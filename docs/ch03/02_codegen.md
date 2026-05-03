@@ -25,7 +25,7 @@ leave                # %rbp を %rsp に戻し、保存していた %rbp を復�
 ret                  # 戻り番地に飛ぶ
 ```
 
-`leave` は `movq %rbp, %rsp; popq %rbp` と等価。これで `%rsp` が prologue 直後の状態に戻り、`%rbp` も呼び出し元の値に戻る。**関数が触ったスタックは完璧にきれいに片付く**。
+`leave` は `movq %rbp, %rsp; popq %rbp` と等価。これで `%rsp` が prologue 直後の状態に戻り、`%rbp` も呼び出し元の値に戻る。**関数が使ったスタック領域はきれいに解放される**。
 
 ch01・ch02 ではここに何も足さなかった。ローカル変数がなかったからだ。ch03 では、プロローグと最初の `leave` の間に **ローカル変数のための領域** を確保する。
 
@@ -90,20 +90,18 @@ static LVar *locals;       /* 連結リストの先頭 */
 static int frame_size;     /* 現在までに割り当てたバイト数 */
 ```
 
-シンプルな単方向リスト。`name` と `offset` のペア。連結リストにしているのは、検索が線形探索でいい（変数の数が少ない）から。ハッシュテーブルや AVL 木にする必要はない。
+`name` と `offset` のペアを保持する単方向リスト。
 
 新しい変数を追加する関数:
 
 ```c
 static int add_local(char *name) {
-    /* 既にあるか確認 */
     for (LVar *v = locals; v; v = v->next) {
         if (strcmp(v->name, name) == 0) {
             fprintf(stderr, "redeclared variable: %s\n", name);
             exit(1);
         }
     }
-    /* 新しく追加 */
     LVar *v = calloc(1, sizeof(LVar));
     v->name = name;
     frame_size += 8;
@@ -148,17 +146,13 @@ case NODE_VAR_DECL: {
 3ステップ。
 
 1. `add_local` で名前を登録し、オフセットをもらう。
-2. `subq $8, %rsp` で `%rsp` を8バイト下げる。**これがないと、後で `pushq` した時にこの変数が上書きされる**。
+2. `subq $8, %rsp` で `%rsp` を8バイト下げる（理由は下記参照）。
 3. 初期化式 (`node->expr`) を `gen_expr` で評価する。結果は `%eax` に入る。
 4. `movl %eax, -off(%rbp)` でその値を割り当てた場所に書き込む。
 
-`subq $8, %rsp` は重要だ。`%rbp` 基準のアドレッシングは `%rsp` の位置とは独立だが、**`%rsp` より上の領域** は「これから push されるかもしれない一時領域」だから、変数を置いておくと壊される。`subq` で `%rsp` を下げて、変数領域を「使用中」とマークするわけだ。
+`subq $8, %rsp` は重要だ。なぜか。プロローグ直後は `%rsp` が `%rbp` と同じ位置を指している。この状態のまま `x` を `-8(%rbp)` に書き込んだあとで `pushq` をすると、`%rsp` が 8 バイト下がって `-8(%rbp)` と同じ場所を指し、push されるデータがちょうど `x` のスロットを上書きしてしまう。
 
-### 別解: 一括して subq する
-
-実プロダクションのコンパイラは、関数本体に登場する全変数の数を **事前に数えて**、プロローグで `subq $N, %rsp` を一発で撃つ。我々の lazy 方式（変数1つごとに `subq $8`）よりも効率がいい。
-
-tiny-c では教育目的なので、lazy で書いている。「宣言と確保が1対1」のほうが、コードも読みやすい。`subq $8` を毎回出すのは数命令の損だが、可読性が勝つ。
+そこで `subq $8, %rsp` で **`%rsp` を `x` のスロットより下に下げておく**。すると後の `pushq` の書き込み先は `-16(%rbp)` 以下になり、`x` の領域は壊されない。`subq` は「ここまでが変数領域、これより下は一時領域」という境界を `%rsp` で示している。
 
 ## 5. NODE_IDENT の codegen
 
@@ -199,7 +193,24 @@ case NODE_ASSIGN: {
 
 ## 7. NODE_EXPR_STMT の codegen
 
-「式を計算して、値は捨てる」。
+`NODE_EXPR_STMT` は **「式を文として置いただけ」** のノードだ。たとえば:
+
+```c
+x = x + 5;
+```
+
+これ自体が C では「式」(`x = x + 5` という代入式) で、最後に `;` を付けることで「文」になる。AST はこんな形:
+
+```
+EXPR_STMT
+└─ ASSIGN
+   ├─ IDENT x
+   └─ BINARY +
+      ├─ IDENT x
+      └─ INT_LIT 5
+```
+
+codegen は内側の式を評価するだけ。
 
 ```c
 case NODE_EXPR_STMT:
@@ -207,7 +218,16 @@ case NODE_EXPR_STMT:
     return;
 ```
 
-`gen_expr` を呼ぶだけ。`%eax` に何が入っても気にしない。次の文がやってきたら `%eax` を上書きするだけだ。
+このとき `gen_expr` の中では `%eax` がフル活用される ── `x + 5` を計算して `%eax` に置き、それを `-off(%rbp)` の `x` のスロットに書き込む。**側面効果（メモリへの書き込み）は確かに起きる**。
+
+「捨てる」のは式の **戻り値** のほう。代入式 `x = x + 5` には値があり（書き込んだ値）、それは `gen_expr` 終了時に `%eax` に残っている。だが `EXPR_STMT` の codegen はその `%eax` を誰にも渡さない。次の文の codegen が始まると、その文の最初の操作で `%eax` は上書きされる。
+
+つまり:
+
+- **`return x = x + 5;`** のように代入式が `return` の対象になっていれば、`%eax` の値はそのまま戻り値として使われる ── 捨てない。
+- **`x = x + 5;`** のように単独の文として置けば、計算と代入は行われるが、式としての値（`%eax`）は誰も読まずに次の文で潰される ── 捨てる。
+
+`NODE_EXPR_STMT` は後者のパターンを表すノードだ。
 
 ## 8. 連鎖代入を見てみる
 
@@ -249,68 +269,51 @@ movl %eax, -8(%rbp)        # a = 7
 ```c
 static void gen_expr(Node *node) {
     switch (node->kind) {
-    case NODE_INT_LIT:    /* ch02 と同じ */
-    case NODE_UNARY:      /* ch02 と同じ */
-    case NODE_BINARY:     /* ch02 と同じ */
-    case NODE_IDENT: {
-        int off = find_local(node->name);
-        fprintf(out, "  movl -%d(%%rbp), %%eax\n", off);
-        return;
-    }
-    case NODE_ASSIGN: {
-        if (node->lhs->kind != NODE_IDENT) { ... error ... }
-        int off = find_local(node->lhs->name);
-        gen_expr(node->rhs);
-        fprintf(out, "  movl %%eax, -%d(%%rbp)\n", off);
-        return;
-    }
+    case NODE_INT_LIT: { /* ch02 と同じ */ }
+    case NODE_UNARY:   { /* ch02 と同じ */ }
+    case NODE_BINARY:  { /* ch02 と同じ */ }
+    case NODE_IDENT: {                                         /* 追加 */
+        int off = find_local(node->name);                      /* 追加 */
+        fprintf(out, "  movl -%d(%%rbp), %%eax\n", off);       /* 追加 */
+        return;                                                /* 追加 */
+    }                                                          /* 追加 */
+    case NODE_ASSIGN: {                                        /* 追加 */
+        if (node->lhs->kind != NODE_IDENT) { ... error ... }   /* 追加 */
+        int off = find_local(node->lhs->name);                 /* 追加 */
+        gen_expr(node->rhs);                                   /* 追加 */
+        fprintf(out, "  movl %%eax, -%d(%%rbp)\n", off);       /* 追加 */
+        return;                                                /* 追加 */
+    }                                                          /* 追加 */
     ...
     }
 }
 
 static void gen_stmt(Node *node) {
     switch (node->kind) {
-    case NODE_RETURN:    /* ch01 と同じ */
-    case NODE_BLOCK:     /* ch01 と同じ */
-    case NODE_VAR_DECL: {
-        int off = add_local(node->name);
-        fprintf(out, "  subq $8, %%rsp\n");
-        gen_expr(node->expr);
-        fprintf(out, "  movl %%eax, -%d(%%rbp)\n", off);
-        return;
-    }
-    case NODE_EXPR_STMT:
-        gen_expr(node->expr);
-        return;
+    case NODE_RETURN: { /* ch01 と同じ */ }
+    case NODE_BLOCK:  { /* ch01 と同じ */ }
+    case NODE_VAR_DECL: {                                      /* 追加 */
+        int off = add_local(node->name);                       /* 追加 */
+        fprintf(out, "  subq $8, %%rsp\n");                    /* 追加 */
+        gen_expr(node->expr);                                  /* 追加 */
+        fprintf(out, "  movl %%eax, -%d(%%rbp)\n", off);       /* 追加 */
+        return;                                                /* 追加 */
+    }                                                          /* 追加 */
+    case NODE_EXPR_STMT:                                       /* 追加 */
+        gen_expr(node->expr);                                  /* 追加 */
+        return;                                                /* 追加 */
     ...
     }
 }
 ```
 
-`codegen` 関数本体（プロローグを出すところ）は ch01 と同じ。ローカル領域の確保は `gen_stmt` で `VAR_DECL` を見つけたとき lazy にやるので、プロローグはいじらない。
+## 10. lvalue / rvalue
 
-## 10. lvalue / rvalue という見方
+- **rvalue** = 式の **値**。`%eax` に保存されるもの。`gen_expr` の結果。
+- **lvalue** = **メモリの場所**。`x = 5` の `x`。`-8(%rbp)` のような番地。
 
-ここで一度立ち止まって、整理しておこう。
-
-- **rvalue** （right value、読み取り） = 式の **値**。`x + 1` の `x` も、`5` も、`a + b` も rvalue。`%eax` に乗ってくるもの。
-- **lvalue** （left value、左辺値、書き込み可能） = **メモリの場所**。`x = 5` の `x` は lvalue。`-8(%rbp)` のような番地。
-
-我々の codegen は、ほぼ常に **rvalue** を生成している（`gen_expr` の結果は `%eax` に値を入れる）。例外は `=` の左辺で、ここだけ「場所」が必要になる。
-
-ch03 では lvalue といえば変数だけなので、`find_local(name)` でオフセット1つを取れば済んだ。ch06 で **`*p`**、**`a[i]`**、**`&x`** が登場すると、lvalue を計算するための専用関数 `gen_addr` が必要になる。「アドレスを計算する gen_addr」と「値を計算する gen_expr」を別々に持ち、`*` で gen_expr が gen_addr を呼び出して `movl (%rax), %eax` で間接 load する ── という構造になる。
-
-ch03 ではここまで踏み込まない。だが、`gen_expr(NODE_IDENT)` が「load する」ことと、`NODE_ASSIGN` が「store する」ことが、対称的に対応している ── この感覚を頭の隅に置いておくと、後の章の見通しがよくなる。
-
-## 11. まとめ
-
-- ローカル変数は **`%rbp` 相対** の負のオフセットで管理する（`-8(%rbp)`、`-16(%rbp)` ...）。
-- 8バイトずつ取る。スタックの単位が8バイトなので素直。
-- **シンボルテーブル**（連結リスト）が名前 → オフセット を覚える。codegen.c 内に閉じる。
-- 変数宣言ごとに `subq $8, %rsp` で領域を取る (lazy allocation)。
-- `=` の左辺は lvalue である必要があり、ch03 では `IDENT` のみ。codegen 時にチェックする。
-- `gen_expr(IDENT)` は load、`NODE_ASSIGN` は store。**rvalue** と **lvalue** の対称性。
+ch03 では lvalue は変数だけなので、`find_local(name)` でオフセットを引けば済む。ch06 で `*p`、`a[i]`、`&x` が登場すると、lvalue 計算専用の `gen_addr` 関数が登場する。`gen_expr(IDENT)` が load、`NODE_ASSIGN` が store ── 対称的な操作になっている。
 
 ## 次へ
 
-最後のサブ章（`03_build.md`）で、全ファイルの完全形と差分を並べ、ビルドして動かす。生成アセンブリを `int x = 1; int y = 2; return x + y;` の例で1行ずつ追う。
+最後のサブ章（`03_build.md`）で全ファイルの完全形を並べ、ビルドして動かす。

@@ -72,7 +72,7 @@ movzbl %al, %eax   # %eax = (32-bit unsigned extension of %al)
 
 `movzbl` = "**mov** **z**ero-extend **b**yte to **l**ong"。下位8ビットを 32ビットレジスタにコピーし、上位24ビットを 0 で埋める。
 
-これで `%eax` には正確に 0 か 1 が入る。約束事「式の値は `%eax`」を守れた。
+これで `%eax` には正確に 0 か 1 が入る。約束事「式の値は `%eax`」に対応できた。
 
 ## 5. 比較演算3点セットを並べる
 
@@ -153,13 +153,7 @@ case '!':
 
 unary 演算子の switch に1ケース足すだけ。
 
-## 8. testq との関係（補足）
-
-x86 の世界では、`cmpl $0, %eax` の代わりに **`testl %eax, %eax`** という書き方もよく見る。`testl src, dst` は `src AND dst` を計算してフラグを更新する命令で、`testl %eax, %eax` は `%eax & %eax = %eax` のフラグ（ZF, SF）を立てる。実質「`%eax` がゼロかどうか」を見るのに使える。
-
-`cmpl $0, %eax` でも `testl %eax, %eax` でも結果は同じ ── どちらも ZF と SF を `%eax` の値次第でセットする。実プロダクションのコンパイラは `testl` のほうが命令長が短いのでこちらを使うことが多い。tiny-c では `cmpl $0` のほうが意味が明確（「ゼロと比較」と読める）なので、こちらを採用している。
-
-## 9. 比較演算の codegen 全体（gen_expr の追加分）
+## 8. 比較演算の codegen 全体（gen_expr の追加分）
 
 ```c
 static void gen_expr(Node *node) {
@@ -172,10 +166,10 @@ static void gen_expr(Node *node) {
             fprintf(out, "  negl %%eax\n");
             return;
         case '!':                                    /* 追加 */
-            fprintf(out, "  cmpl $0, %%eax\n");
-            fprintf(out, "  sete %%al\n");
-            fprintf(out, "  movzbl %%al, %%eax\n");
-            return;
+            fprintf(out, "  cmpl $0, %%eax\n");       /* 追加 */
+            fprintf(out, "  sete %%al\n");            /* 追加 */
+            fprintf(out, "  movzbl %%al, %%eax\n");   /* 追加 */
+            return;                                   /* 追加 */
         }
         ...
     case NODE_BINARY:
@@ -186,26 +180,19 @@ static void gen_expr(Node *node) {
         switch (node->op) {
         /* ... ch02 の +-*/% ... */
         case '<':   emit_compare("setl");  return;   /* 追加 */
-        case OP_LE: emit_compare("setle"); return;
-        case '>':   emit_compare("setg");  return;
-        case OP_GE: emit_compare("setge"); return;
-        case OP_EQ: emit_compare("sete");  return;
-        case OP_NE: emit_compare("setne"); return;
+        case OP_LE: emit_compare("setle"); return;   /* 追加 */
+        case '>':   emit_compare("setg");  return;   /* 追加 */
+        case OP_GE: emit_compare("setge"); return;   /* 追加 */
+        case OP_EQ: emit_compare("sete");  return;   /* 追加 */
+        case OP_NE: emit_compare("setne"); return;   /* 追加 */
         }
         ...
     }
 }
 ```
 
-純粋に **追加だけ** で済む。既存の codegen のかたちを壊していない。
-
-## 10. まとめ
-
-- 比較は 3命令: `cmpl` でフラグ更新、`setcc` で `%al` に 0/1、`movzbl` で `%eax` に拡張。
-- `cmpl src, dst` は `dst - src` を計算する。`%eax` に lhs、`%ecx` に rhs を置けば素直に書ける。
-- `!x` も同じ仕組み。`cmpl $0, %eax` + `sete` + `movzbl`。
-- 真偽値は普通の `int` (0 or 1)。約束事「式の値は `%eax`」は変わらない。
+純粋に **追加だけ** で済む。
 
 ## 次へ
 
-比較が「真偽値（0 か 1）を `%eax` に置く」ことだとわかった。次のサブ章（`03_control.md`）では、その値をどう **分岐** に使うか ── `je` `jmp` というジャンプ命令と、それらの飛び先を表す **ラベル** を扱う。`if` と `while` の codegen 本体だ。
+次のサブ章（`03_control.md`）では、その真偽値をどう **分岐** に使うか ── `je` `jmp` ジャンプ命令と **ラベル** を扱う。

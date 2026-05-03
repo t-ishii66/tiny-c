@@ -36,7 +36,7 @@ func_def
 
 stmts
     : /* empty */       { $$ = NULL; }
-    | stmts stmt        { $$ = new_node_list($2, $1); }
+    | stmt stmts        { $$ = new_node_list($1, $2); }
     ;
 
 stmt

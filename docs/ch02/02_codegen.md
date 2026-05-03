@@ -1,8 +1,6 @@
 # 02 — スタックで中間値を管理する
 
-AST が組み上がった。次はそれをアセンブリに落とす番だ。
-
-`2 + 3 * 4` のように演算子が複数ある式を、レジスタ `%eax` ひとつだけで計算するにはどうするか。答えは **スタックを使う** だ。この章で導入する一番大事な道具。
+`2 + 3 * 4` のように演算子が複数ある式を、レジスタ `%eax` ひとつだけで計算するにはどうするか。答えは **スタックを使う** だ。
 
 ## 1. ch01 の codegen を思い出す
 
@@ -59,7 +57,7 @@ popq  %rcx     # rcx = *(rsp);  rsp += 8;
 
 ## 4. 二項演算の定石
 
-二項演算の生成パターンはこうなる。
+二項演算 ── つまり **左(lhs) 演算子 右(rhs)** という形（`a + b` や `x * y`）── の生成パターンはこうなる。
 
 ```
 gen_expr(rhs)         # %eax = 右オペランドの値
@@ -70,9 +68,31 @@ popq %rcx             # 退避していた右の値を %ecx に取り出す
 addl %ecx, %eax       # %eax = 左 + 右
 ```
 
-ポイントは順序。**右を先に計算してスタックに退避し、左を後で計算する**。なぜか？
+ポイントは順序。**右を先に計算してスタックに退避し、左を後で計算する**。
 
-AT&T 構文では `addl %ecx, %eax` は `%eax += %ecx` の意味。**結果は左オペランドのほうのレジスタ（`%eax`）に上書きされる**。我々の約束事は「式の値は `%eax`」だから、左オペランドが `%eax` に座っているのが自然だ。だから「左を後で計算する」。
+### なぜこの順序なのか
+
+そもそも我々がやりたいのは「**どんな二項演算子でも同じパターンで生成する**」ことだ。`+ - * / %` は意味が違うが、コード生成の枠組みは共通にしておきたい ── そうでないと演算子の種類だけ別々の処理を書くはめになる。
+
+そのために決めるのは「**演算の直前に、左オペランドの値・右オペランドの値が、それぞれどのレジスタに入っているか**」を統一すること。tiny-c では:
+
+- 左オペランド (lhs) → `%eax`
+- 右オペランド (rhs) → `%ecx`
+
+という配置に統一する。なぜこの配置か。式の値は約束事として `%eax` に保持される。AT&T の `subl %ecx, %eax` は `%eax = %eax - %ecx`、つまり結果が左側のレジスタ（`%eax`）に上書きされる。なので **`%eax` が lhs を保持していれば、`lhs - rhs` の結果がそのまま `%eax` に残る** ── 約束事と一致する。
+
+可換な `+`、`*` だけ考えるなら左右は入れ替わってもいいが、非可換な `-`、`/`、`%`（あとで来る比較演算も）では順序を守らないと意味が変わる。だから配置の規約を演算子に依らず固定する。
+
+### 実装レベル
+
+「演算直前に `%eax = lhs`、`%ecx = rhs`」という状態を作るには、こう順序付ける:
+
+1. 先に `rhs` を計算 → `%eax = rhs` → スタックに退避
+2. 次に `lhs` を計算 → `%eax = lhs`（rhs 評価で潰されない、退避済みだから）
+3. 退避していた `rhs` を `%ecx` に pop
+4. ここで `%eax = lhs`、`%ecx = rhs`。あとは `addl`/`subl`/... を1行で書ける
+
+逆順（lhs 先）にすると最終的な `%eax` に rhs が保持される状態になってしまい、追加で move 命令が要る。だから「rhs から先に計算」が定石になる。
 
 整理。
 
@@ -111,7 +131,7 @@ gen_expr(外側のBINARY)
 
 スタックは `[7]` → `[2, 7]` → `[7]` → `[]` と動いていく。
 
-各レベルの `pushq`/`popq` がペアになっているから、スタックは出入りで完璧に釣り合う。**再帰の各階層が、自分の使うスタック領域を自前で確保し、自前で解放する**。誰の領域とも干渉しない。これが再帰的なコード生成の美しさだ。
+各レベルの `pushq`/`popq` がペアになっているからスタックは釣り合う。**再帰の各階層が自分の使うスタック領域を自前で確保し、自前で解放する**。
 
 ## 6. 除算と剰余だけは特殊
 
@@ -135,7 +155,7 @@ cdq                   # eax を edx:eax に符号拡張
 idivl %ecx            # eax = 分子/分母,  edx = 余り
 ```
 
-剰余 `%` の場合は最後に `movl %edx, %eax` を足して、余りを `%eax` に移す。約束事「式の値は `%eax`」を守るためだ。
+剰余 `%` の場合は最後に `movl %edx, %eax` を足して、余りを `%eax` に移す。約束ごと「式の値は `%eax`」に従うためだ。
 
 ```
 cdq
@@ -166,28 +186,28 @@ static void gen_expr(Node *node) {
     case NODE_INT_LIT:
         fprintf(out, "  movl $%d, %%eax\n", node->int_val);
         return;
-    case NODE_UNARY:
-        gen_expr(node->operand);
-        fprintf(out, "  negl %%eax\n");
-        return;
-    case NODE_BINARY:
-        gen_expr(node->rhs);
-        fprintf(out, "  pushq %%rax\n");
-        gen_expr(node->lhs);
-        fprintf(out, "  popq %%rcx\n");
-        switch (node->op) {
-        case '+': fprintf(out, "  addl %%ecx, %%eax\n"); return;
-        case '-': fprintf(out, "  subl %%ecx, %%eax\n"); return;
-        case '*': fprintf(out, "  imull %%ecx, %%eax\n"); return;
-        case '/':
-            fprintf(out, "  cdq\n");
-            fprintf(out, "  idivl %%ecx\n");
-            return;
-        case '%':
-            fprintf(out, "  cdq\n");
-            fprintf(out, "  idivl %%ecx\n");
-            fprintf(out, "  movl %%edx, %%eax\n");
-            return;
+    case NODE_UNARY:                                                    /* 追加 */
+        gen_expr(node->operand);                                        /* 追加 */
+        fprintf(out, "  negl %%eax\n");                                 /* 追加 */
+        return;                                                         /* 追加 */
+    case NODE_BINARY:                                                   /* 追加 */
+        gen_expr(node->rhs);                                            /* 追加 */
+        fprintf(out, "  pushq %%rax\n");                                /* 追加 */
+        gen_expr(node->lhs);                                            /* 追加 */
+        fprintf(out, "  popq %%rcx\n");                                 /* 追加 */
+        switch (node->op) {                                             /* 追加 */
+        case '+': fprintf(out, "  addl %%ecx, %%eax\n"); return;        /* 追加 */
+        case '-': fprintf(out, "  subl %%ecx, %%eax\n"); return;        /* 追加 */
+        case '*': fprintf(out, "  imull %%ecx, %%eax\n"); return;       /* 追加 */
+        case '/':                                                       /* 追加 */
+            fprintf(out, "  cdq\n");                                    /* 追加 */
+            fprintf(out, "  idivl %%ecx\n");                            /* 追加 */
+            return;                                                     /* 追加 */
+        case '%':                                                       /* 追加 */
+            fprintf(out, "  cdq\n");                                    /* 追加 */
+            fprintf(out, "  idivl %%ecx\n");                            /* 追加 */
+            fprintf(out, "  movl %%edx, %%eax\n");                      /* 追加 */
+            return;                                                     /* 追加 */
         }
     default:
         fprintf(stderr, "unknown expr\n");
@@ -204,18 +224,6 @@ static void gen_expr(Node *node) {
 
 スタックの単位は8バイトなので、64ビットの `pushq` を使う。32ビットだけプッシュする `pushl` は x86-64 ではそもそも使えない（オペランドサイズのルールが違う）。
 
-## 10. 中間値の上限は気にしなくていい
-
-「複雑な式だとスタックが溢れない？」── 心配ない。普通の式の深さでは、関数のスタックフレームよりずっと小さい量しか積まない。`(((((1 + 2) + 3) + 4) + 5) + 6)` でも、最大同時にスタックに積まれるのは数語程度だ。コンパイラが内部で生成する一時値としては、現実的に問題にならない。
-
-## 11. まとめ
-
-- 約束事「式の値は `%eax` に入れる」を、ch01 から維持。
-- 二項演算は **rhs → push → lhs → pop → 演算** のパターン。
-- AT&T の `op src, dst` は `dst = dst op src`。だから左オペランドが `%eax` 側に座る。
-- 除算と剰余だけは `idivl` の都合で `cdq` による符号拡張が要る。剰余は `%edx` から `%eax` へ移す。
-- スタックは push/pop が完璧にペアになり、再帰の各階層で完結する。
-
 ## 次へ
 
-最後のサブ章（`03_build.md`）で、`lexer.l` `parser.y` `ast.h/c` `codegen.c` の完全形を ch01 との差分とともに並べ、実際にビルドして動かす。生成アセンブリを `2 + 3 * 4` で1行ずつ追って締めくくる。
+最後のサブ章（`03_build.md`）で、`lexer.l` `parser.y` `ast.h/c` `codegen.c` の完全形を並べ、ビルドして動かす。

@@ -1,26 +1,20 @@
 # 01 — 文法と AST
 
-ch04 までの「プログラムは1つの関数」「関数は引数なし」という前提を捨てる。プログラムは関数の列であり、関数は引数を取れる。
+プログラムを関数の列にし、関数が引数を取れるようにする。
 
 ## 1. プログラムを関数の列に
 
-ch01 から ch04 まで、`program` の規則はずっとこうだった。
-
-```yacc
-program : func_def ;
-```
-
-「プログラムは関数1つ」。これを「関数の列」に変える。
+ch04 までの `program : func_def ;` を「関数の列」に変える。
 
 ```yacc
 program
-    : func_defs                  { program = new_program($1); }
+    : func_defs                  { program = new_program($1); }   /* 変更: ch04 は : func_def */
     ;
 
-func_defs
-    : /* empty */                { $$ = NULL; }
-    | func_def func_defs         { $$ = new_node_list($1, $2); }
-    ;
+func_defs                                                         /* 追加 */
+    : /* empty */                { $$ = NULL; }                   /* 追加 */
+    | func_def func_defs         { $$ = new_node_list($1, $2); }  /* 追加 */
+    ;                                                             /* 追加 */
 ```
 
 `func_defs` は右再帰で、関数の連続を `NodeList` として組み上げる。空でも OK（理論上は関数のないプログラム）。`new_program` は新しいコンストラクタで、`NODE_PROGRAM` ノードを作る。
@@ -31,23 +25,23 @@ func_defs
 
 ```yacc
 func_def
-    : INT IDENT '(' params ')' '{' stmts '}'
-                                 { $$ = new_func_def($2, $4, new_block($7)); }
+    : INT IDENT '(' params ')' '{' stmts '}'                        /* 変更: params 追加 */
+                                 { $$ = new_func_def($2, $4, new_block($7)); }  /* 変更: $4 追加 */
     ;
 
-params
-    : /* empty */                { $$ = NULL; }
-    | param_list                 { $$ = $1; }
-    ;
+params                                                              /* 追加 */
+    : /* empty */                { $$ = NULL; }                     /* 追加 */
+    | param_list                 { $$ = $1; }                       /* 追加 */
+    ;                                                               /* 追加 */
 
-param_list
-    : param                      { $$ = new_node_list($1, NULL); }
-    | param ',' param_list       { $$ = new_node_list($1, $3); }
-    ;
+param_list                                                          /* 追加 */
+    : param                      { $$ = new_node_list($1, NULL); }  /* 追加 */
+    | param ',' param_list       { $$ = new_node_list($1, $3); }    /* 追加 */
+    ;                                                               /* 追加 */
 
-param
-    : INT IDENT                  { $$ = new_ident($2); }
-    ;
+param                                                               /* 追加 */
+    : INT IDENT                  { $$ = new_ident($2); }            /* 追加 */
+    ;                                                               /* 追加 */
 ```
 
 `params` は「空 or 1つ以上のパラメータ」。`param_list` は右再帰でカンマ区切りの並びを `NodeList` にする。
@@ -66,19 +60,19 @@ param
 primary
     : INT_LIT                    { $$ = new_int_lit($1); }
     | IDENT                      { $$ = new_ident($1); }
-    | IDENT '(' args ')'         { $$ = new_call($1, $3); }    /* 追加 */
+    | IDENT '(' args ')'         { $$ = new_call($1, $3); }      /* 追加 */
     | '(' expr ')'               { $$ = $2; }
     ;
 
-args
-    : /* empty */                { $$ = NULL; }
-    | arg_list                   { $$ = $1; }
-    ;
+args                                                             /* 追加 */
+    : /* empty */                { $$ = NULL; }                  /* 追加 */
+    | arg_list                   { $$ = $1; }                    /* 追加 */
+    ;                                                            /* 追加 */
 
-arg_list
-    : expr                       { $$ = new_node_list($1, NULL); }
-    | expr ',' arg_list          { $$ = new_node_list($1, $3); }
-    ;
+arg_list                                                         /* 追加 */
+    : expr                       { $$ = new_node_list($1, NULL); }    /* 追加 */
+    | expr ',' arg_list          { $$ = new_node_list($1, $3); }      /* 追加 */
+    ;                                                            /* 追加 */
 ```
 
 注目点: `IDENT` 単体と `IDENT '(' args ')'` は同じトークン (`IDENT`) で始まる。**bison は競合せずに解決できる**: `IDENT` の次に `(` が来たら関数呼び出し、それ以外なら変数参照。
@@ -114,35 +108,19 @@ Node *new_program(NodeList *funcs);                          /* 追加 */
 
 ## 5. 前方参照（forward reference）について
 
-C では普通、関数を呼ぶ前に **宣言** (prototype) が必要だ。
+tiny-c は **prototype を要求しない**。フロントエンドで関数の存在チェックをせず、`call name` を吐くだけ。実体の解決は **リンカ任せ**。
 
-```c
-int foo(int x);          // prototype
-int main() {
-    return foo(3);       // 呼び出し
-}
-int foo(int x) {         // 定義（prototype 不要なら定義が main の前にあるべき）
-    return x + 1;
-}
-```
+- 同じソース内で後ろに定義された関数も呼べる（forward reference）。
+- `printf` などの外部関数も同じように呼べる（libc から解決）。
+- 存在しない関数名はリンクエラーになる（コンパイル時には気付けない）。
 
-tiny-c は **prototype を要求しない**。理由は単純で、コンパイラのフロントエンドで「関数の存在チェック」をしないから。`new_call(name, args)` は名前を `char *` で持つだけ。codegen 時にも、関数が同じソース内で定義されているかチェックしない。`call name` を吐くだけ。
-
-つまり実体は **リンカ任せ**。`call name` の `name` を「リンカの仕事」にしておけば、
-
-- 同じプログラムの後ろのほうの関数も呼べる（forward reference）。
-- `printf` のような外部関数も同じように呼べる（リンク時に libc から解決される）。
-- 存在しない関数を書くと **リンクエラー**（実行ファイルにできない）。
-
-これが「最小のフロントエンド」の利点。意味解析を省略すれば、相互再帰も外部関数呼び出しもタダで手に入る。
-
-ただし誤った関数名のミスタイプは、コンパイル時には気付けず、リンク時にやっと「`undefined reference to xyz`」とわかる。プロダクションのコンパイラはここで意味解析をするが、tiny-c では割り切る。
+意味解析を省略しているおかげで、相互再帰や外部関数呼び出しがタダで手に入る。
 
 ## 6. 引数の数チェック
 
 文法レベルでは「最大6個」のような制約は表現できない。codegen で実行時的にチェックする（ch05 のサブ章 04 で見る）。`call` の前に「7個以上だったらエラー」。
 
-引数 0個の場合（`foo()`）も `args : /* empty */` で受け入れる。よくある「`int main(void)` と書くべきか `int main()` と書くべきか」の議論は、tiny-c では関係ない ── どちらも「引数なし」として同じに扱う。
+引数 0個の場合（`foo()`）も `args : /* empty */` で受け入れる。
 
 ## 7. AST の例
 
@@ -181,14 +159,6 @@ PROGRAM
 
 `PARAM` は `print_ast` が `NODE_IDENT` を「PARAM」として表示しているだけで、ノードの kind 自体は `NODE_IDENT`。
 
-## 8. まとめ
-
-- `program : func_defs`、複数の関数を並べられるようになった。
-- `func_def : INT IDENT '(' params ')' '{' stmts '}'`、`param_list` でカンマ区切りの引数を取る。
-- `primary : IDENT '(' args ')'` で関数呼び出し。bison は `IDENT` の後の `(` を見て区別する。
-- AST に `NODE_PROGRAM`、`NODE_CALL` 追加。`Node` に `params`、`args` フィールド追加。
-- 前方参照と外部関数呼び出しは **意味解析を省略している**ことの自然な帰結。
-
 ## 次へ
 
-文法と AST はこれで揃った。だがコンパイラの仕事の本番はここから。次のサブ章 (`02_abi.md`) で、関数を呼ぶときの「ルール」── **System V AMD64 ABI** ── を見る。レジスタの使い分け、戻り値の置き場所、スタックの整え方。これは「契約」だ。守らないと動かない。
+次のサブ章 (`02_abi.md`) で、関数を呼ぶときのルール ── **System V AMD64 ABI** ── を見る。

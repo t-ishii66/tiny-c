@@ -23,9 +23,9 @@ program
     ;
 
 func_defs                                              /* 追加 */
-    : /* empty */                { $$ = NULL; }
-    | func_def func_defs         { $$ = new_node_list($1, $2); }
-    ;
+    : /* empty */                { $$ = NULL; }        /* 追加 */
+    | func_def func_defs         { $$ = new_node_list($1, $2); }   /* 追加 */
+    ;                                                  /* 追加 */
 
 func_def
     : INT IDENT '(' params ')' '{' stmts '}'           /* params 追加 */
@@ -33,16 +33,16 @@ func_def
     ;
 
 params                                                 /* 追加 */
-    : /* empty */                { $$ = NULL; }
-    | param_list                 { $$ = $1; }
-    ;
+    : /* empty */                { $$ = NULL; }        /* 追加 */
+    | param_list                 { $$ = $1; }          /* 追加 */
+    ;                                                  /* 追加 */
 param_list                                             /* 追加 */
-    : param                      { $$ = new_node_list($1, NULL); }
-    | param ',' param_list       { $$ = new_node_list($1, $3); }
-    ;
+    : param                      { $$ = new_node_list($1, NULL); }     /* 追加 */
+    | param ',' param_list       { $$ = new_node_list($1, $3); }       /* 追加 */
+    ;                                                  /* 追加 */
 param                                                  /* 追加 */
-    : INT IDENT                  { $$ = new_ident($2); }
-    ;
+    : INT IDENT                  { $$ = new_ident($2); }               /* 追加 */
+    ;                                                  /* 追加 */
 
 primary
     : INT_LIT                    { $$ = new_int_lit($1); }
@@ -52,13 +52,13 @@ primary
     ;
 
 args                                                   /* 追加 */
-    : /* empty */                { $$ = NULL; }
-    | arg_list                   { $$ = $1; }
-    ;
+    : /* empty */                { $$ = NULL; }        /* 追加 */
+    | arg_list                   { $$ = $1; }          /* 追加 */
+    ;                                                  /* 追加 */
 arg_list                                               /* 追加 */
-    : expr                       { $$ = new_node_list($1, NULL); }
-    | expr ',' arg_list          { $$ = new_node_list($1, $3); }
-    ;
+    : expr                       { $$ = new_node_list($1, NULL); }     /* 追加 */
+    | expr ',' arg_list          { $$ = new_node_list($1, $3); }       /* 追加 */
+    ;                                                  /* 追加 */
 ```
 
 `%expect 1` (dangling-else) は ch04 から引き続き。
@@ -107,73 +107,72 @@ ch03 から育ててきた `codegen.c` を **再設計**。
 完全版は `steps/ch05/src/codegen.c` を参照。要点だけ抜粋:
 
 ```c
-static const char *arg_regs64[] = {"%rdi", "%rsi", "%rdx", "%rcx", "%r8",  "%r9"};
-static const char *arg_regs32[] = {"%edi", "%esi", "%edx", "%ecx", "%r8d", "%r9d"};
+static const char *arg_regs64[] = {"%rdi", "%rsi", "%rdx", "%rcx", "%r8",  "%r9"};   /* 追加 */
+static const char *arg_regs32[] = {"%edi", "%esi", "%edx", "%ecx", "%r8d", "%r9d"};  /* 追加 */
 
-static int stack_offset;     /* 追加: rsp delta in 8-byte units */
+static int stack_offset;                                        /* 追加 */
 
-static void emit_push(void) {
-    fprintf(out, "  pushq %%rax\n");
-    stack_offset++;
-}
-static void emit_pop(const char *reg) {
-    fprintf(out, "  popq %s\n", reg);
-    stack_offset--;
-}
+static void emit_push(void) {                                   /* 追加 */
+    fprintf(out, "  pushq %%rax\n");                            /* 追加 */
+    stack_offset++;                                             /* 追加 */
+}                                                               /* 追加 */
+static void emit_pop(const char *reg) {                         /* 追加 */
+    fprintf(out, "  popq %s\n", reg);                           /* 追加 */
+    stack_offset--;                                             /* 追加 */
+}                                                               /* 追加 */
 
-case NODE_CALL: {
-    int pad = (stack_offset % 2) != 0;
-    if (pad) {
-        fprintf(out, "  subq $8, %%rsp\n");
-        stack_offset++;
-    }
-    int n_args = push_args(node->args);
-    for (int i = 0; i < n_args; i++)
-        emit_pop(arg_regs64[i]);
-    fprintf(out, "  movl $0, %%eax\n");
-    fprintf(out, "  call %s\n", node->name);
-    if (pad) {
-        fprintf(out, "  addq $8, %%rsp\n");
-        stack_offset--;
-    }
-    return;
-}
+/* gen_expr の switch 内に新しく追加するケース */
+case NODE_CALL: {                                               /* 追加 */
+    int pad = (stack_offset % 2) != 0;                          /* 追加 */
+    if (pad) {                                                  /* 追加 */
+        fprintf(out, "  subq $8, %%rsp\n");                     /* 追加 */
+        stack_offset++;                                         /* 追加 */
+    }                                                           /* 追加 */
+    int n_args = push_args(node->args);                         /* 追加 */
+    for (int i = 0; i < n_args; i++)                            /* 追加 */
+        emit_pop(arg_regs64[i]);                                /* 追加 */
+    fprintf(out, "  movl $0, %%eax\n");                         /* 追加 */
+    fprintf(out, "  call %s\n", node->name);                    /* 追加 */
+    if (pad) {                                                  /* 追加 */
+        fprintf(out, "  addq $8, %%rsp\n");                     /* 追加 */
+        stack_offset--;                                         /* 追加 */
+    }                                                           /* 追加 */
+    return;                                                     /* 追加 */
+}                                                               /* 追加 */
 
-static void gen_func(Node *fn) {
-    locals = NULL; frame_size = 0; stack_offset = 0;
-    for (NodeList *l = fn->params; l; l = l->next)
-        add_local(l->node->name);
-    collect_locals(fn->body);
-    int aligned = (frame_size + 15) & ~15;
+static void gen_func(Node *fn) {                                /* 追加 */
+    locals = NULL; frame_size = 0; stack_offset = 0;            /* 追加 */
+    for (NodeList *l = fn->params; l; l = l->next)              /* 追加 */
+        add_local(l->node->name);                               /* 追加 */
+    collect_locals(fn->body);                                   /* 追加 */
+    int aligned = (frame_size + 15) & ~15;                      /* 追加 */
 
-    fprintf(out, "  .globl %s\n", fn->name);
-    fprintf(out, "%s:\n", fn->name);
-    fprintf(out, "  pushq %%rbp\n");
-    fprintf(out, "  movq %%rsp, %%rbp\n");
-    if (aligned > 0) fprintf(out, "  subq $%d, %%rsp\n", aligned);
+    fprintf(out, "  .globl %s\n", fn->name);                    /* 追加 */
+    fprintf(out, "%s:\n", fn->name);                            /* 追加 */
+    fprintf(out, "  pushq %%rbp\n");                            /* 追加 */
+    fprintf(out, "  movq %%rsp, %%rbp\n");                      /* 追加 */
+    if (aligned > 0) fprintf(out, "  subq $%d, %%rsp\n", aligned);  /* 追加 */
 
-    int i = 0;
-    for (NodeList *l = fn->params; l; l = l->next) {
-        int off = find_local(l->node->name);
-        fprintf(out, "  movl %s, -%d(%%rbp)\n", arg_regs32[i], off);
-        i++;
-    }
-    gen_stmt(fn->body);
-    fprintf(out, "  movl $0, %%eax\n  leave\n  ret\n");  /* implicit return */
-}
+    int i = 0;                                                  /* 追加 */
+    for (NodeList *l = fn->params; l; l = l->next) {            /* 追加 */
+        int off = find_local(l->node->name);                    /* 追加 */
+        fprintf(out, "  movl %s, -%d(%%rbp)\n", arg_regs32[i], off);  /* 追加 */
+        i++;                                                    /* 追加 */
+    }                                                           /* 追加 */
+    gen_stmt(fn->body);                                         /* 追加 */
+    fprintf(out, "  movl $0, %%eax\n  leave\n  ret\n");         /* 追加: implicit return */
+}                                                               /* 追加 */
 
-void codegen(Node *prog, FILE *output) {
+void codegen(Node *prog, FILE *output) {                        /* 変更: ch04 はここでプロローグ直接出力 */
     out = output;
     label_count = 0;
     fprintf(out, "  .text\n");
-    for (NodeList *l = prog->stmts; l; l = l->next)
-        gen_func(l->node);
+    for (NodeList *l = prog->stmts; l; l = l->next)             /* 変更: 単一関数 → 関数のループ */
+        gen_func(l->node);                                      /* 変更 */
 }
 ```
 
 ## 6. main.c / Makefile — 変更なし
-
-4章連続で main.c と Makefile は変えていない。フロントエンドのインターフェース (`yyparse`、`program` グローバル、`codegen()`) が安定している証拠。
 
 ## 7. ビルドして動かす
 
@@ -299,31 +298,6 @@ addl %ecx, %eax          ; eax = fib(n-1) + fib(n-2)
 
 2回目の `call fib` (= `fib(n-1)`) の前に `stack_offset = 1` を検出 → `subq $8, %rsp` でパディング。call 後 `addq $8, %rsp` で解除。
 
-**実際のアセンブリにこのパディングが入っていることを目で確認できる**。tiny-c はちゃんと ABI を守っている。
+## 9. 次へ
 
-## 9. 各フレームの独立性
-
-`fact(5)` を実行するとき、スタックには 5回分の `fact` フレームが積まれる。それぞれが独立した `n` を持つ。
-
-`fact(5)` の `n=5` が `-8(%rbp_5)` に、`fact(4)` の `n=4` が `-8(%rbp_4)` に...という具合。`%rbp` の値だけが各フレームで違うので、同じ `-8(%rbp)` というアセンブリ表記でも、実行時に違うメモリ位置を指す。
-
-これが ch04 までで作ってきた **「変数は `%rbp` 相対のアドレス」** の本当の意味。`%rbp` を **その関数呼び出し固有の値** に設定するから、同名の変数（再帰の `n`）でも混ざらない。
-
-## 10. ここまでで作ったもの
-
-- 複数関数のプログラム。`PROGRAM` ノードの下に `FUNC_DEF` のリスト。
-- パラメータ付き関数定義、関数呼び出し式 (`NODE_CALL`)。
-- **System V AMD64 ABI** に従った引数渡し（`%rdi`〜`%r9`）。
-- **16バイトアライメント** を保つ事前確保 (`subq $aligned_frame`) と動的パディング (`stack_offset`)。
-- **再帰** がコンパイラの特別な仕掛けなしに動く。フレームの独立性のおかげ。
-- 暗黙の `return 0`（落っこち防止）。
-
-第6章では、ここに **ポインタと配列** を加える。`&x`、`*p`、`a[i]`、文字列リテラル、グローバル変数。**lvalue** の世界が本格的に開ける ── アドレスを返す codegen (`gen_addr`)、`*` と `&` の対称性、配列アクセスのアドレス計算。tiny-c の最終形が見えてくる。
-
-## まとめ
-
-- **ABI は契約**。守れば再帰も外部関数呼び出しも自然に動く。
-- フレーム確保を **事前一括** に変更 (`subq $aligned_frame`)。事前 pre-pass でフレームサイズ計算。
-- 引数は **逆順 push → pop でレジスタ** という定石パターン。
-- アライメント追跡 (`stack_offset`) で **動的パディング**。call の瞬間は必ず 16-aligned。
-- 4章連続で main.c と Makefile を変えていない ── 設計の安定。
+第6章では **ポインタと配列** を加える。`&x`、`*p`、`a[i]`、文字列リテラル、グローバル変数。アドレスを返す codegen (`gen_addr`)、`*` と `&` の対称性、配列アクセスのアドレス計算。

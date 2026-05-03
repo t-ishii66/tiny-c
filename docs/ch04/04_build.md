@@ -106,19 +106,19 @@ assign
     | equality '=' assign                   { $$ = new_assign($1, $3); }
     ;
 
-equality                                                              /* 追加レベル */
-    : relational                            { $$ = $1; }
-    | equality EQ_OP relational             { $$ = new_binary(OP_EQ, $1, $3); }
-    | equality NE_OP relational             { $$ = new_binary(OP_NE, $1, $3); }
-    ;
+equality                                                              /* 追加 */
+    : relational                            { $$ = $1; }              /* 追加 */
+    | equality EQ_OP relational             { $$ = new_binary(OP_EQ, $1, $3); } /* 追加 */
+    | equality NE_OP relational             { $$ = new_binary(OP_NE, $1, $3); } /* 追加 */
+    ;                                                                 /* 追加 */
 
-relational                                                            /* 追加レベル */
-    : add_expr                              { $$ = $1; }
-    | relational '<' add_expr               { $$ = new_binary('<', $1, $3); }
-    | relational LE_OP add_expr             { $$ = new_binary(OP_LE, $1, $3); }
-    | relational '>' add_expr               { $$ = new_binary('>', $1, $3); }
-    | relational GE_OP add_expr             { $$ = new_binary(OP_GE, $1, $3); }
-    ;
+relational                                                            /* 追加 */
+    : add_expr                              { $$ = $1; }              /* 追加 */
+    | relational '<' add_expr               { $$ = new_binary('<', $1, $3); }   /* 追加 */
+    | relational LE_OP add_expr             { $$ = new_binary(OP_LE, $1, $3); } /* 追加 */
+    | relational '>' add_expr               { $$ = new_binary('>', $1, $3); }   /* 追加 */
+    | relational GE_OP add_expr             { $$ = new_binary(OP_GE, $1, $3); } /* 追加 */
+    ;                                                                 /* 追加 */
 
 add_expr    : ...   /* ch02 と同じ */
 mul_expr    : ...
@@ -216,25 +216,25 @@ static const char *op_str(int op) {
 
 ```c
 case NODE_BINARY:
-    printf("BINARY %s\n", op_str(node->op));
+    printf("BINARY %s\n", op_str(node->op));                              /* 変更: %c → %s */
     print_ast(node->lhs, level + 1);
     print_ast(node->rhs, level + 1);
     break;
 case NODE_UNARY:
-    printf("UNARY %s\n", op_str(node->op));
+    printf("UNARY %s\n", op_str(node->op));                               /* 変更: %c → %s */
     print_ast(node->operand, level + 1);
     break;
-case NODE_IF:
-    printf("IF\n");
-    print_ast(node->cond, level + 1);
-    print_ast(node->then_body, level + 1);
-    if (node->else_body) print_ast(node->else_body, level + 1);
-    break;
-case NODE_WHILE:
-    printf("WHILE\n");
-    print_ast(node->cond, level + 1);
-    print_ast(node->body, level + 1);
-    break;
+case NODE_IF:                                                             /* 追加 */
+    printf("IF\n");                                                       /* 追加 */
+    print_ast(node->cond, level + 1);                                     /* 追加 */
+    print_ast(node->then_body, level + 1);                                /* 追加 */
+    if (node->else_body) print_ast(node->else_body, level + 1);           /* 追加 */
+    break;                                                                /* 追加 */
+case NODE_WHILE:                                                          /* 追加 */
+    printf("WHILE\n");                                                    /* 追加 */
+    print_ast(node->cond, level + 1);                                     /* 追加 */
+    print_ast(node->body, level + 1);                                     /* 追加 */
+    break;                                                                /* 追加 */
 ```
 
 完全版は `steps/ch04/src/ast.c`。
@@ -276,10 +276,10 @@ case NODE_UNARY:
         fprintf(out, "  negl %%eax\n");
         return;
     case '!':                                       /* 追加 */
-        fprintf(out, "  cmpl $0, %%eax\n");
-        fprintf(out, "  sete %%al\n");
-        fprintf(out, "  movzbl %%al, %%eax\n");
-        return;
+        fprintf(out, "  cmpl $0, %%eax\n");         /* 追加 */
+        fprintf(out, "  sete %%al\n");              /* 追加 */
+        fprintf(out, "  movzbl %%al, %%eax\n");     /* 追加 */
+        return;                                     /* 追加 */
     }
     ...
 
@@ -291,11 +291,11 @@ case NODE_BINARY:
     switch (node->op) {
     /* +-*/% (ch02 と同じ) */
     case '<':   emit_compare("setl");  return;     /* 追加 */
-    case OP_LE: emit_compare("setle"); return;
-    case '>':   emit_compare("setg");  return;
-    case OP_GE: emit_compare("setge"); return;
-    case OP_EQ: emit_compare("sete");  return;
-    case OP_NE: emit_compare("setne"); return;
+    case OP_LE: emit_compare("setle"); return;     /* 追加 */
+    case '>':   emit_compare("setg");  return;     /* 追加 */
+    case OP_GE: emit_compare("setge"); return;     /* 追加 */
+    case OP_EQ: emit_compare("sete");  return;     /* 追加 */
+    case OP_NE: emit_compare("setne"); return;     /* 追加 */
     }
     ...
 ```
@@ -337,8 +337,6 @@ case NODE_WHILE: {
 完全版は `steps/ch04/src/codegen.c`。
 
 ## 6. main.c / Makefile — 変更なし
-
-ch01 から3章連続で main.c と Makefile は変えていない。
 
 ## 7. ビルドして動かす
 
@@ -515,18 +513,6 @@ main:
 
 5回ループして `1 * 5 * 4 * 3 * 2 = 120` が `%eax` に残り、`return` で返される。
 
-## 9. ここまでで作ったもの
+## 9. 次へ
 
-- 比較演算 (`< <= > >= == !=`) と論理否定 `!`。`cmpl + setcc + movzbl` の3命令パターン。
-- `if/else`、`while`、ブロック文。**ラベル + 条件ジャンプ** で表現。
-- dangling-else を bison のデフォルト shift で正しく解決。
-- ラベル番号は関数内ユニーク。入れ子になっても衝突しない。
-
-第5章では、ここに **関数の定義と呼び出し** を加える。複数の関数、引数、`printf` などの外部関数呼び出しが扱えるようになる。新しいテーマは **System V AMD64 ABI** ── レジスタで引数を渡し、16バイトでスタックを揃える、という呼び出し規約だ。
-
-## まとめ
-
-- 比較・等値・関係演算子は文法に2階層追加。`op` を `int` にして 256 以降の値で複数文字演算子をエンコード。
-- if、while、`{ ... }` の文を追加。AST に `NODE_IF`、`NODE_WHILE` を導入。
-- codegen はラベル発行 (`new_label`) と条件ジャンプ (`je`) を導入。すべての制御構造はラベル+ジャンプに分解される。
-- main.c / Makefile は変えない。**3章連続で安定**。
+第5章では **関数の定義と呼び出し** を加える。複数の関数、引数、外部関数呼び出し。新しいテーマは **System V AMD64 ABI** ── レジスタで引数を渡し、16バイトでスタックを揃える呼び出し規約だ。

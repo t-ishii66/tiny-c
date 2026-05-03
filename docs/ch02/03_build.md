@@ -1,6 +1,6 @@
 # 03 — 完全形とビルド
 
-ここまでで、文法による優先順位の表現と、スタックを使った codegen を見た。最後に、ch02 のソース全体を ch01 との差分とともに並べる。実際にビルドして動かし、生成アセンブリを追う。
+ch02 のソース全体を ch01 との差分とともに並べる。ビルドして動かし、生成アセンブリを追う。
 
 ## 1. lexer.l — トークン5つ追加
 
@@ -76,7 +76,7 @@ func_def
 
 stmts
     : /* empty */       { $$ = NULL; }
-    | stmts stmt        { $$ = new_node_list($2, $1); }
+    | stmt stmts        { $$ = new_node_list($1, $2); }
     ;
 
 stmt
@@ -84,31 +84,31 @@ stmt
     ;
 
 expr
-    : add_expr          { $$ = $1; }
+    : add_expr          { $$ = $1; }                            /* 変更: ch01 は : INT_LIT */
     ;
 
-add_expr
-    : mul_expr                  { $$ = $1; }
-    | add_expr '+' mul_expr     { $$ = new_binary('+', $1, $3); }
-    | add_expr '-' mul_expr     { $$ = new_binary('-', $1, $3); }
-    ;
+add_expr                                                        /* 追加 */
+    : mul_expr                  { $$ = $1; }                    /* 追加 */
+    | add_expr '+' mul_expr     { $$ = new_binary('+', $1, $3); }/* 追加 */
+    | add_expr '-' mul_expr     { $$ = new_binary('-', $1, $3); }/* 追加 */
+    ;                                                           /* 追加 */
 
-mul_expr
-    : unary                     { $$ = $1; }
-    | mul_expr '*' unary        { $$ = new_binary('*', $1, $3); }
-    | mul_expr '/' unary        { $$ = new_binary('/', $1, $3); }
-    | mul_expr '%' unary        { $$ = new_binary('%', $1, $3); }
-    ;
+mul_expr                                                        /* 追加 */
+    : unary                     { $$ = $1; }                    /* 追加 */
+    | mul_expr '*' unary        { $$ = new_binary('*', $1, $3); }/* 追加 */
+    | mul_expr '/' unary        { $$ = new_binary('/', $1, $3); }/* 追加 */
+    | mul_expr '%' unary        { $$ = new_binary('%', $1, $3); }/* 追加 */
+    ;                                                           /* 追加 */
 
-unary
-    : primary                   { $$ = $1; }
-    | '-' unary                 { $$ = new_unary('-', $2); }
-    ;
+unary                                                           /* 追加 */
+    : primary                   { $$ = $1; }                    /* 追加 */
+    | '-' unary                 { $$ = new_unary('-', $2); }    /* 追加 */
+    ;                                                           /* 追加 */
 
-primary
-    : INT_LIT                   { $$ = new_int_lit($1); }
-    | '(' expr ')'              { $$ = $2; }
-    ;
+primary                                                         /* 追加 */
+    : INT_LIT                   { $$ = new_int_lit($1); }       /* 追加 */
+    | '(' expr ')'              { $$ = $2; }                    /* 追加 */
+    ;                                                           /* 追加 */
 
 %%
 ```
@@ -182,22 +182,22 @@ Node *new_int_lit(int val) {
     return n;
 }
 
-Node *new_binary(char op, Node *lhs, Node *rhs) {
-    Node *n = calloc(1, sizeof(Node));
-    n->kind = NODE_BINARY;
-    n->op = op;
-    n->lhs = lhs;
-    n->rhs = rhs;
-    return n;
-}
+Node *new_binary(char op, Node *lhs, Node *rhs) {                /* 追加 */
+    Node *n = calloc(1, sizeof(Node));                           /* 追加 */
+    n->kind = NODE_BINARY;                                       /* 追加 */
+    n->op = op;                                                  /* 追加 */
+    n->lhs = lhs;                                                /* 追加 */
+    n->rhs = rhs;                                                /* 追加 */
+    return n;                                                    /* 追加 */
+}                                                                /* 追加 */
 
-Node *new_unary(char op, Node *operand) {
-    Node *n = calloc(1, sizeof(Node));
-    n->kind = NODE_UNARY;
-    n->op = op;
-    n->operand = operand;
-    return n;
-}
+Node *new_unary(char op, Node *operand) {                        /* 追加 */
+    Node *n = calloc(1, sizeof(Node));                           /* 追加 */
+    n->kind = NODE_UNARY;                                        /* 追加 */
+    n->op = op;                                                  /* 追加 */
+    n->operand = operand;                                        /* 追加 */
+    return n;                                                    /* 追加 */
+}                                                                /* 追加 */
 
 Node *new_return(Node *expr) { /* ch01 と同じ */ }
 Node *new_block(NodeList *stmts) { /* ch01 と同じ */ }
@@ -215,15 +215,15 @@ void print_ast(Node *node, int level) {
     case NODE_INT_LIT:
         printf("INT_LIT %d\n", node->int_val);
         break;
-    case NODE_BINARY:                              /* 追加 */
-        printf("BINARY %c\n", node->op);
-        print_ast(node->lhs, level + 1);
-        print_ast(node->rhs, level + 1);
-        break;
-    case NODE_UNARY:                               /* 追加 */
-        printf("UNARY %c\n", node->op);
-        print_ast(node->operand, level + 1);
-        break;
+    case NODE_BINARY:                                            /* 追加 */
+        printf("BINARY %c\n", node->op);                         /* 追加 */
+        print_ast(node->lhs, level + 1);                         /* 追加 */
+        print_ast(node->rhs, level + 1);                         /* 追加 */
+        break;                                                   /* 追加 */
+    case NODE_UNARY:                                             /* 追加 */
+        printf("UNARY %c\n", node->op);                          /* 追加 */
+        print_ast(node->operand, level + 1);                     /* 追加 */
+        break;                                                   /* 追加 */
     case NODE_RETURN:
         printf("RETURN\n");
         print_ast(node->expr, level + 1);
@@ -260,31 +260,31 @@ static void gen_expr(Node *node) {
     case NODE_INT_LIT:
         fprintf(out, "  movl $%d, %%eax\n", node->int_val);
         return;
-    case NODE_UNARY:                               /* 追加 */
-        gen_expr(node->operand);
-        fprintf(out, "  negl %%eax\n");
-        return;
-    case NODE_BINARY:                              /* 追加 */
-        gen_expr(node->rhs);
-        fprintf(out, "  pushq %%rax\n");
-        gen_expr(node->lhs);
-        fprintf(out, "  popq %%rcx\n");
-        switch (node->op) {
-        case '+': fprintf(out, "  addl %%ecx, %%eax\n"); return;
-        case '-': fprintf(out, "  subl %%ecx, %%eax\n"); return;
-        case '*': fprintf(out, "  imull %%ecx, %%eax\n"); return;
-        case '/':
-            fprintf(out, "  cdq\n");
-            fprintf(out, "  idivl %%ecx\n");
-            return;
-        case '%':
-            fprintf(out, "  cdq\n");
-            fprintf(out, "  idivl %%ecx\n");
-            fprintf(out, "  movl %%edx, %%eax\n");
-            return;
+    case NODE_UNARY:                                                  /* 追加 */
+        gen_expr(node->operand);                                      /* 追加 */
+        fprintf(out, "  negl %%eax\n");                               /* 追加 */
+        return;                                                       /* 追加 */
+    case NODE_BINARY:                                                 /* 追加 */
+        gen_expr(node->rhs);                                          /* 追加 */
+        fprintf(out, "  pushq %%rax\n");                              /* 追加 */
+        gen_expr(node->lhs);                                          /* 追加 */
+        fprintf(out, "  popq %%rcx\n");                               /* 追加 */
+        switch (node->op) {                                           /* 追加 */
+        case '+': fprintf(out, "  addl %%ecx, %%eax\n"); return;      /* 追加 */
+        case '-': fprintf(out, "  subl %%ecx, %%eax\n"); return;      /* 追加 */
+        case '*': fprintf(out, "  imull %%ecx, %%eax\n"); return;     /* 追加 */
+        case '/':                                                     /* 追加 */
+            fprintf(out, "  cdq\n");                                  /* 追加 */
+            fprintf(out, "  idivl %%ecx\n");                          /* 追加 */
+            return;                                                   /* 追加 */
+        case '%':                                                     /* 追加 */
+            fprintf(out, "  cdq\n");                                  /* 追加 */
+            fprintf(out, "  idivl %%ecx\n");                          /* 追加 */
+            fprintf(out, "  movl %%edx, %%eax\n");                    /* 追加 */
+            return;                                                   /* 追加 */
         }
-        fprintf(stderr, "unknown binary op: %c\n", node->op);
-        exit(1);
+        fprintf(stderr, "unknown binary op: %c\n", node->op);         /* 追加 */
+        exit(1);                                                      /* 追加 */
     default:
         fprintf(stderr, "unknown expr\n");
         exit(1);
@@ -297,7 +297,7 @@ void codegen(Node *prog, FILE *output) { /* ch01 と同じ */ }
 
 ## 6. main.c / Makefile / codegen.h — 変更なし
 
-ch01 のものをそのまま使う。コンパイラのコマンドラインインターフェースとビルド手順はもう確立している。これが「土台ができている」効果だ。
+ch01 のものをそのまま使う。
 
 ## 7. ビルドして動かす
 
@@ -405,21 +405,6 @@ BINARY +                       <-- 一番最後の addl に対応
 
 葉 (`INT_LIT`) は `movl $N, %eax`、内部ノード (`BINARY`) はそのオペレーション命令。木の **後行順** (postorder) で命令が並ぶ ── これが再帰的な式の codegen の典型形だ。
 
-## 9. ここまでで作ったもの
+## 9. 次へ
 
-ch01 に比べて何が増えた？
-
-- 文法のなかに **優先順位の階層** ができた。これは bison 文法の標準的な書き方。
-- AST に **二項・単項演算ノード** ができた。木の形が表現力を持ち始めた。
-- codegen に **スタック退避のパターン** ができた。これは ch03 以降でも使い続ける。
-
-第3章では、ここに **変数** が加わる。`int x = 1; int y = 2; return x + y;` のような式が書けるようになる。スタックの使い方がさらに進化する ── 変数のためにスタックフレームを取り、名前をスタック上のアドレスに変える。codegen が「式の値」だけでなく「式の場所（lvalue）」も意識するようになる。
-
-その話は次の章で。
-
-## まとめ
-
-- **5階層の文法** で四則演算と単項マイナスを過不足なく表現する。
-- **スタックによる中間値退避** が二項演算 codegen の定石。再帰の各階層が自前で push/pop する。
-- 除算と剰余は `idivl` の都合で `cdq` が要る。剰余は `%edx` から `%eax` へ。
-- main.c と Makefile は ch01 から **一切変えない**。骨格は1度作れば再利用できる。
+第3章では **変数** が加わる。`int x = 1; int y = 2; return x + y;` のような式が書けるようになる。スタックフレーム上に変数の場所を取り、名前をアドレスに変換する仕組みが入る。
