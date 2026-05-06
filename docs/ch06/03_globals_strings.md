@@ -84,9 +84,7 @@ struct LVar {
 };
 ```
 
-`find_var(name)` はローカル → グローバル の順で検索する。同名のローカルがあればそちらが優先 ── **ローカル/グローバル間のシャドーイング** は C と一致する。
-
-なお、tiny-c は **関数内のブロック単位のスコープは実装していない**。同じ関数の中で同名の変数を別ブロックに書くと（`{ int x = 1; } { int x = 2; }` のように）`add_local` が「redeclared variable」エラーを出す。シンボルテーブルが関数につき1つのフラットな構造で、ブロックスコープ管理を省いているため。
+`find_var(name)` はローカル → グローバル の順で検索する。同名のローカルがあればそちらが優先 ── **ローカル/グローバル間のシャドーイング** は C と一致する。ローカル変数のブロックスコープ管理は次節 04 で扱う。
 
 codegen の入口で:
 
@@ -188,7 +186,7 @@ else
 
 `int strlen(char *s)` の `s` は `char *`（pointer）なので `movq %rdi, -8(%rbp)`。`int set(int v)` の `v` は `int` なので `movl %edi, -8(%rbp)`。
 
-## 9. 全部つながる: Hello, world のフルパス
+## 9. 全部つながる: Hello, world
 
 ```c
 int main() {
@@ -200,9 +198,11 @@ int main() {
 
 1. パーサ: `STRING_LIT "hello"` を受け取り、ノードに保存。
 2. codegen 始まり: `.text` セクション、`main:` ラベル、プロローグ。
-3. `char *s = "hello";`:
-   - `gen_expr(STRING_LIT "hello")` → `add_string` で label 0 を取り、`leaq .LS0(%rip), %rax`。
-   - `s` への代入: `gen_addr(s)` → `leaq -8(%rbp), %rax` を push、上記の `%rax` を pop して `movq %rax, (%rcx)` で store。
+3. `char *s = "hello";`（代入の順序は ① lhs のアドレス → push、② rhs を計算（%rax）、③ pop %rcx で lhs アドレスを取り出し、④ store）:
+   - ① `gen_addr(s)` → `leaq -8(%rbp), %rax`、`pushq %rax` で退避。
+   - ② `gen_expr(STRING_LIT "hello")` → `add_string` で label 0 を取り、`leaq .LS0(%rip), %rax`（`%rax` = `"hello"` のアドレス）。
+   - ③ `popq %rcx`（`%rcx` = `s` のスロットのアドレス）。
+   - ④ `movq %rax, (%rcx)` で store ── `s` のスロットに `"hello"` のアドレスが書き込まれる。
 4. `printf("%s\n", s);`:
    - push_args は **引数を逆順に push**（最初の引数が最後に push されてスタックの一番上に来るように）。
    - まず arg 2 = `s` を push: `gen_expr(s)` → `leaq -8(%rbp), %rax; movq (%rax), %rax`、push。
@@ -226,4 +226,4 @@ int main() {
 
 ## 次へ
 
-最後のサブ章（`04_build.md`）で、ch06 の全ファイルの完全形を ch05 との差分とともに並べ、Hello, world と strlen のデモを動かす。
+次の節（`04_scope.md`）で **ブロックスコープ** を導入する ── append-only のシンボルテーブルに active フラグと scope_stack を足し、`{ int x=1; }{ int x=2; }` のような同名変数の別宣言が通るようにする。

@@ -1,6 +1,6 @@
 # 05 — 完全形とビルド
 
-ch04 との差分を並べ、ビルドして再帰を動かす。フィボナッチの生成アセンブリで、**入れ子の call にパディングが入る瞬間**を見届ける。
+ch04 との差分を並べ、ビルドして再帰を動かす。入れ子の call (`f(1) + f(2)`) の生成アセンブリで、**パディングが入る瞬間**を見届ける。
 
 ## 1. lexer.l — カンマ追加
 
@@ -259,44 +259,36 @@ $ ./tinyc test.c > test.s && gcc -o test test.s && ./test; echo $?
 
 `is_odd` を呼んでいる時点で `is_odd` は **まだ定義されていない**（後ろで定義される）。tiny-c は意味解析をしないので forward reference でも問題なく動く。
 
-## 8. フィボナッチの生成アセンブリ ── パディングが入る瞬間
+## 8. 入れ子の call の生成アセンブリ ── パディングが入る瞬間
 
-`fib(n - 1) + fib(n - 2)` の部分の生成アセンブリ:
+ch05/04 節 5 で追った `f(1) + f(2)` の生成アセンブリを実物で見る。
 
 ```
-; fib(n - 2) を計算して push するまで
-movl $2, %eax            ; rhs of (n-2): 2
+; f(2) を計算
+movl $2, %eax            ; arg = 2
 pushq %rax               ; so=1
-movl -8(%rbp), %eax      ; lhs of (n-2): n
-popq %rcx                ; so=0
-subl %ecx, %eax          ; eax = n - 2
-pushq %rax               ; arg push, so=1
-popq %rdi                ; arg load, so=0
+popq %rdi                ; so=0
 movl $0, %eax
-call fib                 ; ★ so=0 (16-aligned), パディング不要
-pushq %rax               ; fib(n-2) の結果を保存, so=1
+call f                   ; ★ so=0 (16-aligned), パディング不要
+pushq %rax               ; f(2) の結果を保存, so=1
 
-; fib(n - 1) を計算する番
+; f(1) を計算する番
 subq $8, %rsp            ; ★★ パディング！ so=1 (奇数) → so=2 にしてアライン
-movl $1, %eax            ; rhs of (n-1): 1
-pushq %rax               ; so=3
-movl -8(%rbp), %eax
-popq %rcx                ; so=2
-subl %ecx, %eax
+movl $1, %eax            ; arg = 1
 pushq %rax               ; so=3
 popq %rdi                ; so=2
 movl $0, %eax
-call fib                 ; ★ so=2 (16-aligned), OK
+call f                   ; ★ so=2 (16-aligned), OK
 addq $8, %rsp            ; パディング解除, so=1
-popq %rcx                ; fib(n-2) を取り戻す, so=0
-addl %ecx, %eax          ; eax = fib(n-1) + fib(n-2)
+popq %rcx                ; f(2) を取り戻す, so=0
+addl %ecx, %eax          ; eax = f(1) + f(2)
 ```
 
-最初の `call fib` (= `fib(n-2)`) の時点では `stack_offset = 0` で偶数 → 何もパディングしない。
+最初の `call f` (= `f(2)`) の時点では `stack_offset = 0` で偶数 → 何もパディングしない。
 
-その後 `pushq %rax` (fib(n-2) の結果保存) で `stack_offset = 1`。
+その後 `pushq %rax` (f(2) の結果保存) で `stack_offset = 1`。
 
-2回目の `call fib` (= `fib(n-1)`) の前に `stack_offset = 1` を検出 → `subq $8, %rsp` でパディング。call 後 `addq $8, %rsp` で解除。
+2回目の `call f` (= `f(1)`) の前に `stack_offset = 1` を検出 → `subq $8, %rsp` でパディング。call 後 `addq $8, %rsp` で解除。
 
 ## 9. 次へ
 

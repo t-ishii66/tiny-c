@@ -165,4 +165,4 @@ PROGRAM
 
 ## 7. 次へ
 
-AST レベルの最適化はこれで完了。次のサブ章（`02_peephole.md`）では、AST → codegen の後、**生成 asm を文字列のまま眺めて** 隣接命令を書き換える **ピープホール最適化** を見る。`pushq %rax; popq %rcx` が `movq %rax, %rcx` に化け、`ret` の後の dead code が消える ── codegen に手を入れずに、後段で asm を整形するイメージだ。
+AST レベルの最適化はこれで完了。次の節（`02_backpatch.md`）では、最適化の話から少し離れて **バックパッチ** を導入する ── ch06 では Phase 1 で `max_frame_size` を確定してからプロローグを書いていたが、codegen の出力をメモリバッファに溜める仕組みがあれば「先にプレースホルダで `subq $N, %rsp` を書き、後から N を埋める」ことができる。これで Phase 1 が消え、codegen は単一パスになる。

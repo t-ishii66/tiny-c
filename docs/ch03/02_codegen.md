@@ -37,12 +37,12 @@ ch01・ch02 ではここに何も足さなかった。ローカル変数がな�
             高アドレス
            +---------+
            |  ...    |
-           +---------+ ← 呼び出し元の %rbp が指していた場所
-           | 戻り番地 |   (call 命令でここに積まれた)
            +---------+
-   %rbp →  | 旧 %rbp  |   (pushq %rbp で積まれた)
+           | 戻り番地 |   call 命令で積まれた（call 直後は %rsp がここを指す）
            +---------+
-   %rsp →  |         |   (空きスタック)
+   %rbp →  | 旧 %rbp  |   pushq %rbp で積まれた（その後 movq %rsp, %rbp で %rbp はここを指す）
+           +---------+
+   %rsp →  |         |   （空きスタック）
            |         |
            | ...     |
            低アドレス
@@ -127,7 +127,7 @@ static int find_local(char *name) {
 
 リストを舐めて、見つかればオフセットを返す。なければエラー。
 
-シンボルテーブルは **codegen.c の中だけで使う** 静的な道具だ。AST にも、parser.y にも漏らさない。`tinyc` は「関数1つに1つの平らなテーブル」という単純さで済む（ch04 で if/while が来ても同じ。ch08 でブロックスコープを真面目にやり始めると、テーブルが入れ子になる）。
+シンボルテーブルは **codegen.c の中だけで使う** 静的な道具だ。AST にも、parser.y にも漏らさない。`tinyc` は「関数 1 つに 1 つの平らなテーブル」という単純さで済む（ch04 で if/while が来ても同じ。ch06 でブロックスコープを入れるときに、シンボルテーブルに `active` フラグと scope_stack を追加して可視性を管理する形に拡張する）。
 
 ## 4. NODE_VAR_DECL の codegen
 
@@ -156,7 +156,7 @@ case NODE_VAR_DECL: {
 
 ## 5. NODE_IDENT の codegen
 
-`x` を式として読むのは1命令。
+例えば `y = x + 1;` の右辺を計算するとき、`x` の値を読み出す部分。これは 1 命令で済む。
 
 ```c
 case NODE_IDENT: {
@@ -170,7 +170,7 @@ case NODE_IDENT: {
 
 ## 6. NODE_ASSIGN の codegen
 
-代入は「rhs を計算して、lhs の場所に書く」。
+前節と同じ `y = x + 1;` の例で言えば、右辺 `x + 1` を計算した結果を `y` に書き込む部分。代入は「rhs を計算して、lhs の場所に書く」のがすべてだ。
 
 ```c
 case NODE_ASSIGN: {
@@ -192,6 +192,8 @@ case NODE_ASSIGN: {
 代入式の **「式の値」** は、**書き込んだ値そのもの**。`a = (b = 7)` のような連鎖代入では、内側の代入の結果（7）が外側の rhs として使われる。我々のコードでは、movl の後で `%eax` を変えていないから、自動的に **`%eax` に書いた値が残る** ── 結果として、代入式自体の値も `%eax` に乗っている。約束事を守れる。
 
 ## 7. NODE_EXPR_STMT の codegen
+
+前節の `ASSIGN` は **式** のノードで、値を計算して `%eax` に残す。一方 `EXPR_STMT` は **文** のノードで、式を実行はするが結果値を捨てる役割を持つ。`y = x + 1;` のように `;` で終わる代入は、AST 上では `EXPR_STMT` が `ASSIGN` を包む二段構造になる ── 「計算する」のが `ASSIGN`、「結果を捨てて次の文へ進む」のが `EXPR_STMT`。
 
 `NODE_EXPR_STMT` は **「式を文として置いただけ」** のノードだ。たとえば:
 
@@ -245,9 +247,11 @@ ASSIGN
 
 外側 `ASSIGN` の codegen:
 
-1. `lhs` (IDENT a) の lvalue チェック OK。`off_a` 取得。
+以下、`off_a` は `a` のオフセット（`find_local("a")` の戻り値）、`off_b` は `b` のオフセット。
+
+1. `lhs` (IDENT a) の lvalue チェック OK。`off_a` を取得。
 2. `gen_expr(node->rhs)` ── 内側の `ASSIGN` を評価。
-   - `lhs` (IDENT b) の lvalue チェック OK。`off_b` 取得。
+   - `lhs` (IDENT b) の lvalue チェック OK。`off_b` を取得。
    - `gen_expr(INT_LIT 7)` → `movl $7, %eax`
    - `movl %eax, -off_b(%rbp)` → b に 7 書き込み。`%eax` はまだ 7。
 3. `movl %eax, -off_a(%rbp)` → a に 7 書き込み。`%eax` はまだ 7。
@@ -316,4 +320,4 @@ ch03 では lvalue は変数だけなので、`find_local(name)` でオフセッ
 
 ## 次へ
 
-最後のサブ章（`03_build.md`）で全ファイルの完全形を並べ、ビルドして動かす。
+最後の節（`03_build.md`）で全ファイルの完全形を並べ、ビルドして動かす。

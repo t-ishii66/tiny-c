@@ -13,7 +13,8 @@ static void usage(void) {
     fprintf(stderr,
         "usage: tinyc [--dump-ast] [--no-opt] <file>\n"
         "  --dump-ast   AST を表示して終了\n"
-        "  --no-opt     最適化（AST 畳み込み + ピープホール）を無効化\n");
+        "  --no-opt     最適化（AST 畳み込み + ピープホール）を無効化\n"
+        "               （バックパッチによる単一パス codegen は常に有効）\n");
 }
 
 int main(int argc, char **argv) {
@@ -41,18 +42,22 @@ int main(int argc, char **argv) {
         return 0;
     }
 
+    /* Always emit codegen into a memory buffer. Reasons:
+       1) prologue's `subq $N, %rsp` is backpatched (codegen needs ftell/fseek)
+       2) ピープホール最適化があれば同じバッファ上で適用してから出力
+       --no-opt のときは ピープホール段階だけスキップ。 */
+    char *buf = NULL;
+    size_t len = 0;
+    FILE *mem = open_memstream(&buf, &len);
+    if (!mem) { perror("open_memstream"); return 1; }
+    codegen(program, mem);
+    fclose(mem);
+
     if (no_opt) {
-        codegen(program, stdout);
+        fputs(buf, stdout);
     } else {
-        /* codegen の出力を一旦メモリに溜め、ピープホールを適用してから出力 */
-        char *buf = NULL;
-        size_t len = 0;
-        FILE *mem = open_memstream(&buf, &len);
-        if (!mem) { perror("open_memstream"); return 1; }
-        codegen(program, mem);
-        fclose(mem);
         peephole(buf, (int)len, stdout);
-        free(buf);
     }
+    free(buf);
     return 0;
 }

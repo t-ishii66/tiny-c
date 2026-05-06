@@ -62,7 +62,7 @@ f(2, g(1))
 全部評価し終わったら、popq でレジスタに取り出す。
 ```
 
-スタックは「触ってはいけないレジスタ問題」と無関係。push しておけば、その後どんな関数を呼ばれても `%rdi` は気にしなくていい。
+これで「触ってはいけないレジスタ問題」が解消する。push でいったんスタックに退避してしまえば、その後どんな関数を呼ばれて `%rdi` が壊されても、最終的に popq で正しい値を取り出せる。
 
 順序に少し工夫が要る。レジスタ順は `%rdi (1番), %rsi (2番), %rdx (3番), ...`。push を「左から」やると、最後に push した = 一番上に乗っているのは N番目の引数。pop すると N番目から取り出される。これを `%rdi` (1番) に入れるのは間違い。
 
@@ -149,52 +149,47 @@ case NODE_CALL: {
 }
 ```
 
+ここで使う `arg_regs64[] = {"%rdi", "%rsi", "%rdx", "%rcx", "%r8", "%r9"}` は、節 03 の callee 側で見た `arg_regs32[]`（`%edi`, `%esi`, ...）の **64-bit 版**だ。呼び出し側は `popq`（64-bit 命令）でスタックから取り出すので 64-bit 名、callee 側は `movl`（32-bit 命令）で int をスロットに保存するので 32-bit 名 ── という非対称になる。これで辻褄が合う理由は **節 6（引数 32ビット問題と caller / callee の食い違い）** で説明する。
+
 ここでのキモ:
 
-- pad は **call 開始時** の `stack_offset` で決める。
+- **パディングを出すかどうかを示すフラグ `pad`** は、call 開始時の `stack_offset` で決める。
 - パディングは push_args の前に出す。push_args は同数の push と pop で釣り合うから、`stack_offset` を変えない（一時的に増えて戻る）。
 - call の瞬間、`stack_offset` はパディング後の偶数 → `%rsp` は 16-aligned。
 
 ## 5. 入れ子の call で動くか確認
 
-`fib(n-1) + fib(n-2)` の codegen を追う（再帰の典型）。コメントの `so` は `stack_offset` の略、`PAD` はセクション 4 で見たパディング（`subq $8, %rsp` で 16-align に整える操作）の略。**PAD のチェックは `CALL` に入る瞬間にだけ行う**（具体的には `gen_expr` で `NODE_CALL` 分岐に入った直後、引数を push する前） ── 他の場面（メモリロード、加減算など）では `%rsp` が一時的に misalign していても問題にならない（call を跨がないので）。
+`f(1) + f(2)` の codegen を追う（入れ子の call の典型）。コメントの `so` は `stack_offset` の略、`PAD` はセクション 4 で見たパディング（`subq $8, %rsp` で 16-align に整える操作）の略。**PAD のチェックは `CALL` に入る瞬間にだけ行う**（具体的には `gen_expr` で `NODE_CALL` 分岐に入った直後、引数を push する前） ── 他の場面（メモリロード、加減算など）では `%rsp` が一時的に misalign していても問題にならない（call を跨がないので）。
 
 ```c
-gen_expr(BINARY +, lhs=fib(n-1), rhs=fib(n-2)):
-  gen_expr(rhs = CALL fib(n-2)):     # NODE_CALL 処理開始
+gen_expr(BINARY +, lhs=f(1), rhs=f(2)):
+  gen_expr(rhs = CALL f(2)):       # NODE_CALL 処理開始
     stack_offset = 0 (偶数)、pad なし
-    push_args([n-2]):
-      gen_expr(BINARY -, lhs=n, rhs=2):
-        gen_expr(2)             # eax=2
-        emit_push               # so=1
-        gen_expr(n)             # so=1 のまま、ただの load なので PAD 不要
-        emit_pop %rcx           # so=0
-        subl                    # eax=n-2
-      emit_push                 # so=1
-      return 1
-    emit_pop %rdi               # so=0
-    movl $0, %eax               # variadic ABI
-    call fib                    # so=0 偶数 → 16-aligned ✓
-  emit_push                     # so=1, fib(n-2) の結果を保存
-  gen_expr(lhs = CALL fib(n-1)):     # NODE_CALL 処理開始
-    （直前の emit_push で fib(n-2) の結果を退避したので so=1 のまま）
-    stack_offset = 1 (奇数) で CALL 処理を開始 → 後で出る call fib の前に揃えるため PAD を入れる
-    subq $8, %rsp               # so=2 (PAD: 後の call まで保持)
-    push_args([n-1]):
-      gen_expr(BINARY -):
-        ... 同様 ...
-        eax=n-1
-      emit_push                 # so=3
-      return 1
-    emit_pop %rdi               # so=2
-    movl $0, %eax               # variadic ABI
-    call fib                    # so=2 偶数 → 16-aligned ✓
-    addq $8, %rsp               # so=1 (PAD 解除)
-  emit_pop %rcx                 # so=0
-  addl %ecx, %eax               # eax = fib(n-1) + fib(n-2)
+    push_args([2]):
+      gen_expr(2)                # eax=2
+      emit_push                  # so=1
+      return 1                   # push した引数の個数
+    emit_pop %rdi                # so=0
+    movl $0, %eax                # variadic ABI
+    call f                       # so=0 偶数 → 16-aligned ✓
+  emit_push                      # so=1, f(2) の結果を保存
+  gen_expr(lhs = CALL f(1)):     # NODE_CALL 処理開始
+    （直前の emit_push で f(2) の結果を退避したので so=1 のまま）
+    stack_offset = 1 (奇数) で CALL 処理を開始 → 後で出る call f の前に揃えるため PAD を入れる
+    subq $8, %rsp                # so=2 (PAD: 後の call まで保持)
+    push_args([1]):
+      gen_expr(1)                # eax=1
+      emit_push                  # so=3
+      return 1                   # push した引数の個数
+    emit_pop %rdi                # so=2
+    movl $0, %eax                # variadic ABI
+    call f                       # so=2 偶数 → 16-aligned ✓
+    addq $8, %rsp                # so=1 (PAD 解除)
+  emit_pop %rcx                  # so=0
+  addl %ecx, %eax                # eax = f(1) + f(2)
 ```
 
-最初の `call fib(n-2)` は呼び出し開始時 `so=0` で素直に 16-aligned。`fib(n-2)` の結果を `pushq` で保存する瞬間に `so=1` になり、続く `fib(n-1)` の CALL 直前で **奇数を検出してパディング**。`call` の瞬間は確実に 16-aligned。
+最初の `call f(2)` は呼び出し開始時 `so=0` で素直に 16-aligned。`f(2)` の結果を `pushq` で保存する瞬間に `so=1` になり、続く `f(1)` の CALL 直前で **奇数を検出してパディング**。`call` の瞬間は確実に 16-aligned。
 
 `stack_offset` という数字を持っているだけで、入れ子の任意の深さで正しく整列できる。
 
@@ -203,7 +198,7 @@ gen_expr(BINARY +, lhs=fib(n-1), rhs=fib(n-2)):
 ここまで眺めると、面白い不一致に気付く:
 
 - **caller** は引数に対して `pushq %rax` / `popq %rdi`（64-bit op）を使う。
-- **callee**（サブ章 03 の spill 部分）は `movl %edi, -off(%rbp)`（32-bit op）で受け取る。
+- **callee**（節 03 の spill 部分）は `movl %edi, -off(%rbp)`（32-bit op）で受け取る。
 
 64-bit で渡して 32-bit で受け取って大丈夫なのか? 大丈夫だ。これは **x86-64 の重要なルール**で辻褄が合っている:
 
@@ -233,6 +228,17 @@ ch06 でポインタが入ると callee 側で `movq` 分岐が必要になる�
 
 ## 8. 再帰呼び出しが「自然に」動く理由
 
+題材として階乗 `fact` を考える:
+
+```c
+int fact(int n) {
+    if (n <= 1) return 1;
+    return n * fact(n - 1);
+}
+```
+
+`fact(5)` を呼ぶと、関数の中でさらに `fact(4)`、その中で `fact(3)`、... と自分自身を呼んでいく。各呼び出しは「自分の `n`」という独立したローカル変数を持つはずだが、それが正しく機能するのはなぜか?
+
 各関数呼び出しは自分のプロローグで新しいフレームを積み、`%rbp` をそのフレームのベースに更新する。`-8(%rbp)` はその時の `%rbp` 基準なので、**呼び出しごとに別のメモリ位置**を指す。
 
 ```
@@ -260,4 +266,4 @@ ch06 でポインタが入ると callee 側で `movq` 分岐が必要になる�
 
 ## 次へ
 
-最後のサブ章 (`05_build.md`) で、完全形を並べ、再帰の階乗・フィボナッチを動かして生成アセンブリを読む。
+最後の節 (`05_build.md`) で、完全形を並べ、入れ子の call (`f(1) + f(2)`) の生成アセンブリでパディングが入る瞬間を読む。
