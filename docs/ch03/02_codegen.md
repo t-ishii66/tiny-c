@@ -127,7 +127,7 @@ static int find_local(char *name) {
 
 リストを舐めて、見つかればオフセットを返す。なければエラー。
 
-シンボルテーブルは **codegen.c の中だけで使う** 静的な道具だ。AST にも、parser.y にも漏らさない。`tinyc` は「関数 1 つに 1 つの平らなテーブル」という単純さで済む（ch04 で if/while が来ても同じ。ch06 でブロックスコープを入れるときに、シンボルテーブルに `active` フラグと scope_stack を追加して可視性を管理する形に拡張する）。
+シンボルテーブルは **codegen.c の中だけで使う** 静的な道具だ。AST と parser.y は名前のままで、アドレスへの解決は触らない。`tinyc` は「関数 1 つに 1 つの平らなテーブル」という単純さで済む（ch04 で if/while が来ても同じ。ch06 でブロックスコープを入れるときに、シンボルテーブルに `active` フラグと scope_stack を追加して可視性を管理する形に拡張する）。
 
 ## 4. NODE_VAR_DECL の codegen
 
@@ -185,7 +185,7 @@ case NODE_ASSIGN: {
 }
 ```
 
-ここで lvalue チェックを入れる。`node->lhs` が `NODE_IDENT` でなければエラー。これが文法レベルで「lvalue は限られる」と言わなかった代わりの判定だ。
+ここで lvalue チェックを入れる。`node->lhs` が `NODE_IDENT` でなければエラー。
 
 順序は **rhs を先に計算する**。代入は `=` の右辺を評価した後で左辺に書き込む、という C の意味そのまま。`gen_expr(node->rhs)` の後、`%eax` には書き込むべき値が入っている。それを `movl %eax, -off(%rbp)` で目的地に書くだけ。
 

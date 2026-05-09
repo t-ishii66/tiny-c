@@ -266,7 +266,7 @@ while のループ先頭 `.Lbegin_0` から、本体の最後の `jmp .Lbegin_0`
 | `if (cond) A else B` | `cond評価; je else;  A; jmp 終; else: B; 終:` |
 | `while (cond) body` | `先頭: cond評価; je 終;  body; jmp 先頭; 終:` |
 
-すべて「ラベル + ジャンプ」だけで構成される。`for`、`break`、`continue`、`switch` などを足すとしても本質は同じ。
+すべて「ラベル + ジャンプ」だけで構成される。
 
 ## 次へ
 

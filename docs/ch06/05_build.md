@@ -219,8 +219,6 @@ void codegen(Node *prog, FILE *output) {
 
 ## 5. main.c / Makefile — 変更なし
 
-5章連続で main.c と Makefile は変えていない。
-
 ## 6. ビルドして動かす
 
 ```bash
@@ -306,7 +304,7 @@ $ echo $?
 5
 ```
 
-`s[n]` で 1 バイトずつ読み出し、ヌル終端まで数える ── これだけのコードでも、char* / 添字 / グローバル不要 / printf が同居する完全な C プログラムだ。
+`s[n]` で 1 バイトずつ読み出し、ヌル終端まで数える。
 
 ## 7. Hello, world の生成アセンブリを読む
 
@@ -367,7 +365,7 @@ main:
 - 文字リテラル、文字列リテラル
 - ポインタ操作（`&` `*` `[]`）
 
-全部合わせても `steps/ch06/` のソースは数百行。**コンパイラの主要な仕組み** ── lexer / parser / AST / codegen / lvalue-rvalue ── を 6 章かけて自分の手で組み立ててきた。
+**コンパイラの主要な仕組み** ── lexer / parser / AST / codegen / lvalue-rvalue ── を 6 章かけて作成してきた。
 
 ## まとめ
 

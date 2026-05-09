@@ -84,7 +84,7 @@ make test
 - コードレビュー: t-ishii66
 - ドキュメントレビュー: t-ishii66
 - 発行日: 2026/5/x
-- バージョン: 0.0.0
+- バージョン: 0.0.0 (under construction)
 - Copyright(C)2026 t-ishii66. All rights reserved.
 
 

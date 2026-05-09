@@ -355,7 +355,7 @@ gcc -Wall -g -Isrc -Ibuild -Wno-unused-function -c -o build/lex.yy.o build/lex.y
 gcc -o tinyc build/ast.o build/codegen.o build/main.o build/parser.tab.o build/lex.yy.o
 ```
 
-bison は競合警告を出さない。代入の文法は LALR(1) でクリーンに解ける。
+bison は競合警告を出さない。
 
 ```bash
 $ cat > test.c <<'EOF'
