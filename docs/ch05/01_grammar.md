@@ -91,13 +91,13 @@ NODE_PROGRAM,    /* トップレベル: stmts = list of func_defs */
 NODE_CALL,       /* 関数呼び出し: name, args (NodeList of expr) */
 ```
 
-`Node` 構造体に `params` と `args` の2フィールドを追加（ともに `NodeList *`）。
+`Node` 構造体に `params` と `args` の2フィールドを追加（ともに `NodeList *`）。**`params` は関数定義側の仮引数、`args` は関数呼び出し側の実引数** ── 用途が違うので別フィールドで持つ。
 
 ```c
 struct Node {
     /* ... 既存のフィールド ... */
-    NodeList *params;    /* NODE_FUNC_DEF: list of NODE_IDENT (param names) */
-    NodeList *args;      /* NODE_CALL: list of expression nodes */
+    NodeList *params;    /* NODE_FUNC_DEF 用: 仮引数（IDENT のリスト）*/
+    NodeList *args;      /* NODE_CALL 用:    実引数（式のリスト）*/
 };
 ```
 
@@ -123,9 +123,9 @@ tiny-c は **prototype を要求しない**。フロントエンドで関数の�
 
 ## 6. 引数の数チェック
 
-文法レベルでは「最大6個」のような制約は表現できない。codegen で実行時的にチェックする（ch05 の節 04 で見る）。`call` の前に「7個以上だったらエラー」。
+文法レベルでは「最大6個」という制約は表現できない。codegen で実行時的にチェックする（ch05 の節 04 で見る）。`call` の前に「7個以上だったらエラー」。
 
-引数 0個の場合（`foo()`）も `args : /* empty */` で受け入れる。
+引数 0個の場合（`foo()`）は `args : /* empty */` で受け入れる。
 
 ## 7. AST の例
 

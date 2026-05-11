@@ -54,7 +54,7 @@ int *p = &x;   /* &x で x の lvalue を rvalue（アドレス値）に変換�
 ポインタの `&` と `*` は lvalue / rvalue を行き来する演算子だ:
 
 - `&x` ── x の lvalue（アドレス）を rvalue（値）として取り出す → `gen_addr(x)` を呼ぶ
-- `*p` ── p の rvalue（p に格納されたアドレス）が指す場所 → そのアドレスから load を足せば値が取れる
+- `*p` ── p の rvalue（p に格納されたアドレス）が指す場所 → そのアドレスから load 処理を足せば値が取れる
 
 `&` は load(アドレスからデータを取り込む処理) を 1 段取り去り、`*` は load を 1 段足す ── 対称的な操作。これが ch06 のコード生成の骨格になる。
 
@@ -173,8 +173,7 @@ PROGRAM
 | 01 | 型と文法の追加 — `Type` 構造体、`int*`/`char*` 型、添字 `[]`、`&` `*` 単項、char/string リテラル、グローバル宣言 |
 | 02 | lvalue と rvalue — `gen_addr` 関数、`&` と `*` の対称性、配列の decay |
 | 03 | グローバル変数と文字列リテラル — `.bss` と `.rodata`、サイズ別の load/store |
-| 04 | ブロックスコープ — append-only シンボルテーブル + active フラグ + scope_stack |
-| 05 | 全ファイルの完全形と差分、Hello, world デモ |
+| 04 | 全ファイルの完全形と差分、Hello, world デモ |
 
 ## 5. 次へ
 

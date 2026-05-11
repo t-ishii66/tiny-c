@@ -1,6 +1,6 @@
 # 02 — バックパッチで Phase 1 を消す
 
-ch06 の codegen は **Phase 1（収集）→ Phase 2（生成）** の二相構成だった。Phase 1 を分離する唯一の理由は **プロローグの `subq $N, %rsp` で `max_frame_size` が確定していないと書けない** から ── 関数本体を歩き切らないと N が分からない以上、本体を生成する前に一度走査が要る、という制約だ。
+ch06 の codegen は **Phase 1（収集）→ Phase 2（生成）** の二相構成だった。Phase 1 を分離する唯一の理由は **プロローグの `subq $N, %rsp` で `frame_size` が確定していないと書けない** から ── 関数本体を歩き切らないと N が分からない以上、本体を生成する前に一度走査が要る、という制約だ。
 
 ch07 ではこの制約を **バックパッチ** で外す。「先に N が決まらない部分はプレースホルダで書いておき、後から書き戻す」── これでコード生成は **単一パス** になる。
 
@@ -12,14 +12,13 @@ ch06 の `gen_func` は次のような順序で動いていた:
 
 ```c
 gen_func(fn) {
-    /* Phase 1: 全 VAR_DECL を歩いて max_frame_size を確定 */
-    enter_scope();
+    /* Phase 1: 全 VAR_DECL を歩いて frame_size を確定 */
     for params: add_local(...);
     collect_locals(fn->body);    /* AST を歩くだけ（コードは出さない）*/
 
-    /* Phase 2: max_frame_size が分かったのでプロローグを書ける */
-    fprintf("subq $%d, %%rsp", aligned(max_frame_size));
-    /* Phase 1 で確定した offset を使って本体の codegen */
+    /* Phase 2: frame_size が分かったのでプロローグを書ける */
+    fprintf("subq $%d, %%rsp", aligned(frame_size));
+    /* 本体の codegen（locals は Phase 1 で構築済み）*/
     gen_stmt(fn->body);
     ...
 }
@@ -59,8 +58,7 @@ ch07 では **`--no-opt` でもバッファを使う**（`fputs` でそのまま
 #define SUBQ_FRAME_WIDTH 10   /* プレースホルダの数値部の桁数（固定）*/
 
 static void gen_func(Node *fn) {
-    locals = NULL; frame_size = 0; max_frame_size = 0;
-    scope_depth = 0;
+    locals = NULL; frame_size = 0;
 
     fprintf(out, "  .globl %s\n", fn->name);
     fprintf(out, "%s:\n", fn->name);
@@ -71,18 +69,16 @@ static void gen_func(Node *fn) {
     long subq_pos = ftell(out);
     fprintf(out, "  subq $%-*d, %%rsp\n", SUBQ_FRAME_WIDTH, 0);   /* 0 はダミー */
 
-    enter_scope();
     /* params を add_local + spill */
     for params: { LVar *v = add_local(...); /* spill 命令を出す */ }
 
-    /* 本体を生成（max_frame_size がここで育つ）*/
+    /* 本体を生成（frame_size がここで育つ）*/
     gen_stmt(fn->body);
 
-    exit_scope();
     fprintf(out, "  movl $0, %%eax\n  leave\n  ret\n");
 
-    /* ★ ここで max_frame_size が確定した。プロローグに戻って上書き */
-    int aligned_frame = (max_frame_size + 15) & ~15;
+    /* ★ ここで frame_size が確定した。プロローグに戻って上書き */
+    int aligned_frame = (frame_size + 15) & ~15;
     long here = ftell(out);
     fseek(out, subq_pos, SEEK_SET);
     fprintf(out, "  subq $%-*d, %%rsp\n", SUBQ_FRAME_WIDTH, aligned_frame);
@@ -115,22 +111,16 @@ case NODE_VAR_DECL: {
 }
 ```
 
-ch06 では `node->lvar = add_local(...)` で AST にバックポインタを残し、Phase 2 で読み出していたが、**ch07 では node->lvar が不要**（その場で `add_local` の戻り値を使うだけ）。
+ch06 では Phase 1 (`collect_locals`) で全 VAR_DECL を歩いて `add_local` を呼び、locals テーブルを構築してから、Phase 2 で本体を生成していた。**ch07 では Phase 1 が消える** ── 本体生成中に VAR_DECL に出会った時点で `add_local` を呼ぶだけで済む。
 
-そのため `Node` 構造体から `LVar *lvar;` フィールドを削除でき、`ast.h` の `typedef struct LVar LVar;` 前方宣言も消せる。AST と codegen の関心がきっちり分離された ── AST はもう LVar を知らなくていい。
-
-スコープ管理の `enter_scope` / `exit_scope` は ch06 と同じ:
+`NODE_BLOCK` も特別な処理は要らず、stmt を順に生成するだけ:
 
 ```c
 case NODE_BLOCK:
-    enter_scope();
     for (NodeList *l = node->stmts; l; l = l->next)
         gen_stmt(l->node);
-    exit_scope();
     return;
 ```
-
-`max_frame_size` の更新は `add_local` の中で都度行うので、ブロック離脱時に明示的な更新は不要（add_local が `frame_size` を伸ばすたびに `if (frame_size > max_frame_size) max_frame_size = frame_size;`）。
 
 ## 5. ch06 vs ch07 の比較
 
@@ -139,22 +129,8 @@ case NODE_BLOCK:
 | AST 走査回数 | 2 回（collect_locals + gen_stmt）| **1 回**（gen_stmt のみ） |
 | 出力先 | `stdout` 直書き | `open_memstream` バッファ経由 |
 | プロローグの `subq $N` | 先に N を確定してから書く | 先にプレースホルダで書き、後で N を埋める |
-| `Node->lvar` | あり（Phase 1 → Phase 2 の橋渡し）| なし |
-| AST 側のコード | LVar の前方宣言が必要 | LVar に依存しない（純粋な AST 構造のみ）|
+| `add_local` の呼び場所 | Phase 1（collect_locals 内）| 本体生成中（NODE_VAR_DECL 内）|
 
-## 6. なぜこれを最適化と一緒に説明するか
+## 6. 次へ
 
-バックパッチ自体は **最適化ではない** ── 生成コードの内容は ch06 とまったく同じ。違うのは codegen の **構造**（二相 → 単一パス）と、コードを書き出す **先**（stdout → memstream）だけ。
-
-しかし「メモリバッファに溜める」という同じインフラを共有するので、ch07 は **「最適化＋バックパッチ」** の章になる:
-
-- バッファに溜める → ピープホール最適化が可能になる（節 03）
-- バッファに溜める → ftell/fseek が使える → バックパッチでプロローグを後埋め可能（この節）
-
-これは **コンパイラを段階的に進化させる** 良い題材 ── ch01〜ch06 では「次々と新しい言語機能を追加」だったが、ch07 は「コンパイラ自身の構造を改善する」フェーズ。最適化とバックパッチはどちらもこの方向の進化。
-
-`--no-opt` で無効化できるのは **AST 最適化（const fold）** と **ピープホール** だけ。バックパッチは codegen の構造そのものなので、常に有効。
-
-## 7. 次へ
-
-次の節（`03_peephole.md`）で、もうひとつのバッファ用途 ── **ピープホール最適化** を見る。生成された asm を文字列のまま眺めて、隣接命令のパターンマッチで書き換える。`pushq %rax; popq %rcx` → `movq %rax, %rcx` のような単純な置換でも、生成コードは目に見えて短くなる。
+次の節（`03_scope.md`）で、単一パス化の上に **ブロックスコープ** を乗せる。`{ int x=1; }{ int x=2; }` のような同名再宣言が通るようになる ── 二相設計だとスコープ状態を両 phase で同期する複雑さがあったが、単一パスなら codegen の流れに自然に組み込めるだけ。

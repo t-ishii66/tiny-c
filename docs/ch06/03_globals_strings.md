@@ -84,7 +84,9 @@ struct LVar {
 };
 ```
 
-`find_var(name)` はローカル → グローバル の順で検索する。同名のローカルがあればそちらが優先 ── **ローカル/グローバル間のシャドーイング** は C と一致する。ローカル変数のブロックスコープ管理は次節 04 で扱う。
+リストが2つ別建てなら `is_global` は不要では？と思うかもしれない。理由は `find_var` が両方のリストを横断して **統一された `LVar*`** を返すから ── 受け取る側（`gen_addr` など）はその `LVar*` 1本だけ握るので、「どっちのリストから来たか」を LVar 自身に持たせておく必要がある。
+
+`find_var(name)` はローカル → グローバル の順で検索する。同名のローカルがあればそちらが優先 ── **ローカル/グローバル間のシャドーイング** は C と一致する。なお ch06 ではブロックスコープを扱わず、関数内では1つのフラットなテーブル（同名ローカルの別ブロック宣言は再宣言エラー）。これは ch07 で導入する。
 
 codegen の入口で:
 
@@ -198,11 +200,11 @@ int main() {
 
 1. パーサ: `STRING_LIT "hello"` を受け取り、ノードに保存。
 2. codegen 始まり: `.text` セクション、`main:` ラベル、プロローグ。
-3. `char *s = "hello";`（代入の順序は ① lhs のアドレス → push、② rhs を計算（%rax）、③ pop %rcx で lhs アドレスを取り出し、④ store）:
-   - ① `gen_addr(s)` → `leaq -8(%rbp), %rax`、`pushq %rax` で退避。
-   - ② `gen_expr(STRING_LIT "hello")` → `add_string` で label 0 を取り、`leaq .LS0(%rip), %rax`（`%rax` = `"hello"` のアドレス）。
-   - ③ `popq %rcx`（`%rcx` = `s` のスロットのアドレス）。
-   - ④ `movq %rax, (%rcx)` で store ── `s` のスロットに `"hello"` のアドレスが書き込まれる。
+3. `char *s = "hello";`:
+   - `gen_addr(s)` → `leaq -8(%rbp), %rax`、`pushq %rax` で退避。
+   - `gen_expr(STRING_LIT "hello")` → `add_string` で label 0 を取り、`leaq .LS0(%rip), %rax`（`%rax` = `"hello"` のアドレス）。
+   - `popq %rcx`（`%rcx` = `s` のスロットのアドレス）。
+   - `movq %rax, (%rcx)` で store ── `s` のスロットに `"hello"` のアドレスが書き込まれる。
 4. `printf("%s\n", s);`:
    - push_args は **引数を逆順に push**（最初の引数が最後に push されてスタックの一番上に来るように）。
    - まず arg 2 = `s` を push: `gen_expr(s)` → `leaq -8(%rbp), %rax; movq (%rax), %rax`、push。
@@ -226,4 +228,4 @@ int main() {
 
 ## 次へ
 
-次の節（`04_scope.md`）で **ブロックスコープ** を導入する ── append-only のシンボルテーブルに active フラグと scope_stack を足し、`{ int x=1; }{ int x=2; }` のような同名変数の別宣言が通るようにする。
+次の節（`04_build.md`）で全ファイルの完全形を並べ、Hello, world デモまで通す。

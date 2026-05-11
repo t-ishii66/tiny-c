@@ -47,7 +47,6 @@ struct Type {
 
 typedef struct Node Node;
 typedef struct NodeList NodeList;
-typedef struct LVar LVar;   /* defined in codegen.c; AST keeps a back-pointer */
 
 struct NodeList {
     Node *node;
@@ -72,7 +71,6 @@ struct Node {
     Type *type;        /* NODE_VAR_DECL, NODE_GLOBAL_VAR_DECL, NODE_IDENT (param) */
     char *str_val;     /* NODE_STRING_LIT */
     int str_len;       /* NODE_STRING_LIT (number of chars including \0) */
-    LVar *lvar;        /* NODE_VAR_DECL & param NODE_IDENT: back-pointer set by codegen */
 };
 
 /* Type constructors */

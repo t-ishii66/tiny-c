@@ -24,16 +24,30 @@ BINARY +              →   BINARY +              →   INT_LIT 14
 
 子を先に最適化（畳み込み）してから親を見ることで、深いネストも一発で全部畳まれる。
 
-対応する演算子は `+ - * / %` の算術と `< > <= >= == !=` の比較。後者は `0` か `1` の `int` を返す（C の比較演算子の規約通り）。
+対応する演算子は `+ - * / %` の算術と `< > <= >= == !=` の比較。比較は `0` か `1` の `int` を返す（C の規約通り）。実コードはこう:
 
 ```c
-case '<':   r = (a <  b); break;
-case '>':   r = (a >  b); break;
-case OP_LE: r = (a <= b); break;
-...
+if (is_int_lit(L) && is_int_lit(R)) {
+    int a = L->int_val, b = R->int_val, r = 0;
+    switch (node->op) {
+    case '+': r = a + b; break;
+    case '-': r = a - b; break;
+    case '*': r = a * b; break;
+    case '/': if (b == 0) return node; r = a / b; break;
+    case '%': if (b == 0) return node; r = a % b; break;
+    case '<':   r = (a <  b); break;
+    case '>':   r = (a >  b); break;
+    case OP_LE: r = (a <= b); break;
+    case OP_GE: r = (a >= b); break;
+    case OP_EQ: r = (a == b); break;
+    case OP_NE: r = (a != b); break;
+    default: return node;
+    }
+    return new_int_lit(r);
+}
 ```
 
-ゼロ除算は畳み込まない（実行時に未定義動作だが、コンパイラが落ちるよりは asm に残してリンク時/実行時の判断に任せる）。
+`L` / `R` は `node->lhs` / `node->rhs` のエイリアス（§4 で見る）。ゼロ除算は畳み込まず元の AST を返す ── 実行時未定義動作だが、コンパイラが落ちるよりは asm に残してリンク/実行時の判断に任せる。
 
 ## 2. 代数的単純化 (Algebraic simplification)
 
@@ -47,6 +61,29 @@ case OP_LE: r = (a <= b); break;
 | `0 * x`、`x * 0` | `0` | 乗法零元 |
 | `x / 1` | `x` | 除法単位元 |
 
+実コードは表の各行と素直に対応する。`is_int_lit_val(node, n)` は「`node` が値 `n` の整数リテラルか」を判定するヘルパ:
+
+```c
+switch (node->op) {
+case '+':
+    if (is_int_lit_val(L, 0)) return R;       /* 0 + x → x */
+    if (is_int_lit_val(R, 0)) return L;       /* x + 0 → x */
+    break;
+case '-':
+    if (is_int_lit_val(R, 0)) return L;       /* x - 0 → x */
+    break;
+case '*':
+    if (is_int_lit_val(L, 1)) return R;       /* 1 * x → x */
+    if (is_int_lit_val(R, 1)) return L;       /* x * 1 → x */
+    if (is_int_lit_val(L, 0) || is_int_lit_val(R, 0))
+        return new_int_lit(0);                /* 0 * x → 0, x * 0 → 0 */
+    break;
+case '/':
+    if (is_int_lit_val(R, 1)) return L;       /* x / 1 → x */
+    break;
+}
+```
+
 注意点:
 
 - `0 - x` を `-x` には**しない**（単項演算子ノードを生成する手間に対してメリットが薄い）。
@@ -58,15 +95,17 @@ case OP_LE: r = (a <= b); break;
 `-(定数)` や `!(定数)` も畳み込む:
 
 ```c
-case NODE_UNARY:
+case NODE_UNARY: {
     node->operand = optimize_ast(node->operand);
-    if (is_int_lit(node->operand)) {
+    Node *X = node->operand;
+    if (is_int_lit(X)) {
         switch (node->op) {
         case '-': return new_int_lit(-X->int_val);
         case '!': return new_int_lit(!X->int_val);
         }
     }
     return node;
+}
 ```
 
 `!0` は `1`、`!1` は `0`、`-(5)` は `-5`、など。ループ条件 `while (!0)` のような書き方が `while (1)` に化け、その後さらに ch05 の codegen が無限ループとして処理する。
@@ -165,4 +204,4 @@ PROGRAM
 
 ## 7. 次へ
 
-AST レベルの最適化はこれで完了。次の節（`02_backpatch.md`）では、最適化の話から少し離れて **バックパッチ** を導入する ── ch06 では Phase 1 で `max_frame_size` を確定してからプロローグを書いていたが、codegen の出力をメモリバッファに溜める仕組みがあれば「先にプレースホルダで `subq $N, %rsp` を書き、後から N を埋める」ことができる。これで Phase 1 が消え、codegen は単一パスになる。
+AST レベルの最適化はこれで完了。次の節（`02_backpatch.md`）では、最適化の話から少し離れて **バックパッチ** を導入する ── ch06 では Phase 1 で `frame_size` を確定してからプロローグを書いていたが、codegen の出力をメモリバッファに溜める仕組みがあれば「先にプレースホルダで `subq $N, %rsp` を書き、後から N を埋める」ことができる。これで Phase 1 が消え、codegen は単一パスになる。

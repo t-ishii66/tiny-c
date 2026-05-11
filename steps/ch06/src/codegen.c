@@ -9,6 +9,7 @@ static int label_count;
 static int stack_offset;
 
 /* Symbol tables */
+typedef struct LVar LVar;
 struct LVar {
     char *name;
     int offset;        /* positive; -offset(%rbp) for locals */
@@ -17,36 +18,9 @@ struct LVar {
     LVar *next;
 };
 
-static LVar *locals;     /* in-scope locals (head = innermost recent decl) */
+static LVar *locals;     /* per-function locals (head = most recent decl) */
 static LVar *globals;    /* program-wide globals */
-static int frame_size;       /* current allocated frame depth */
-static int max_frame_size;   /* peak across all scopes — used for prologue */
-
-/* Block scope: the locals list itself represents the in-scope set.
-   On scope enter, save the locals head; on exit, restore it (truncate).
-   Phase 1 also saves frame_size so sibling blocks reuse stack slots. */
-#define MAX_SCOPE 64
-static LVar *scope_top[MAX_SCOPE];   /* locals head at scope entry */
-static int frame_save[MAX_SCOPE];    /* frame_size at scope entry (phase 1) */
-static int scope_depth;
-
-static void enter_scope(void) {
-    if (scope_depth >= MAX_SCOPE) {
-        fprintf(stderr, "scope nesting too deep\n");
-        exit(1);
-    }
-    scope_top[scope_depth] = locals;
-    frame_save[scope_depth] = frame_size;
-    scope_depth++;
-}
-
-static void exit_scope(void) {
-    scope_depth--;
-    locals = scope_top[scope_depth];
-    /* Caller (phase 1) is responsible for updating max_frame_size before the
-       restore; here we just rewind frame_size. Phase 2 leaves frame_size at 0. */
-    frame_size = frame_save[scope_depth];
-}
+static int frame_size;   /* allocated frame depth; monotonic within a function */
 
 /* String literal table — emit them in .rodata */
 typedef struct StrLit StrLit;
@@ -76,14 +50,10 @@ static void emit_pop(const char *reg) {
     stack_offset--;
 }
 
-/* Phase 1 only: allocate a slot and prepend to locals. Redeclared check is
-   bounded by the current scope (head ↓ to scope_top[depth-1]), so duplicates
-   in different scopes are allowed. Frame size grows; sibling scopes reuse
-   slots because exit_scope rewinds frame_size. The caller stores the
-   returned LVar* into the AST node so phase 2 can re-link without name lookup. */
+/* Allocate a slot for a local; redeclaration is checked against the entire
+   per-function locals list (function-level scope, no block-level redeclaration). */
 static LVar *add_local(char *name, Type *type) {
-    LVar *bound = (scope_depth > 0) ? scope_top[scope_depth - 1] : NULL;
-    for (LVar *v = locals; v != bound; v = v->next) {
+    for (LVar *v = locals; v; v = v->next) {
         if (strcmp(v->name, name) == 0) {
             fprintf(stderr, "redeclared variable: %s\n", name);
             exit(1);
@@ -91,7 +61,6 @@ static LVar *add_local(char *name, Type *type) {
     }
     int sz = round_up_8(type_size(type));
     frame_size += sz;
-    if (frame_size > max_frame_size) max_frame_size = frame_size;
     LVar *v = calloc(1, sizeof(LVar));
     v->name = name;
     v->type = type;
@@ -115,9 +84,7 @@ static void add_global(char *name, Type *type) {
     globals = v;
 }
 
-/* Look up variable: locals first (the list contains only currently in-scope
-   entries — exit_scope truncates), then globals. Innermost shadowing wins
-   because the most recent decl is at the head. */
+/* Look up variable: locals first, then globals. */
 static LVar *find_var(char *name) {
     for (LVar *v = locals; v; v = v->next)
         if (strcmp(v->name, name) == 0) return v;
@@ -388,22 +355,17 @@ static void gen_expr(Node *node) {
     }
 }
 
-/* Phase 1: walk AST with scope tracking. NODE_BLOCK saves/restores
-   locals + frame_size so sibling scopes reuse slots. Each VAR_DECL gets
-   a slot via add_local, and the resulting LVar* is stashed back into the
-   AST node so phase 2 can re-link without another name lookup. */
+/* Phase 1: walk the function body and call add_local for every VAR_DECL,
+   so all locals have offsets and frame_size is final before the prologue. */
 static void collect_locals(Node *node) {
     if (!node) return;
     switch (node->kind) {
     case NODE_VAR_DECL:
-        node->lvar = add_local(node->name, node->type);
+        add_local(node->name, node->type);
         break;
     case NODE_BLOCK:
-        enter_scope();
         for (NodeList *l = node->stmts; l; l = l->next)
             collect_locals(l->node);
-        if (frame_size > max_frame_size) max_frame_size = frame_size;
-        exit_scope();
         break;
     case NODE_IF:
         collect_locals(node->then_body);
@@ -425,13 +387,8 @@ static void gen_stmt(Node *node) {
         fprintf(out, "  ret\n");
         return;
     case NODE_VAR_DECL: {
-        /* Re-link the LVar (allocated in phase 1) into the current locals,
-           making the name visible. Done before init so `int x = x + 1;`
-           can reference the just-declared x (garbage value, per C). */
-        LVar *v = node->lvar;
-        v->next = locals;
-        locals = v;
         if (!node->expr) return;  /* array decl, no init */
+        LVar *v = find_var(node->name);
         fprintf(out, "  leaq -%d(%%rbp), %%rax\n", v->offset);
         emit_push();
         gen_expr(node->expr);
@@ -445,10 +402,8 @@ static void gen_stmt(Node *node) {
         gen_expr(node->expr);
         return;
     case NODE_BLOCK:
-        enter_scope();
         for (NodeList *l = node->stmts; l; l = l->next)
             gen_stmt(l->node);
-        exit_scope();
         return;
     case NODE_IF: {
         int n = new_label();
@@ -488,17 +443,12 @@ static void gen_stmt(Node *node) {
 static void gen_func(Node *fn) {
     locals = NULL;
     frame_size = 0;
-    max_frame_size = 0;
     stack_offset = 0;
-    scope_depth = 0;
 
-    /* Phase 1: walk AST with scope tracking. Assign offsets to every VAR_DECL
-       (via node->lvar), enforce redeclared per-scope, and compute
-       max_frame_size with slot reuse across sibling blocks. */
-    enter_scope();   /* function scope: parameters live here */
+    /* Phase 1: register parameters and walk body to allocate all local slots. */
     int n_params = 0;
     for (NodeList *l = fn->params; l; l = l->next) {
-        l->node->lvar = add_local(l->node->name, l->node->type);
+        add_local(l->node->name, l->node->type);
         n_params++;
     }
     if (n_params > 6) {
@@ -506,10 +456,8 @@ static void gen_func(Node *fn) {
         exit(1);
     }
     collect_locals(fn->body);
-    if (frame_size > max_frame_size) max_frame_size = frame_size;
-    /* No exit_scope here; we reset for phase 2 below. */
 
-    int aligned_frame = (max_frame_size + 15) & ~15;
+    int aligned_frame = (frame_size + 15) & ~15;
 
     /* Phase 2: prologue */
     fprintf(out, "  .globl %s\n", fn->name);
@@ -519,19 +467,10 @@ static void gen_func(Node *fn) {
     if (aligned_frame > 0)
         fprintf(out, "  subq $%d, %%rsp\n", aligned_frame);
 
-    /* Reset state for phase 2. The locals list is rebuilt as we re-link
-       LVars at each VAR_DECL (offsets unchanged from phase 1). */
-    locals = NULL;
-    scope_depth = 0;
-
-    enter_scope();   /* function scope */
-
-    /* Spill register arguments to their slots and re-link them into locals. */
+    /* Spill register arguments to their slots. */
     int i = 0;
     for (NodeList *l = fn->params; l; l = l->next) {
-        LVar *v = l->node->lvar;
-        v->next = locals;
-        locals = v;
+        LVar *v = find_var(l->node->name);
         Type *t = v->type;
         int sz = t->is_pointer ? 8 : 4;  /* int/char param spill as int (4 bytes) */
         if (sz == 8)
@@ -543,8 +482,6 @@ static void gen_func(Node *fn) {
 
     /* Phase 3: body */
     gen_stmt(fn->body);
-
-    exit_scope();
 
     /* Implicit return 0 */
     fprintf(out, "  movl $0, %%eax\n");

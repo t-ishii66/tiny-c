@@ -18,17 +18,20 @@ struct LVar {
     LVar *next;
 };
 
-static LVar *locals;     /* in-scope locals (head = innermost recent decl) */
-static LVar *globals;    /* program-wide globals */
+static LVar *locals;         /* in-scope locals (head = innermost recent decl) */
+static LVar *globals;        /* program-wide globals */
 static int frame_size;       /* current allocated frame depth */
-static int max_frame_size;   /* peak across all scopes — used for prologue */
+static int max_frame_size;   /* peak across all scopes — used for prologue backpatch */
 
 /* Block scope: the locals list itself represents the in-scope set.
-   On scope enter, save the locals head; on exit, restore it (truncate).
-   Phase 1 also saves frame_size so sibling blocks reuse stack slots. */
+   On scope enter, save the locals head and frame_size; on exit, restore
+   both — that truncates locals (so block-internal names go out of scope)
+   and rewinds frame_size (so sibling blocks reuse stack slots). The
+   prologue's `subq $N` is written with max_frame_size (the peak), which
+   we update inside add_local. */
 #define MAX_SCOPE 64
 static LVar *scope_top[MAX_SCOPE];   /* locals head at scope entry */
-static int frame_save[MAX_SCOPE];    /* frame_size at scope entry (phase 1) */
+static int frame_save[MAX_SCOPE];    /* frame_size at scope entry */
 static int scope_depth;
 
 static void enter_scope(void) {
@@ -44,8 +47,6 @@ static void enter_scope(void) {
 static void exit_scope(void) {
     scope_depth--;
     locals = scope_top[scope_depth];
-    /* Caller (phase 1) is responsible for updating max_frame_size before the
-       restore; here we just rewind frame_size. Phase 2 leaves frame_size at 0. */
     frame_size = frame_save[scope_depth];
 }
 
@@ -77,11 +78,10 @@ static void emit_pop(const char *reg) {
     stack_offset--;
 }
 
-/* Phase 1 only: allocate a slot and prepend to locals. Redeclared check is
-   bounded by the current scope (head ↓ to scope_top[depth-1]), so duplicates
-   in different scopes are allowed. Frame size grows; sibling scopes reuse
-   slots because exit_scope rewinds frame_size. The caller stores the
-   returned LVar* into the AST node so phase 2 can re-link without name lookup. */
+/* Allocate a slot for a local. Redeclaration check is bounded by the current
+   scope (head ↓ to scope_top[depth-1]), so duplicates in different scopes
+   are allowed. frame_size grows; sibling scopes reuse slots because
+   exit_scope rewinds frame_size. max_frame_size tracks the peak. */
 static LVar *add_local(char *name, Type *type) {
     LVar *bound = (scope_depth > 0) ? scope_top[scope_depth - 1] : NULL;
     for (LVar *v = locals; v != bound; v = v->next) {
@@ -399,8 +399,7 @@ static void gen_stmt(Node *node) {
         return;
     case NODE_VAR_DECL: {
         /* Single pass: allocate the LVar here (with redeclared check + frame
-           growth), making the name visible immediately. `int x = x + 1;`
-           still references the just-declared x (garbage value, per C). */
+           growth), making the name visible immediately. */
         LVar *v = add_local(node->name, node->type);
         if (!node->expr) return;  /* array decl, no init */
         fprintf(out, "  leaq -%d(%%rbp), %%rax\n", v->offset);
@@ -474,9 +473,9 @@ static void gen_func(Node *fn) {
     fprintf(out, "  movq %%rsp, %%rbp\n");
 
     /* Backpatch slot for the prologue's `subq $N, %rsp`. We don't know N yet
-       (depends on max_frame_size which we'll observe while emitting the body),
-       so write a fixed-width placeholder, remember its byte position, and
-       overwrite the digits at the end of this function. */
+       (depends on max_frame_size which grows during the body), so write a
+       fixed-width placeholder, remember its byte position, and overwrite the
+       digits at the end of this function. */
     long subq_pos = ftell(out);
     fprintf(out, "  subq $%-*d, %%rsp\n", SUBQ_FRAME_WIDTH, 0);
 
@@ -502,7 +501,7 @@ static void gen_func(Node *fn) {
     }
 
     /* Body: gen_stmt emits asm, grows frame_size in NODE_VAR_DECL, and
-       saves/restores it in NODE_BLOCK so sibling scopes reuse slots. */
+       enters/exits scopes in NODE_BLOCK so sibling scopes reuse slots. */
     gen_stmt(fn->body);
 
     exit_scope();
@@ -512,7 +511,7 @@ static void gen_func(Node *fn) {
     fprintf(out, "  leave\n");
     fprintf(out, "  ret\n");
 
-    /* Backpatch the prologue's subq with the now-known frame size. */
+    /* Backpatch the prologue's subq with the now-known frame size peak. */
     int aligned_frame = (max_frame_size + 15) & ~15;
     long here = ftell(out);
     if (fseek(out, subq_pos, SEEK_SET) != 0) {

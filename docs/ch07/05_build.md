@@ -1,28 +1,30 @@
-# 04 — 完全形とビルド
+# 05 — 完全形とビルド
 
 ch07 の差分を ch06 と並べる。
 
 | ファイル | ch06 → ch07 |
 |---------|------------|
-| `lexer.l` / `parser.y` / `ast.c` | **無変更** |
-| `ast.h` | `Node->lvar` フィールドと `LVar` 前方宣言を **削除**（バックパッチで Phase 1 が不要に）|
-| `codegen.c` | `collect_locals` を **削除**、単一パス化。プロローグの `subq $N, %rsp` を `ftell`/`fseek` で **バックパッチ** |
+| `lexer.l` / `parser.y` / `ast.h` / `ast.c` | **無変更** |
+| `codegen.c` | `collect_locals` を **削除**、単一パス化。プロローグの `subq $N, %rsp` を `ftell`/`fseek` で **バックパッチ**。**ブロックスコープ** の導入（`enter_scope` / `exit_scope`、`scope_top[]`、`max_frame_size`）|
 | `main.c` | 常に `open_memstream` を使う。`--no-opt` でもバッファ経由で stdout に流す |
 | `optimize.h` / `optimize.c` | **新規** ── `optimize_ast` と `peephole` の 2 関数 |
 | `Makefile` | `optimize.c` をビルド対象に追加 |
 
-「最適化」（節 01・03）と「バックパッチ」（節 02）は別物だが、両者とも **メモリバッファ** という同じインフラの上に乗る。`--no-opt` で外せるのは最適化だけで、バックパッチは常に有効。
+「最適化」（節 01・04）と「バックパッチ」（節 02）「ブロックスコープ」（節 03）は別物だが、すべて **メモリバッファ + 単一パス codegen** という共通インフラの上に乗る。`--no-opt` で外せるのは最適化だけで、バックパッチとスコープは常に有効。
 
-## 1. codegen.c — バックパッチ部分の差分
+## 1. codegen.c — バックパッチ + スコープ部分の差分
 
-ch06 の `gen_func` は **二相**（Phase 1 = `collect_locals` で `max_frame_size` 確定 → Phase 2 = プロローグ + 本体生成）だった。ch07 は **単一パス + バックパッチ** に置き換わる:
+ch06 の `gen_func` は **二相**（Phase 1 = `collect_locals` で `frame_size` 確定 → Phase 2 = プロローグ + 本体生成）だった。ch07 は **単一パス + バックパッチ + スコープ** に置き換わる:
 
 ```c
 #define SUBQ_FRAME_WIDTH 10
 
 static void gen_func(Node *fn) {
-    locals = NULL; frame_size = 0; max_frame_size = 0;
-    stack_offset = 0; scope_depth = 0;
+    locals = NULL;
+    frame_size = 0;
+    max_frame_size = 0;
+    stack_offset = 0;
+    scope_depth = 0;
 
     fprintf(out, "  .globl %s\n", fn->name);
     fprintf(out, "%s:\n", fn->name);
@@ -33,7 +35,7 @@ static void gen_func(Node *fn) {
     long subq_pos = ftell(out);
     fprintf(out, "  subq $%-*d, %%rsp\n", SUBQ_FRAME_WIDTH, 0);
 
-    enter_scope();   /* 関数スコープ */
+    enter_scope();   /* function scope: parameters live here */
 
     /* params: add_local と spill を 1 ループで。Phase 1 はもうない */
     int i = 0;
@@ -48,9 +50,10 @@ static void gen_func(Node *fn) {
         i++;
     }
 
-    gen_stmt(fn->body);   /* 本体: VAR_DECL で frame_size と max_frame_size が育つ */
+    gen_stmt(fn->body);   /* 本体: VAR_DECL で frame_size が育ち、max_frame_size を追跡 */
 
     exit_scope();
+
     fprintf(out, "  movl $0, %%eax\n  leave\n  ret\n");
 
     /* ★ ここで max_frame_size が確定。プロローグに戻って subq を書き直す */
@@ -80,9 +83,16 @@ case NODE_VAR_DECL: {
     emit_store(sz);
     return;
 }
+
+case NODE_BLOCK:
+    enter_scope();
+    for (NodeList *l = node->stmts; l; l = l->next)
+        gen_stmt(l->node);
+    exit_scope();
+    return;
 ```
 
-ch06 の「Phase 2 で `node->lvar` から LVar を取り出して再リンク」する手順が **完全に消える** ── AST に back-pointer を残す必要もなくなった（だから `ast.h` から `Node->lvar` を削除）。
+ch06 の「Phase 1 で `add_local` を呼んで locals を作っておき、Phase 2 で本体を生成」という二相が **完全に消える** ── 本体生成中に出会った VAR_DECL でその場で `add_local` を呼ぶだけで済む。`NODE_BLOCK` での `enter_scope` / `exit_scope` がスコープ単位の locals 切り戻しを担当し、`max_frame_size` が `subq` のバックパッチ値を保持する。
 
 完全版は `steps/ch07/src/codegen.c` を参照。
 
@@ -413,7 +423,7 @@ $ ./tinyc fib.c | wc -l
 
 ## 10. デモ 5: バックパッチによるフレームサイズ確定
 
-ローカル変数を持つ関数で `subq $N` が後埋めされる様子:
+ブロックスコープによる **スロット再利用** + バックパッチを同時に見るデモ:
 
 ```bash
 $ cat frame.c
@@ -429,20 +439,21 @@ $ ./tinyc --no-opt frame.c | head -7
 main:
   pushq %rbp
   movq %rsp, %rbp
-  subq $16        , %rsp    ← バックパッチで 16 が埋まった
+  subq $16        , %rsp    ← max_frame_size = 16 がバックパッチで埋まった
   leaq -8(%rbp), %rax
 ```
 
-**フレームは 16 バイト**（兄弟ブロックでスロット再利用：`a, b` と `c, d` が同じ `-8`/`-16` を共有）。ch06 だと Phase 1 で `max_frame_size` を先に確定してから書いていたが、ch07 では本体を生成しながら N が育ち、最後にプロローグの placeholder を埋めるだけ。
+4変数あるのに **フレームは 16 バイト**（兄弟ブロックでスロット再利用：`a, b` と `c, d` が同じ `-8`/`-16` を共有）。ch06 だと Phase 1 で `frame_size` を先に確定してから `subq $16, %rsp` を書いていたが、ch07 では先にプレースホルダ `subq $0         , %rsp` を出して本体を生成し、`max_frame_size` をスコープ走査の中で追跡し、最後に `ftell`/`fseek` で埋めるだけ。プレースホルダの空白パディングが残るので、出力をよく見れば「ここがバックパッチされた」と分かる。
 
 ## 11. ここまでで作ったもの
 
 第 7 章で:
 
 - **AST 最適化** パスの導入。lexer/parser/codegen に手を入れずに「最適化を後付けできる構造」を実例化。
-- **バックパッチ** で codegen を **二相 → 単一パス** に簡素化。`Node->lvar` などの中間状態が不要になり、AST と codegen の関心が分離した。
+- **バックパッチ** で codegen を **二相 → 単一パス** に簡素化。本体生成中に直接 `add_local` を呼べばよく、`collect_locals` の事前パスは不要になった。
+- **ブロックスコープ** を単一パスの上に乗せた。`{ int x=1; }{ int x=2; }` が通り、兄弟ブロックではスタックスロットも再利用される。
 - **ピープホール最適化** で生成 asm 上の後処理を実装。
-- `--no-opt` で最適化のビフォー・アフターを直接比較できる。バックパッチは常に有効。
+- `--no-opt` で最適化のビフォー・アフターを直接比較できる。バックパッチとスコープは常に有効。
 
 tiny-c の世界では「最適化」は最小限だが、**最適化を後付けで挟める構造になった**。実プロダクションのコンパイラ（GCC/LLVM/clang など）はこの考え方を発展させ、何十・何百もの最適化パスを順に通している ── でも各パスは tiny-c の `optimize_ast` や `peephole` と同じ「**入力を受け取って改善版を返す**」という形をしている。バックパッチも（前方ジャンプの相対オフセットを後で埋めるなど、似た仕掛けは他の場面にも出てくる）。
 
@@ -452,5 +463,6 @@ tiny-c の世界では「最適化」は最小限だが、**最適化を後付�
 - AST 最適化は `Node *` を再帰的に書き換えるだけ。`optimize_ast(node)` は新しい（または同じ）ノードを返す。
 - ピープホール最適化は asm を行に分け、隣接 2 行のパターンを書き換える。
 - **バックパッチ**: 出力をメモリバッファに溜めることで `ftell`/`fseek` が使え、プロローグの `subq $N` を後から埋められる ── これで Phase 1 が消え codegen が単一パスに。
-- AST 最適化とピープホールは `--no-opt` で外せるが、バックパッチは codegen の構造そのものなので常に有効。
-- `lexer.l / parser.y / ast.c` は ch06 と完全に同じ。差分は `ast.h`（lvar 削除）、`codegen.c`（バックパッチ）、`main.c`（常に memstream）、`optimize.c` 新規 の 4 箇所。
+- **ブロックスコープ**: 単一パス化の上に `enter_scope` / `exit_scope` で locals 連結リストの head 切り戻しを乗せる。兄弟ブロックでスロット再利用、`max_frame_size` がバックパッチ値を保持。
+- AST 最適化とピープホールは `--no-opt` で外せるが、バックパッチとスコープは codegen の構造そのものなので常に有効。
+- `lexer.l / parser.y / ast.h / ast.c` は ch06 と完全に同じ。差分は `codegen.c`（バックパッチ + スコープ）、`main.c`（常に memstream）、`optimize.c` 新規 の 3 箇所。

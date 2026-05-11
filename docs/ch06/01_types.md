@@ -137,13 +137,7 @@ primary
     ;
 ```
 
-```c
-typedef struct Node Node;
-struct Node {
-    /* ... */
-    /* NODE_INDEX: lhs = base, rhs = index */
-};
-```
+`NODE_INDEX` は既存の `lhs` / `rhs` フィールドを流用 ── `lhs` が base（配列/ポインタ）、`rhs` がインデックス。
 
 `a[0]` も `a[i+1]` も同じ規則で扱える（インデックスは任意の式）。tiny-c では実用上 `IDENT '[' expr ']'` の形だけサポート（`(p+1)[i]` のような複雑な左辺は許さない）。
 
