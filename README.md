@@ -23,8 +23,6 @@ tiny-c compiles this to x86-64 assembly. Recursion, loops, pointers, arrays, and
 
 ## Documentation
 
-> **Translation in progress.** The English chapter docs under `docs/en/` are being written. The Japanese version (`docs/jp/`) is complete — see [README-jp.md](README-jp.md).
-
 The documentation **is the main artifact** of this project. Each chapter presents **a complete, working small compiler**; as chapters progress, the language grows and so does the compiler. Seven chapters total.
 
 | Chapter | What it can compile | Focus |
