@@ -2,11 +2,11 @@
 
 # tiny-c — A C subset compiler, built step by step
 
-C言語の超サブセットで書かれたソースコードをコンパイルする、学習用Cコンパイラ。
+**English** | [日本語](README-jp.md)
 
-コンパイラのソースコードは約1500行で、C言語で書かれている。また C言語の知識だけでtiny-cが理解できるようにドキュメントを整備した。第一章から読み進めることで、自然と約1500行のコード内容を把握できるようになっている。
+A teaching C compiler that compiles source code written in a tiny subset of C. The compiler source is about 1500 lines of C. The documentation is written so that knowledge of C alone is enough to follow tiny-c — reading the chapters in order naturally walks you through every line of the 1500-line code base.
 
-## 何ができるか
+## What it does
 
 ```c
 int fib(int n) {
@@ -19,81 +19,83 @@ int main() {
 }
 ```
 
-tiny-c はこのコードを x86-64 アセンブリにコンパイルする。再帰、ループ、ポインタ、配列、関数呼び出しに対応。
+tiny-c compiles this to x86-64 assembly. Recursion, loops, pointers, arrays, and function calls all work.
 
-## ドキュメント
+## Documentation
 
-このプロジェクトの主な成果物はドキュメントだ。各章で**完全に動く小さなコンパイラ**を提示し、章が進むごとに言語機能が増えてコンパイラが育っていく構成になっている。全7章。
+> **Translation in progress.** The English chapter docs under `docs/en/` are being written. The Japanese version (`docs/jp/`) is complete — see [README-jp.md](README-jp.md).
 
-| 章 | コンパイルできるようになるもの | 焦点 |
+The documentation **is the main artifact** of this project. Each chapter presents **a complete, working small compiler**; as chapters progress, the language grows and so does the compiler. Seven chapters total.
+
+| Chapter | What it can compile | Focus |
 |---|------|------|
-| [章1: 42を返すだけのコンパイラ](docs/ch01/00_overview.md) | `int main() { return 42; }` | パイプライン全体（lexer→parser→AST→codegen→build）の土台 |
-| [章2: 電卓を作る](docs/ch02/00_overview.md) | `return 2 + 3 * 4;`（四則演算と優先順位） | 文法が優先順位を表現する仕組み、スタックを使った中間値の管理 |
-| [章3: 変数](docs/ch03/00_overview.md) | `int x = 1; int y = 2; return x + y;` | スタックフレーム上のアドレスとして変数を実現、シンボルテーブル |
-| [章4: 分岐とループ](docs/ch04/00_overview.md) | `if/else` `while` と比較演算子（階乗計算など） | CPU は条件ジャンプしか知らない、ラベル生成 |
-| [章5: 関数を呼ぶ・作る](docs/ch05/00_overview.md) | 関数定義・引数・再帰・`printf` 呼び出し | System V AMD64 ABI、レジスタ渡し、16バイトスタックアライメント |
-| [章6: ポインタと配列](docs/ch06/00_overview.md) | `char *s = "hello"; printf("%s\n", s);`、ポインタ・配列・グローバル変数 | lvalue/rvalue の二面性、`gen_addr` 関数、`&` と `*` の対称性 |
-| [章7: 最適化・バックパッチ・スコープ](docs/ch07/00_overview.md) | `{ int x=1; }{ int x=2; }`（ブロックスコープ） | AST 最適化（定数畳み込み + 代数的単純化）、バックパッチで Phase 1 を消して codegen を単一パスに、その上にブロックスコープ（`locals` 切り戻し + スロット再利用）、ピープホール最適化 |
+| [Ch1: A compiler that just returns 42](docs/en/ch01/00_overview.md) | `int main() { return 42; }` | The full pipeline (lexer → parser → AST → codegen → build) as scaffolding |
+| [Ch2: Build a calculator](docs/en/ch02/00_overview.md) | `return 2 + 3 * 4;` (precedence) | How grammar expresses precedence; using the stack for intermediate values |
+| [Ch3: Variables](docs/en/ch03/00_overview.md) | `int x = 1; int y = 2; return x + y;` | Variables as addresses in the stack frame; the symbol table |
+| [Ch4: Branches and loops](docs/en/ch04/00_overview.md) | `if/else`, `while`, comparison operators (factorial, etc.) | The CPU only knows conditional jumps; label generation |
+| [Ch5: Calling and defining functions](docs/en/ch05/00_overview.md) | Function definitions, parameters, recursion, `printf` | System V AMD64 ABI; register passing; 16-byte stack alignment |
+| [Ch6: Pointers and arrays](docs/en/ch06/00_overview.md) | `char *s = "hello"; printf("%s\n", s);` (pointers, arrays, globals) | The lvalue/rvalue duality; the `gen_addr` function; symmetry between `&` and `*` |
+| [Ch7: Optimization, backpatching, scope](docs/en/ch07/00_overview.md) | `{ int x=1; }{ int x=2; }` (block scope) | AST optimization (constant folding + algebraic simplification); backpatching eliminates Phase 1 so codegen is single-pass; block scope on top (`locals` head save/restore with slot reuse); peephole optimization |
 
-各章は `docs/chNN/` フォルダに分かれ、`00_overview.md` から始まって `01_*.md` `02_*.md` ... と複数のサブファイルで構成されている。各章のソースコードは `steps/chNN/` 配下に置かれており、実際にビルド・実行可能な最小構成として保存されている。tiny-c の最終形は **`steps/ch07/src/`** にあり、トップレベルの `Makefile` はこれを直接ビルドする。
+Each chapter lives under `docs/en/chNN/`, starting with `00_overview.md` followed by `01_*.md`, `02_*.md`, etc. The corresponding source for each chapter is under `steps/chNN/`, kept as a minimal, buildable snapshot. The final form of tiny-c lives at **`steps/ch07/src/`** — the top-level `Makefile` builds it directly.
 
-## ビルド・実行
+## Build & run
 
-前提: gcc, flex, bison, make
+Prerequisites: gcc, flex, bison, make
 
 ```bash
-make                    # ビルド
-./tinyc hello.c         # アセンブリを stdout に出力
-./tinyc --dump-ast hello.c  # AST を表示
+make                          # build
+./tinyc hello.c               # write assembly to stdout
+./tinyc --dump-ast hello.c    # print the AST instead
 
-# 実行ファイルを作る (x86-64 Linux)
+# Produce an executable (x86-64 Linux)
 ./tinyc hello.c > hello.s
 gcc -o hello hello.s
 ./hello
 ```
 
-## テスト
+## Tests
 
 ```bash
 make test
 ```
 
-`test/cases/*.c` 配下の機能チェック用ソースを順に `./tinyc` でアセンブリにコンパイルし、各ファイルの結果を検証する。各テストケースの先頭にコメントで `// expect: <終了コード>` や `// output: <stdout>` を書いておき、それと一致するか確認する形式。
+Each `test/cases/*.c` file is fed to `./tinyc`, which emits assembly. The expected exit code and stdout are written as comments at the top of each test case: `// expect: <exit code>` and `// output: <stdout>`.
 
-- **x86-64 Linux 環境**: アセンブリを `gcc` でリンク・実行し、終了コードと stdout まで比較する。
-- **それ以外の環境** (Mac など): 実行はスキップし、「アセンブリ生成が成功するか」だけを確認する。
+- **On x86-64 Linux**: the assembly is linked with `gcc`, the binary is run, and the exit code and stdout are compared to the expectations.
+- **On other platforms** (Mac etc.): execution is skipped; only "did tinyc produce valid-looking assembly" is checked.
 
-ケースは章番号プレフィックス（`01_*.c` 〜 `07_*.c`）で機能ごとに整理されている。
+Test cases are organized by chapter prefix (`01_*.c` through `07_*.c`).
 
-## 対応する文法
+## Supported grammar
 
-| 機能 | 例 |
+| Feature | Examples |
 |------|-----|
-| 型 | `int`, `char`, `void`, `int*`, `char*` |
-| リテラル | `42`, `'a'`, `"hello"` |
-| 演算子 | `+` `-` `*` `/` `%` `==` `!=` `<` `<=` `>` `>=` `!` `-`(単項) `&` `*`(間接参照) |
-| 制御構造 | `if`/`else`, `while` |
-| 関数 | 定義・呼び出し（引数最大6個） |
-| 変数 | ローカル（初期化子必須）、グローバル |
-| 配列 | 1次元のみ (`int a[10];`) |
-| ポインタ | 1段階のみ (`int *p`) |
+| Types | `int`, `char`, `void`, `int*`, `char*` |
+| Literals | `42`, `'a'`, `"hello"` |
+| Operators | `+` `-` `*` `/` `%` `==` `!=` `<` `<=` `>` `>=` `!` `-` (unary) `&` `*` (dereference) |
+| Control flow | `if`/`else`, `while` |
+| Functions | Definition and call (up to 6 arguments) |
+| Variables | Local (initializer required), global |
+| Arrays | 1-D only (`int a[10];`) |
+| Pointers | 1 level only (`int *p`) |
 
-意図的に除外した機能: `for`, `switch`, `&&`, `||`, 構造体, float, プリプロセッサ, etc.
+Deliberately excluded: `for`, `switch`, `&&`, `||`, structs, float, preprocessor, etc.
 
 
 
-## クレジット
+## Credits
 
-- 企画: t-ishii66(大学で物理を学ぶ。システムエンジニア。英会話奮闘中)
-- 構成: t-ishii66
-- コーディング: Claude Opus4.7
-- ドキュメント: Claude Opus4.7
-- コードレビュー: t-ishii66
-- ドキュメントレビュー: t-ishii66
-- イラスト: ChatGPT5.4
-- 発行日: 2026/5/x
-- バージョン: 0.0.0 (under construction)
-- Copyright(C)2026 t-ishii66. All rights reserved.
+- Concept: t-ishii66 (studied physics in college; systems engineer; struggling with conversational English)
+- Structure: t-ishii66
+- Coding: Claude Opus 4.7
+- Documentation: Claude Opus 4.7
+- Code review: t-ishii66
+- Documentation review: t-ishii66
+- Illustrations: ChatGPT 5.4
+- Release date: 2026/5/11
+- Version: 1.0.0
+- Copyright (C) 2026 t-ishii66. All rights reserved.
 
 
 
