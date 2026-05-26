@@ -53,13 +53,13 @@ Each chapter presents **a complete, working small compiler**. As chapters progre
 
 | Chapter | What it can compile | Focus |
 |---|------|------|
-| [Ch1: A compiler that just returns 42](en/ch01/00_overview/) | `int main() { return 42; }` | The full pipeline (lexer → parser → AST → code generation → build) |
-| [Ch2: Build a calculator](en/ch02/00_overview/) | `return 2 + 3 * 4;` | How grammar expresses operator precedence; the evaluation stack |
-| [Ch3: Variables](en/ch03/00_overview/) | `int x = 1; int y = 2; return x + y;` | Variables as stack-frame addresses; the symbol table |
-| [Ch4: Branches and loops](en/ch04/00_overview/) | `if/else`, `while`, comparison operators | The CPU only knows conditional jumps; label generation |
-| [Ch5: Calling and defining functions](en/ch05/00_overview/) | Function definitions, parameters, recursion, `printf` | System V AMD64 ABI, register passing, 16-byte stack alignment |
-| [Ch6: Pointers and arrays](en/ch06/00_overview/) | `char *s = "hello"; printf("%s\n", s);` | The lvalue/rvalue duality; the `gen_addr` function; `&` and `*` symmetry |
-| [Ch7: Optimization, backpatching, scope](en/ch07/00_overview/) | `{ int x=1; }{ int x=2; }` (block scope) | AST optimization, single-pass codegen via backpatching, block scope, peephole optimization |
+| [Ch1: A compiler that just returns 42](en/ch01/00_overview.html) | `int main() { return 42; }` | The full pipeline (lexer → parser → AST → code generation → build) |
+| [Ch2: Build a calculator](en/ch02/00_overview.html) | `return 2 + 3 * 4;` | How grammar expresses operator precedence; the evaluation stack |
+| [Ch3: Variables](en/ch03/00_overview.html) | `int x = 1; int y = 2; return x + y;` | Variables as stack-frame addresses; the symbol table |
+| [Ch4: Branches and loops](en/ch04/00_overview.html) | `if/else`, `while`, comparison operators | The CPU only knows conditional jumps; label generation |
+| [Ch5: Calling and defining functions](en/ch05/00_overview.html) | Function definitions, parameters, recursion, `printf` | System V AMD64 ABI, register passing, 16-byte stack alignment |
+| [Ch6: Pointers and arrays](en/ch06/00_overview.html) | `char *s = "hello"; printf("%s\n", s);` | The lvalue/rvalue duality; the `gen_addr` function; `&` and `*` symmetry |
+| [Ch7: Optimization, backpatching, scope](en/ch07/00_overview.html) | `{ int x=1; }{ int x=2; }` (block scope) | AST optimization, single-pass codegen via backpatching, block scope, peephole optimization |
 
 ## Build & run
 

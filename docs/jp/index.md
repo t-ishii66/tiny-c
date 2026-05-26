@@ -53,13 +53,13 @@ int main() {
 
 | 章 | 何がコンパイルできるか | 焦点 |
 |---|------|------|
-| [第1章: 42 を返すだけのコンパイラ](ch01/00_overview/) | `int main() { return 42; }` | パイプライン全体（lexer → parser → AST → codegen → build）の土台 |
-| [第2章: 電卓を作る](ch02/00_overview/) | `return 2 + 3 * 4;` | 文法が優先順位を表現する仕組み、スタックを使った中間値の管理 |
-| [第3章: 変数](ch03/00_overview/) | `int x = 1; int y = 2; return x + y;` | スタックフレーム上のアドレスとして変数を実現、シンボルテーブル |
-| [第4章: 分岐とループ](ch04/00_overview/) | `if/else`、`while`、比較演算子 | CPU は条件ジャンプしか知らない、ラベル生成 |
-| [第5章: 関数の呼び出しと定義](ch05/00_overview/) | 関数定義、引数、再帰、`printf` 呼び出し | System V AMD64 ABI、レジスタ渡し、16 バイトアライメント |
-| [第6章: ポインタと配列](ch06/00_overview/) | `char *s = "hello"; printf("%s\n", s);` | lvalue/rvalue の二面性、`gen_addr` 関数、`&` と `*` の対称性 |
-| [第7章: 最適化・バックパッチ・スコープ](ch07/00_overview/) | `{ int x=1; }{ int x=2; }`（ブロックスコープ） | AST 最適化、バックパッチによる単一パス codegen、ブロックスコープ、ピープホール最適化 |
+| [第1章: 42 を返すだけのコンパイラ](ch01/00_overview.html) | `int main() { return 42; }` | パイプライン全体（lexer → parser → AST → codegen → build）の土台 |
+| [第2章: 電卓を作る](ch02/00_overview.html) | `return 2 + 3 * 4;` | 文法が優先順位を表現する仕組み、スタックを使った中間値の管理 |
+| [第3章: 変数](ch03/00_overview.html) | `int x = 1; int y = 2; return x + y;` | スタックフレーム上のアドレスとして変数を実現、シンボルテーブル |
+| [第4章: 分岐とループ](ch04/00_overview.html) | `if/else`、`while`、比較演算子 | CPU は条件ジャンプしか知らない、ラベル生成 |
+| [第5章: 関数の呼び出しと定義](ch05/00_overview.html) | 関数定義、引数、再帰、`printf` 呼び出し | System V AMD64 ABI、レジスタ渡し、16 バイトアライメント |
+| [第6章: ポインタと配列](ch06/00_overview.html) | `char *s = "hello"; printf("%s\n", s);` | lvalue/rvalue の二面性、`gen_addr` 関数、`&` と `*` の対称性 |
+| [第7章: 最適化・バックパッチ・スコープ](ch07/00_overview.html) | `{ int x=1; }{ int x=2; }`（ブロックスコープ） | AST 最適化、バックパッチによる単一パス codegen、ブロックスコープ、ピープホール最適化 |
 
 ## ビルドと実行
 
