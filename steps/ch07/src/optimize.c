@@ -5,7 +5,7 @@
 #include "optimize.h"
 
 /* ============================================================
- * AST-level optimization: 定数畳み込み + 代数的単純化
+ * AST-level optimization: constant folding + algebraic simplification
  * ============================================================ */
 
 static int is_int_lit(Node *n)        { return n && n->kind == NODE_INT_LIT; }
@@ -21,7 +21,7 @@ Node *optimize_ast(Node *node) {
         node->rhs = optimize_ast(node->rhs);
         Node *L = node->lhs, *R = node->rhs;
 
-        /* 代数的単純化（片側が定数の特定値のとき） */
+        /* Algebraic simplification (when one side is a specific constant). */
         switch (node->op) {
         case '+':
             if (is_int_lit_val(L, 0)) return R;       /* 0 + x → x */
@@ -41,7 +41,7 @@ Node *optimize_ast(Node *node) {
             break;
         }
 
-        /* 定数畳み込み（両子が INT_LIT のとき） */
+        /* Constant folding (when both children are INT_LIT). */
         if (is_int_lit(L) && is_int_lit(R)) {
             int a = L->int_val, b = R->int_val, r = 0;
             switch (node->op) {
@@ -75,7 +75,7 @@ Node *optimize_ast(Node *node) {
     }
     case NODE_ASSIGN:
         node->rhs = optimize_ast(node->rhs);
-        /* lhs は lvalue なので畳み込みは行わない */
+        /* lhs is an lvalue; do not fold it. */
         return node;
     case NODE_INDEX:
         node->rhs = optimize_ast(node->rhs);
@@ -115,7 +115,7 @@ Node *optimize_ast(Node *node) {
 }
 
 /* ============================================================
- * Peephole optimization: 生成 asm レベル
+ * Peephole optimization: emitted-asm level
  * ============================================================ */
 
 #define MAX_LINES 65536
@@ -138,29 +138,31 @@ static void split_lines(const char *buf, int len) {
     }
 }
 
-/* 行が「実行可能な命令」か否か。
-   - 命令: 先頭が空白で、最初の非空白文字が '.' でない（例: "  pushq %rax"）
-   - 非命令: ラベル（先頭が空白でない、例: "main:" ".LS0:"）、
-             ディレクティブ（"  .text" "  .section ..." "  .byte ..."）、空行 */
+/* Is this line an executable instruction?
+   - Instruction: starts with whitespace, first non-blank char is not '.'
+                  (e.g. "  pushq %rax")
+   - Not an instruction: label (no leading whitespace, e.g. "main:" ".LS0:"),
+                         directive ("  .text" "  .section ..." "  .byte ..."),
+                         or blank line. */
 static int is_instr_line(const char *line) {
     if (!line) return 0;
-    if (line[0] != ' ' && line[0] != '\t') return 0;  /* ラベル */
+    if (line[0] != ' ' && line[0] != '\t') return 0;  /* label */
     const char *p = line;
     while (*p == ' ' || *p == '\t') p++;
-    if (*p == '.') return 0;                          /* ディレクティブ */
-    if (*p == '\n' || *p == '\0') return 0;           /* 空行 */
+    if (*p == '.') return 0;                          /* directive */
+    if (*p == '\n' || *p == '\0') return 0;           /* blank line */
     return 1;
 }
 
-/* ピープホールパターン:
-   1) pushq %rax; popq %rax     → 両方消去
+/* Peephole patterns:
+   1) pushq %rax; popq %rax     → erase both
    2) pushq %rax; popq REG      → movq %rax, REG */
 static void peephole_pushpop(void) {
     for (int i = 0; i + 1 < n_lines; i++) {
         if (!lines[i] || !lines[i+1]) continue;
         if (strcmp(lines[i], "  pushq %rax\n") != 0) continue;
 
-        /* pushq %rax; popq %rax → 消去 */
+        /* pushq %rax; popq %rax → erase */
         if (strcmp(lines[i+1], "  popq %rax\n") == 0) {
             free(lines[i]);  lines[i]   = NULL;
             free(lines[i+1]); lines[i+1] = NULL;
@@ -184,8 +186,8 @@ static void peephole_pushpop(void) {
     }
 }
 
-/* ピープホールパターン:
-   3) ret 直後から次のラベルまでの命令はデッドコード → 消去 */
+/* Peephole pattern:
+   3) instructions from just after ret up to the next label are dead → erase */
 static void peephole_dead_after_ret(void) {
     int dead = 0;
     for (int i = 0; i < n_lines; i++) {
@@ -194,13 +196,13 @@ static void peephole_dead_after_ret(void) {
             if (strcmp(lines[i], "  ret\n") == 0) dead = 1;
             continue;
         }
-        /* dead 状態 */
+        /* in dead state */
         if (!is_instr_line(lines[i])) {
-            /* ラベル行 or セクション切り替え行に到達 → デッド状態解除 */
+            /* reached a label or section directive → leave dead state */
             dead = 0;
             continue;
         }
-        /* 命令行 → 消去 */
+        /* instruction line → erase */
         free(lines[i]);
         lines[i] = NULL;
     }
@@ -208,13 +210,13 @@ static void peephole_dead_after_ret(void) {
 
 void peephole(const char *in_buf, int in_len, FILE *out) {
     split_lines(in_buf, in_len);
-    /* 順不同で適用してよいパターンばかり */
+    /* These patterns are order-independent. */
     peephole_pushpop();
     peephole_dead_after_ret();
     for (int i = 0; i < n_lines; i++) {
         if (lines[i]) fputs(lines[i], out);
     }
-    /* ライン解放 */
+    /* free lines */
     for (int i = 0; i < n_lines; i++)
         if (lines[i]) free(lines[i]);
     n_lines = 0;

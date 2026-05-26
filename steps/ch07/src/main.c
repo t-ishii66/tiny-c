@@ -12,9 +12,9 @@ extern Node *program;
 static void usage(void) {
     fprintf(stderr,
         "usage: tinyc [--dump-ast] [--no-opt] <file>\n"
-        "  --dump-ast   AST を表示して終了\n"
-        "  --no-opt     最適化（AST 畳み込み + ピープホール）を無効化\n"
-        "               （バックパッチによる単一パス codegen は常に有効）\n");
+        "  --dump-ast   print the AST and exit\n"
+        "  --no-opt     disable optimization (AST folding + peephole)\n"
+        "               (backpatching-based single-pass codegen is always on)\n");
 }
 
 int main(int argc, char **argv) {
@@ -44,8 +44,8 @@ int main(int argc, char **argv) {
 
     /* Always emit codegen into a memory buffer. Reasons:
        1) prologue's `subq $N, %rsp` is backpatched (codegen needs ftell/fseek)
-       2) ピープホール最適化があれば同じバッファ上で適用してから出力
-       --no-opt のときは ピープホール段階だけスキップ。 */
+       2) peephole optimization (if enabled) is applied on the same buffer
+       With --no-opt, only the peephole step is skipped. */
     char *buf = NULL;
     size_t len = 0;
     FILE *mem = open_memstream(&buf, &len);
