@@ -1,4 +1,4 @@
-![](../../../images/img-5.png)
+![](../../images/img-5.png)
 
 # Chapter 3 — Variables
 

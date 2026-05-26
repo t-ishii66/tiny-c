@@ -1,0 +1,33 @@
+title: "tiny-c — Build a C Compiler in 1500 Lines"
+description: >-
+  An educational C compiler tutorial in seven chapters. Build a working
+  C compiler in about 1500 lines of C, targeting x86-64 Linux. Covers
+  lexical analysis with flex, parsing with bison, abstract syntax tree
+  (AST) construction, code generation to x86-64 assembly, the System V
+  AMD64 calling convention, lvalue/rvalue handling, pointers, arrays,
+  global variables, string literals, recursion, printf, block scope,
+  constant folding, algebraic simplification, peephole optimization,
+  and backpatching. Documentation in English and Japanese.
+
+url: "https://t-ishii66.github.io"
+baseurl: "/tiny-c"
+repository: t-ishii66/tiny-c
+
+theme: jekyll-theme-cayman
+
+author: t-ishii66
+lang: en
+
+plugins:
+  - jekyll-seo-tag
+  - jekyll-sitemap
+
+exclude:
+  - "*.bak"
+  - PROBLEMS.md
+
+# Markdown engine
+markdown: kramdown
+kramdown:
+  input: GFM
+  syntax_highlighter: rouge

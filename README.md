@@ -1,4 +1,4 @@
-<img src="images/top.png" width="800">
+<img src="docs/images/top.png" width="800">
 
 # tiny-c — A C subset compiler, built step by step
 
@@ -98,4 +98,4 @@ Deliberately excluded: `for`, `switch`, `&&`, `||`, structs, float, preprocessor
 
 
 
-<img src="images/img-9.png" width="800">
+<img src="docs/images/img-9.png" width="800">

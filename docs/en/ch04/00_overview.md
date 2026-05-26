@@ -1,4 +1,4 @@
-![](../../../images/img-4.png)
+![](../../images/img-4.png)
 
 # Chapter 4 — Branches and loops
 

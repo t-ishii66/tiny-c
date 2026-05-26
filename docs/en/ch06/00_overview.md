@@ -1,4 +1,4 @@
-![](../../../images/img-8.png)
+![](../../images/img-8.png)
 
 # Chapter 6 — Pointers and arrays
 

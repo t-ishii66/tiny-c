@@ -1,4 +1,4 @@
-![](../../../images/img-6.png)
+![](../../images/img-6.png)
 
 # Chapter 7 — Optimization and backpatching
 

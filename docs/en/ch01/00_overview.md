@@ -1,4 +1,4 @@
-![](../../../images/img-1.png)
+![](../../images/img-1.png)
 
 # Chapter 1 — A compiler that just returns 42
 

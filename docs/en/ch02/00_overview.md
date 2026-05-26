@@ -1,4 +1,4 @@
-![](../../../images/img-2.png)
+![](../../images/img-2.png)
 
 # Chapter 2 — Build a calculator
 

@@ -1,4 +1,4 @@
-![](../../../images/img-7.png)
+![](../../images/img-7.png)
 
 # Chapter 5 — Calling and defining functions
 
