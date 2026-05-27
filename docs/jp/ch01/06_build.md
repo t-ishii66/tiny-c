@@ -315,6 +315,16 @@ src/main.c   ──────────────────────�
 
 ## 6. ビルド & 実行
 
+手元で実際にコマンドを動かしながら読み進めたい場合は、まずリポジトリをクローンしておく。各章の完全形のソースは `steps/chNN/` 配下にあり、トップレベルの `Makefile` は最終形（ch07）をビルドする。
+
+```bash
+$ git clone https://github.com/t-ishii66/tiny-c.git
+$ cd tiny-c
+$ cd steps/ch01     # この章のソース
+```
+
+必要なもの: `gcc`, `flex`, `bison`, `make`。以降の章ではこのクローンをそのまま使い、`steps/chNN` の `NN` を変えながら `cd` するだけでよい。
+
 ファイルがすべて揃ったら、ビルドできる。
 
 ```bash

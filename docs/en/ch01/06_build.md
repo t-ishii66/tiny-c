@@ -315,6 +315,16 @@ src/main.c   ──────────────────────�
 
 ## 6. Build & run
 
+If you're reading along and want to run the commands yourself, clone the repository first. Each chapter's complete source lives under `steps/chNN/`, and the top-level `Makefile` builds the final ch07 form.
+
+```bash
+$ git clone https://github.com/t-ishii66/tiny-c.git
+$ cd tiny-c
+$ cd steps/ch01     # this chapter's source
+```
+
+Prerequisites: `gcc`, `flex`, `bison`, `make`. Subsequent chapters reuse this clone — they just `cd` into a different `steps/chNN`.
+
 With all the files in place, we can build.
 
 ```bash
