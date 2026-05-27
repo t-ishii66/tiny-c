@@ -2,6 +2,7 @@
 title: "tiny-c — Build Your Own C Compiler in 1500 Lines of C"
 description: "A step-by-step C compiler tutorial in seven chapters. Build a working C compiler in about 1500 lines of C, with lexer (flex), parser (bison), AST, and x86-64 code generation. Covers System V AMD64 ABI, pointers, arrays, recursion, printf, block scope, constant folding, peephole optimization, and backpatching. Free, open source, educational. English and Japanese."
 keywords: "C compiler tutorial, build your own compiler, write a compiler in C, learn compilers, compiler from scratch, compiler construction, programming language implementation, teaching compiler, small C compiler, educational C compiler, x86-64 assembly tutorial, x86-64 Linux, lexer, parser, abstract syntax tree, AST, code generation, codegen, flex, bison, LALR parser, recursive descent, System V AMD64 ABI, calling convention, stack frame, lvalue rvalue, pointer arithmetic, 1D array, global variables, string literals, function calls, recursion, printf, block scope, constant folding, algebraic simplification, peephole optimization, backpatching, ftell fseek memstream, compiler design, GitHub Pages, free open source"
+permalink: /
 ---
 
 <img src="docs/images/top.png" width="800" alt="tiny-c — an educational C compiler compiling a C subset to x86-64 assembly">
