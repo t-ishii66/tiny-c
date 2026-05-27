@@ -1,10 +1,18 @@
-<img src="docs/images/top.png" width="800">
+---
+title: "tiny-c — Build Your Own C Compiler in 1500 Lines of C"
+description: "A step-by-step C compiler tutorial in seven chapters. Build a working C compiler in about 1500 lines of C, with lexer (flex), parser (bison), AST, and x86-64 code generation. Covers System V AMD64 ABI, pointers, arrays, recursion, printf, block scope, constant folding, peephole optimization, and backpatching. Free, open source, educational. English and Japanese."
+keywords: "C compiler tutorial, build your own compiler, write a compiler in C, learn compilers, compiler from scratch, compiler construction, programming language implementation, teaching compiler, small C compiler, educational C compiler, x86-64 assembly tutorial, x86-64 Linux, lexer, parser, abstract syntax tree, AST, code generation, codegen, flex, bison, LALR parser, recursive descent, System V AMD64 ABI, calling convention, stack frame, lvalue rvalue, pointer arithmetic, 1D array, global variables, string literals, function calls, recursion, printf, block scope, constant folding, algebraic simplification, peephole optimization, backpatching, ftell fseek memstream, compiler design, GitHub Pages, free open source"
+---
 
-# tiny-c — A C subset compiler, built step by step
+<img src="docs/images/top.png" width="800" alt="tiny-c — an educational C compiler compiling a C subset to x86-64 assembly">
+
+# tiny-c — Build Your Own C Compiler in 1500 Lines of C
 
 **English** | [日本語](README-jp.md)
 
-A teaching C compiler that compiles source code written in a tiny subset of C. The compiler source is about 1500 lines of C. The documentation is written so that knowledge of C alone is enough to follow tiny-c — reading the chapters in order naturally walks you through every line of the 1500-line code base.
+**tiny-c** is a teaching **C compiler** that compiles a tiny subset of C to **x86-64 assembly**. The compiler source is about **1500 lines of C**. The documentation is written so that knowledge of C alone is enough to follow along — reading the seven chapters in order naturally walks you through every line of the codebase.
+
+If you have ever wanted to **build your own C compiler from scratch**, understand how **lexers, parsers, and code generators** fit together, or see how a real compiler emits x86-64 assembly for variables, pointers, function calls, and recursion — this **compiler tutorial** is for you. Topics covered: **lexical analysis with flex**, **parsing with bison**, **abstract syntax tree (AST)** construction, **code generation**, **System V AMD64 ABI**, **lvalue/rvalue** handling, **stack frames**, **block scope**, **constant folding**, **peephole optimization**, and **backpatching**.
 
 ## What it does
 
