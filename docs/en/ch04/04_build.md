@@ -1,5 +1,7 @@
 # 04 — Complete files and build
 
+![](../../images/play-ch04-04-badminton.png)
+
 We lay out the complete ch04 files with their diffs against ch03, then build and run factorial and branching examples.
 
 ## 1. lexer.l — new keywords and operators

@@ -101,7 +101,7 @@ make test
 - ドキュメント: Claude Opus4.7
 - コードレビュー: t-ishii66
 - ドキュメントレビュー: t-ishii66
-- イラスト: ChatGPT5.4
+- イラスト: ChatGPT6
 - 発行日: 2026/5/11
 - バージョン: 1.0.0
 - Copyright(C)2026 t-ishii66. All rights reserved.

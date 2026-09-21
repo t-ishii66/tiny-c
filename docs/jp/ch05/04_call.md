@@ -1,5 +1,7 @@
 # 04 — 関数呼び出しの codegen
 
+![](../../images/play-ch05-04-paper-boats.png)
+
 `f(a, b, c)` をアセンブリに翻訳する。やることは3つ。
 
 1. 引数 `a, b, c` を評価して `%rdi, %rsi, %rdx` に積む。

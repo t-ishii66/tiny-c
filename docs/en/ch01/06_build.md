@@ -1,5 +1,7 @@
 # 06 — main.c, Makefile, and assembling the whole thing
 
+![](../../images/play-ch01-06-paper-planes.png)
+
 We have `lexer.l`, `parser.y`, `ast.h/ast.c`, and `codegen.c/codegen.h`. What remains is the **entry point** (`main.c`) that ties them together, and the build recipe (`Makefile`).
 
 

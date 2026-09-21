@@ -1,5 +1,7 @@
 # 02 — lvalue と rvalue ── `gen_addr` の世界
 
+![](../../images/play-ch06-02-toy-tea.png)
+
 `x = 5` の左辺と右辺、`*p = 10` の左辺と右辺、`a[i]` ── これらを統一的に扱える視点が **lvalue / rvalue** だ。ch06 の codegen はこの2つを別々の関数で計算する。
 
 ## 1. 復習: rvalue は ch05 までの世界

@@ -1,5 +1,7 @@
 # 03 — Block scope
 
+![](../../images/play-ch07-03-camping.png)
+
 `{ ... }` in C isn't just statement grouping — it also delimits the **scope** of variables declared inside. In `{ int x = 1; } { int x = 2; }`, the same name can be re-declared in another block. tiny-c through ch06 rejected that as a "redeclaration error." This section lifts that restriction.
 
 **The previous section (backpatching) is a prerequisite.** Adding scope to ch06's two-phase codegen creates the complexity of tracking the same scope state **in sync** across Phase 1 (collection) and Phase 2 (emission). With the single-pass codegen from the last section, scope operations are integrated into the codegen flow **just once**.

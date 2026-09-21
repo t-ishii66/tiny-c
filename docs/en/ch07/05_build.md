@@ -1,5 +1,7 @@
 # 05 — Complete files and build
 
+![](../../images/play-ch07-05-flower-crowns.png)
+
 The ch07 diff against ch06:
 
 | File | ch06 → ch07 |

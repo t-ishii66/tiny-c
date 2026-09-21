@@ -1,5 +1,7 @@
 # 01 — Grammar and AST
 
+![](../../images/play-ch05-01-strawberries.png)
+
 Make a program a list of functions, and let functions take parameters.
 
 ## 1. A program is a list of functions

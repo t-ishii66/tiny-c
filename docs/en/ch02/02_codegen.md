@@ -1,5 +1,7 @@
 # 02 — Managing intermediate values with the stack
 
+![](../../images/play-ch02-02-board-game.png)
+
 How do we evaluate a multi-operator expression like `2 + 3 * 4` using just the register `%eax`? The answer: **use the stack**.
 
 ## 1. The ch01 codegen, recalled

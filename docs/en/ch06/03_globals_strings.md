@@ -1,5 +1,7 @@
 # 03 — Global variables and string literals
 
+![](../../images/play-ch06-03-water-play.png)
+
 Through ch05, all data lived **on the stack**: local variables in a function's frame, push/pop intermediates. ch06 is the first time we put data **off the stack** — globals in `.bss` and string literals in `.rodata`.
 
 ## 1. A few ELF sections

@@ -1,5 +1,7 @@
 # 01 — Types and grammar additions
 
+![](../../images/play-ch06-01-acorns.png)
+
 Through ch05, tiny-c treated **everything implicitly as `int`**. ch06 introduces type distinctions for the first time: `int`, `char`, `int *`, `char *`, plus arrays `int[N]` and `char[N]`, and `void` for function return types.
 
 ## 1. The Type struct

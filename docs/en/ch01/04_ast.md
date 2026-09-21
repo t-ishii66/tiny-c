@@ -1,5 +1,7 @@
 # 04 — The AST and ast.h / ast.c
 
+![](../../images/play-ch01-04-cookies.png)
+
 `ast.h` defines the node types; `ast.c` writes the functions that build nodes (constructors). Chapter 1 needs only four kinds of nodes.
 
 

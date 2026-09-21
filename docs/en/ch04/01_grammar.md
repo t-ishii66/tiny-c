@@ -1,5 +1,7 @@
 # 01 — Grammar additions
 
+![](../../images/play-ch04-01-snowman.png)
+
 ## 1. Comparison operators and logical negation
 
 Here's tiny-c's precedence table again. The same symbols `*` and `-` appear at multiple precedence levels, so we write the entries as actual expressions to make the usage clear.

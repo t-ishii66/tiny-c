@@ -1,5 +1,7 @@
 # 02 — 比較と論理否定の codegen
 
+![](../../images/play-ch04-02-blanket-fort.png)
+
 `a < b` や `!x` といった「真偽値を返す式」を、アセンブリでどう表現するか。新しい命令が3つ登場する: **`cmpl`**、**`setcc`**、**`movzbl`**。
 
 ## 1. C には bool 型がない（tiny-c も）

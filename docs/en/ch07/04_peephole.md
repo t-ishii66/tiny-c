@@ -1,5 +1,7 @@
 # 04 — Peephole optimization
 
+![](../../images/play-ch07-04-swings.png)
+
 Peephole optimization is a simple post-processing pass: walk the emitted asm top-to-bottom through a **narrow window**, and rewrite wasteful patterns as they appear. In tiny-c the window is either **two adjacent lines** or **the block after a `ret`**.
 
 ## 1. Where it sits in the pipeline (memstream recap)

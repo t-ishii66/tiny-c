@@ -2,3 +2,19 @@ build/
 tinyc
 /tmp/
 .DS_Store
+
+# Local-only review reports (never commit)
+PROBLEMS.md
+*PROBLEMS*.md
+
+# Secrets
+.env
+.env.*
+!.env.example
+!.env.template
+!.env.sample
+*.pem
+*.key
+id_rsa*
+credentials.json
+service-account*.json

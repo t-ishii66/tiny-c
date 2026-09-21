@@ -1,5 +1,7 @@
 # 05 — A minimum of x86 assembly, and codegen.c
 
+![](../../images/play-ch01-05-puddles.png)
+
 The assembly we emit in Chapter 1 is just seven lines.
 
 ```asm

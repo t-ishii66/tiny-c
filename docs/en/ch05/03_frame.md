@@ -1,5 +1,7 @@
 # 03 — Redesigning the stack frame
 
+![](../../images/play-ch05-03-rain-origami.png)
+
 To meet the ABI's alignment rule, we replace ch04's lazy frame allocation with a **pre-pass**.
 
 ## 1. The ch04 scheme and its problem

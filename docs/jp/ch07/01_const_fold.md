@@ -1,5 +1,7 @@
 # 01 — AST レベル最適化（定数畳み込み + 代数的単純化）
 
+![](../../images/play-ch07-01-butterflies.png)
+
 最適化の第一弾は **AST レベル**。パースが終わって AST が出来上がった直後、codegen に渡る前に「明らかに無駄な構造」を畳み込む。
 
 ## 1. 定数畳み込み (Constant folding)

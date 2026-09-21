@@ -1,5 +1,7 @@
 # 02 — Stack frame and symbol table
 
+![](../../images/play-ch03-02-cat-yarn.png)
+
 Turn the variables `x` and `y` into **memory addresses** the CPU can read. That's the substance of this chapter's codegen.
 
 Two new tools appear:

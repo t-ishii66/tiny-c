@@ -1,5 +1,7 @@
 # 02 — The System V AMD64 ABI
 
+![](../../images/play-ch05-02-drawing.png)
+
 The agreement around calling a function — where to put arguments, where to read the return value, which registers may be clobbered — is called the **calling convention** or **ABI**. On x86-64 Linux, the one in use is the **System V AMD64 ABI**.
 
 > **"Aren't arguments passed on the stack?"**

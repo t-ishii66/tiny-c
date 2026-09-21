@@ -1,5 +1,7 @@
 # 03 — if と while の codegen
 
+![](../../images/play-ch04-03-cherry-blossoms.png)
+
 C で書かれた `if` も `while` も、最終的には次の2種類だけに翻訳される。
 
 - **無条件ジャンプ** (`jmp`): いつでも別の場所に飛ぶ。

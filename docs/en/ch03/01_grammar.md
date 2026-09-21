@@ -1,5 +1,7 @@
 # 01 — Grammar additions
 
+![](../../images/play-ch03-01-sandcastle.png)
+
 Here are the changes to `parser.y`. Three things to do:
 
 1. Add **new statements** (variable declaration, expression statement).

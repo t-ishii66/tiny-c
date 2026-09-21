@@ -1,5 +1,7 @@
 # 02 — Eliminating Phase 1 with backpatching
 
+![](../../images/play-ch07-02-puzzle.png)
+
 The ch06 codegen was structured as **Phase 1 (collect) → Phase 2 (emit)**. The sole reason for splitting Phase 1 was that **`subq $N, %rsp` in the prologue couldn't be written without knowing `frame_size`** — since you can't know N until you've walked the function body, you needed a pre-walk to determine N before emitting the body.
 
 ch07 removes that constraint with **backpatching**: "write a placeholder where N isn't known yet, then write back later." Codegen becomes **single-pass**.

@@ -1,5 +1,7 @@
 # 03 — Codegen for if and while
 
+![](../../images/play-ch04-03-cherry-blossoms.png)
+
 `if` and `while` in C ultimately translate into just two kinds of jumps:
 
 - **Unconditional jump** (`jmp`): always jump somewhere else.

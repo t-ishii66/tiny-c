@@ -1,5 +1,7 @@
 # 03 — Complete files and build
 
+![](../../images/play-ch02-03-watering.png)
+
 Let's lay out the full ch02 source alongside its diff against ch01, then build, run, and trace the generated assembly.
 
 ## 1. lexer.l — 5 tokens added

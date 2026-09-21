@@ -1,5 +1,7 @@
 # 04 — 完全形とビルド
 
+![](../../images/play-ch06-04-rainbow.png)
+
 ch06 の主要差分を ch05 との対比で並べる。最後に Hello, world と strlen を動かす。
 
 ## 1. lexer.l — 新キーワード・新トークン

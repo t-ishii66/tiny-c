@@ -1,5 +1,7 @@
 # 03 — Complete files and build
 
+![](../../images/play-ch03-03-autumn-leaves.png)
+
 We lay out the complete ch03 files with their diffs against ch02, then build and run.
 
 ## 1. lexer.l — one line added for `=`

@@ -1,5 +1,7 @@
 # 01 — 型と文法の追加
 
+![](../../images/play-ch06-01-acorns.png)
+
 ch05 までの tiny-c は **暗黙に全部 int** だった。ch06 で初めて型を区別する: `int`、`char`、`int *`、`char *`、加えて配列 `int[N]` `char[N]`、関数戻り値専用の `void`。
 
 ## 1. Type 構造体

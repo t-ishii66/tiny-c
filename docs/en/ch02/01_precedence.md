@@ -1,5 +1,7 @@
 # 01 — Grammar determines precedence
 
+![](../../images/play-ch02-01-kite.png)
+
 Whether `2 + 3 * 4` becomes `14` or `20` is decided by how the grammar is written.
 
 ## 1. The problem with the naive style

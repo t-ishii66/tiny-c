@@ -1,5 +1,7 @@
 # 02 — Intro to flex and lexer.l
 
+![](../../images/play-ch01-02-blocks.png)
+
 The **lexer** is a program that converts the source string into a stream of **tokens**.
 
 ```

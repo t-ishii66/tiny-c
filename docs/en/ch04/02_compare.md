@@ -1,5 +1,7 @@
 # 02 — Codegen for comparison and logical negation
 
+![](../../images/play-ch04-02-blanket-fort.png)
+
 How do we express "expressions that produce a boolean," like `a < b` or `!x`, in assembly? Three new instructions appear: **`cmpl`**, **`setcc`**, and **`movzbl`**.
 
 ## 1. C has no bool type (and neither does tiny-c)

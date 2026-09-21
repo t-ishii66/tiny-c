@@ -1,5 +1,7 @@
 # 01 — AST-level optimization (constant folding + algebraic simplification)
 
+![](../../images/play-ch07-01-butterflies.png)
+
 The first round of optimization is **AST-level**. Right after parsing, before the AST reaches codegen, we collapse "obviously wasteful structures."
 
 ## 1. Constant folding

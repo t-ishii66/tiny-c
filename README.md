@@ -99,7 +99,7 @@ Deliberately excluded: `for`, `switch`, `&&`, `||`, structs, float, preprocessor
 - Documentation: Claude Opus 4.7
 - Code review: t-ishii66
 - Documentation review: t-ishii66
-- Illustrations: ChatGPT 5.4
+- Illustrations: ChatGPT 6
 - Release date: 2026/5/11
 - Version: 1.0.0
 - Copyright (C) 2026 t-ishii66. All rights reserved.

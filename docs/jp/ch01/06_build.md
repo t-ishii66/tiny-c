@@ -1,5 +1,7 @@
 # 06 — main.c と Makefile、そして全体を組み上げる
 
+![](../../images/play-ch01-06-paper-planes.png)
+
 `lexer.l`、`parser.y`、`ast.h/ast.c`、`codegen.c/codegen.h` が揃った。残りは、これらをつなぐ **エントリポイント** (`main.c`) と、ビルド手順 (`Makefile`) だ。
 
 

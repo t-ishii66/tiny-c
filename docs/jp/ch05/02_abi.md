@@ -1,5 +1,7 @@
 # 02 — System V AMD64 ABI
 
+![](../../images/play-ch05-02-drawing.png)
+
 関数を呼ぶときの取り決め ── 引数をどこに置くか、戻り値をどこから取るか、呼び出し前後で壊してよいレジスタは何か ── を **呼び出し規約 (calling convention)** または **ABI** と呼ぶ。x86-64 Linux で使われているのが **System V AMD64 ABI** だ。
 
 > **「引数はスタック渡し」ではないの？**

@@ -1,5 +1,7 @@
 # 05 — x86 アセンブリ最小限 と codegen.c
 
+![](../../images/play-ch01-05-puddles.png)
+
 第1章で生成するアセンブリはたった7行。
 
 ```asm

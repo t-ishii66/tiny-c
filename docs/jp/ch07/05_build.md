@@ -1,5 +1,7 @@
 # 05 — 完全形とビルド
 
+![](../../images/play-ch07-05-flower-crowns.png)
+
 ch07 の差分を ch06 と並べる。
 
 | ファイル | ch06 → ch07 |

@@ -1,5 +1,7 @@
 # 04 — Codegen for function calls
 
+![](../../images/play-ch05-04-paper-boats.png)
+
 Translate `f(a, b, c)` into assembly. Three things to do:
 
 1. Evaluate the arguments `a, b, c` and put them in `%rdi, %rsi, %rdx`.

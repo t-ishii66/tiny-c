@@ -1,5 +1,7 @@
 # 03 — Intro to bison and parser.y
 
+![](../../images/play-ch01-03-picnic.png)
+
 The lexer turned the source into a token stream. Next comes the **parser**.
 
 The parser's job is to decide whether the token stream is "grammatically valid," and at the same time assemble it into a **tree** (AST).

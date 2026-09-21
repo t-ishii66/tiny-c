@@ -1,5 +1,7 @@
 # 04 — Complete files and build
 
+![](../../images/play-ch06-04-rainbow.png)
+
 We lay out ch06's main diffs against ch05, then run Hello, world and strlen.
 
 ## 1. lexer.l — new keywords and tokens

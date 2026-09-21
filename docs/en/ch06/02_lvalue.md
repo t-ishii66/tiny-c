@@ -1,5 +1,7 @@
 # 02 — lvalue and rvalue — the world of `gen_addr`
 
+![](../../images/play-ch06-02-toy-tea.png)
+
 The left and right sides of `x = 5`, the left and right of `*p = 10`, and `a[i]` — what lets us treat all of these uniformly is the **lvalue / rvalue** distinction. ch06's codegen computes these two with separate functions.
 
 ## 1. Recap: rvalue was the world through ch05

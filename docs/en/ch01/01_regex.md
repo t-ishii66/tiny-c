@@ -1,5 +1,7 @@
 # 01 — Regular expression basics
 
+![](../../images/play-ch01-01-bubbles.png)
+
 The lexer's job is to chop a source string into **meaningful chunks** (tokens).
 
 ```

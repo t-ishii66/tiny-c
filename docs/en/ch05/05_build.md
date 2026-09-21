@@ -1,5 +1,7 @@
 # 05 — Complete files and build
 
+![](../../images/play-ch05-05-sunflowers.png)
+
 We lay out the diff against ch04, build, and run recursion. With the nested call (`f(1) + f(2)`) we'll watch **the moment padding is inserted** in the generated assembly.
 
 ## 1. lexer.l — add the comma
