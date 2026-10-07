@@ -122,7 +122,7 @@ That's the pattern for a C++-style line comment.
 
 This means "one or more consecutive whitespace, tab, or newline characters."
 
-- ` ` is an ordinary space
+- ` ` is an ordinary space
 - `\t` is a tab
 - `\n` is a newline
 

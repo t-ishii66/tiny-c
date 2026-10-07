@@ -248,18 +248,18 @@ Let's trace how this lexer processes `int main() { return 42; }`. flex scans lef
 | Position | Remaining input | Match | Action |
 |-----|-----------|-------|------|
 | 0 | `int main() { return 42; }` | `"int"` | return INT |
-| 3 | ` main() { return 42; }` | `[ \t\n]+` (` `) | skip |
+| 3 | ` main() { return 42; }` | `[ \t\n]+` (` `) | skip |
 | 4 | `main() { return 42; }` | `[a-zA-Z_]...` (`main`) | yylval.name = "main"; return IDENT |
 | 8 | `() { return 42; }` | `"("` | return '(' |
 | 9 | `) { return 42; }` | `")"` | return ')' |
-| 10 | ` { return 42; }` | `[ \t\n]+` | skip |
+| 10 | ` { return 42; }` | `[ \t\n]+` | skip |
 | 11 | `{ return 42; }` | `"{"` | return '{' |
-| 12 | ` return 42; }` | `[ \t\n]+` | skip |
+| 12 | ` return 42; }` | `[ \t\n]+` | skip |
 | 13 | `return 42; }` | `"return"` | return RETURN |
-| 19 | ` 42; }` | `[ \t\n]+` | skip |
+| 19 | ` 42; }` | `[ \t\n]+` | skip |
 | 20 | `42; }` | `[0-9]+` | yylval.int_val = 42; return INT_LIT |
 | 22 | `; }` | `";"` | return ';' |
-| 23 | ` }` | `[ \t\n]+` | skip |
+| 23 | ` }` | `[ \t\n]+` | skip |
 | 24 | `}` | `"}"` | return '}' |
 | 25 | (end) | | return 0 (EOF) |
 
