@@ -291,3 +291,7 @@ The bison-generated parser calls `yylex()` internally to pull tokens. All we nee
 ## Next
 
 In the next section (`03_bison.md`) we build the parser — the part that assembles this token stream into a **tree**. bison is the auto-generation tool that pairs with flex.
+
+---
+
+**Next:** [03 — Intro to bison and parser.y](03_bison.md)

@@ -295,3 +295,7 @@ Before the second `call f` (= `f(1)`), we detect `stack_offset = 1` → emit `su
 ## 9. Next
 
 Chapter 6 adds **pointers and arrays**. `&x`, `*p`, `a[i]`, string literals, global variables. Codegen for addresses (`gen_addr`), the symmetry between `*` and `&`, and address arithmetic for array access.
+
+---
+
+**Next:** [Chapter 6 — Pointers and arrays](../ch06/00_overview.md)

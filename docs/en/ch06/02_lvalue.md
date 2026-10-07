@@ -408,3 +408,7 @@ static void emit_store(int sz) {
 ## Next
 
 In the next section (`03_globals_strings.md`) we look at global variables (`.bss`) and string literals (`.rodata`) — data that lives **outside the stack**.
+
+---
+
+**Next:** [03 — Global variables and string literals](03_globals_strings.md)

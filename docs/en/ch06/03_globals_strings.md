@@ -231,3 +231,7 @@ Linked and run, it prints `hello`. The moment tiny-c becomes a language that "**
 ## Next
 
 In the next section (`04_build.md`) we lay out the complete files and run through the Hello, world demo.
+
+---
+
+**Next:** [04 — Complete files and build](04_build.md)

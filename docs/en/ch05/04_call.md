@@ -269,3 +269,7 @@ The `n` of `fact(3)` and the `n` of `fact(4)` both look like `-8(%rbp)` in assem
 ## Next
 
 In the last section (`05_build.md`) we lay out the complete files and read the generated assembly for a nested call (`f(1) + f(2)`), watching the moment the padding kicks in.
+
+---
+
+**Next:** [05 — Complete files and build](05_build.md)

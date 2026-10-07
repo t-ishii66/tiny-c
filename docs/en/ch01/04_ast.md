@@ -368,3 +368,7 @@ FUNC_DEF main      ← Node D
 ## Next
 
 In the next section (`05_codegen.md`) we look at the code generator that walks this tree and emits x86 assembly.
+
+---
+
+**Next:** [05 — A minimum of x86 assembly, and codegen.c](05_codegen.md)

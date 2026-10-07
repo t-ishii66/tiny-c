@@ -111,3 +111,7 @@ FUNC_DEF main
 ## 4. 次へ
 
 節 01（`01_grammar.md`）では、比較演算子の階層、`if`・`while`・`{ ... }` の文、dangling-else への対処を見る。
+
+---
+
+**次へ:** [01 — 文法の追加](01_grammar.md)

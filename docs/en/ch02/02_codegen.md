@@ -227,3 +227,7 @@ The stack's unit is 8 bytes, so we use the 64-bit `pushq`. A 32-bit-only `pushl`
 ## Next
 
 In the last section (`03_build.md`) we lay out the full `lexer.l`, `parser.y`, `ast.h/c`, and `codegen.c`, then build and run.
+
+---
+
+**Next:** [03 — Complete files and build](03_build.md)

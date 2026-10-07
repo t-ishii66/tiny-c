@@ -188,3 +188,7 @@ The `'(' expr ')'` rule under `primary` just needs `$$ = $2`: "pass the contents
 ## Next
 
 In the next section (`02_codegen.md`) we look at the other side — generating assembly from the AST. We still use only `%eax`, yet handle arbitrarily complex expressions. The stack does the heavy lifting.
+
+---
+
+**Next:** [02 — Managing intermediate values with the stack](02_codegen.md)

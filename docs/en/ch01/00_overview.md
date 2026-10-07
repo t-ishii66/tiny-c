@@ -188,3 +188,7 @@ If you only want to check the AST with `--dump-ast`, anything works.
 ## 7. Next
 
 In the next section (`01_regex.md`) we cover the basics of **regular expressions** — just the amount that flex needs.
+
+---
+
+**Next:** [01 — Regular expression basics](01_regex.md)

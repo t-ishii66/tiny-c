@@ -207,3 +207,7 @@ PROGRAM
 ## 7. Next
 
 AST-level optimization is done. In the next section (`02_backpatch.md`) we step away from optimization briefly to introduce **backpatching** — in ch06, Phase 1 determined `frame_size` first and then wrote the prologue, but if codegen output is buffered in memory we can "write `subq $N, %rsp` with a placeholder first, then fill in N later." Phase 1 disappears and codegen becomes single-pass.
+
+---
+
+**Next:** [02 — Eliminating Phase 1 with backpatching](02_backpatch.md)

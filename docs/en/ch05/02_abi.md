@@ -155,3 +155,7 @@ That's everything. The next two sections turn each side into implementation.
 ## Next
 
 In the next section (`03_frame.md`) we replace ch04's lazy frame allocation with **pre-pass allocation**, and guarantee 16-alignment.
+
+---
+
+**Next:** [03 — Redesigning the stack frame](03_frame.md)

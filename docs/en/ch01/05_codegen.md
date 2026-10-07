@@ -368,3 +368,7 @@ When you walk the AST recursively, the visit order naturally becomes the output 
 ## Next
 
 In the last section (`06_build.md`) we look at `main.c` and the `Makefile` that tie everything together — completing the compiler.
+
+---
+
+**Next:** [06 — main.c, Makefile, and assembling the whole thing](06_build.md)

@@ -212,3 +212,7 @@ PROGRAM
 ## 12. Next
 
 Grammar and AST now carry types. In the next section (`02_lvalue.md`) we look at the heart of code generation — **the `gen_addr` function** and **the symmetry of lvalue / rvalue**. How `*` and `&` correspond in code generation, why an array name "decays" into an address — all of it falls out from how we use `gen_addr` vs. `gen_expr`.
+
+---
+
+**Next:** [02 — lvalue and rvalue — the world of `gen_addr`](02_lvalue.md)

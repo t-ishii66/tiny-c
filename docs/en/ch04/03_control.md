@@ -197,3 +197,7 @@ The outer `while` uses `0`, the inner `if` uses `1`. **Each nested structure get
 ## Next
 
 In the last section (`04_build.md`) we lay out the full files and build & run.
+
+---
+
+**Next:** [04 — Complete files and build](04_build.md)

@@ -408,3 +408,7 @@ static void emit_store(int sz) {
 ## 次へ
 
 次の節（`03_globals_strings.md`）では、グローバル変数（`.bss`）と文字列リテラル（`.rodata`）── つまり **スタックの外** にあるデータをどう扱うかを見る。
+
+---
+
+**次へ:** [03 — グローバル変数と文字列リテラル](03_globals_strings.md)

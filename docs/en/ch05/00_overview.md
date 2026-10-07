@@ -131,3 +131,7 @@ Where ch04 had `Node *program = func_def` (a single function), now a `PROGRAM` n
 ## 5. Next
 
 In section 01 (`01_grammar.md`) we look at the grammar for multiple functions, argument lists, and function-call expressions.
+
+---
+
+**Next:** [01 — Grammar and AST](01_grammar.md)

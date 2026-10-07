@@ -196,3 +196,7 @@ static void gen_expr(Node *node) {
 ## 次へ
 
 次の節（`03_control.md`）では、その真偽値をどう **分岐** に使うか ── `je` `jmp` ジャンプ命令と **ラベル** を扱う。
+
+---
+
+**次へ:** [03 — if と while の codegen](03_control.md)

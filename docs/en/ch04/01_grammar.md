@@ -261,3 +261,7 @@ ch04 treats `{ ... }` as a block statement, but **this chapter does not yet impl
 ## Next
 
 In the next section (`02_compare.md`) we look at codegen for comparison and logical negation.
+
+---
+
+**Next:** [02 — Codegen for comparison and logical negation](02_compare.md)

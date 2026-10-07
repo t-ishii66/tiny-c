@@ -18,3 +18,6 @@ PROBLEMS.md
 id_rsa*
 credentials.json
 service-account*.json
+
+# Local tool state (per-machine, never shared)
+.claude/

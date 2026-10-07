@@ -178,3 +178,7 @@ Nodes now carry `Type` information (`x : int`, `p : int*`). `UNARY &` and `UNARY
 ## 5. Next
 
 In section 01 (`01_types.md`) we introduce **the concept of type** into tiny-c. Every variable was implicitly `int` before; from ch06, we need to distinguish `char`, `int*`, `char*`, and `int[N]`. We look at the `Type` struct and the related grammar/AST changes.
+
+---
+
+**Next:** [01 — Types and grammar additions](01_types.md)

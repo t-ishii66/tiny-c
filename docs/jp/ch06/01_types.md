@@ -212,3 +212,7 @@ PROGRAM
 ## 12. 次へ
 
 文法と AST に型が入った。次の節（`02_lvalue.md`）で、コード生成側の核心 ── **`gen_addr` 関数** と **lvalue / rvalue の対称性** ── を見る。`*` と `&` がコード生成の上でどう対応関係にあるか、配列名がなぜ自動的にアドレスになる（"decay"）か、すべて `gen_addr` と `gen_expr` の使い分けで説明できる。
+
+---
+
+**次へ:** [02 — lvalue と rvalue ── `gen_addr` の世界](02_lvalue.md)

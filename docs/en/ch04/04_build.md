@@ -518,3 +518,7 @@ Five passes of the loop leave `1 * 5 * 4 * 3 * 2 = 120` in `%eax`, which `return
 ## 9. Next
 
 Chapter 5 adds **function definitions and calls**. Multiple functions, parameters, calls to external functions. The new theme is the **System V AMD64 ABI** — the calling convention that passes arguments in registers and keeps the stack aligned to 16 bytes.
+
+---
+
+**Next:** [Chapter 5 — Calling and defining functions](../ch05/00_overview.md)

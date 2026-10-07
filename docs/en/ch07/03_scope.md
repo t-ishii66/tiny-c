@@ -169,3 +169,7 @@ When the inner `}` runs `exit_scope`, `locals` rolls back up to the outer x, and
 ## 8. Next
 
 In the next section (`04_peephole.md`) we cover the last optimization piece — **peephole optimization**, which looks at the emitted asm and rewrites adjacent instructions. Like backpatching, it works on the memory buffer.
+
+---
+
+**Next:** [04 — Peephole optimization](04_peephole.md)

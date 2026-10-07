@@ -169,3 +169,7 @@ PROGRAM
 ## 次へ
 
 次の節 (`02_abi.md`) で、関数を呼ぶときのルール ── **System V AMD64 ABI** ── を見る。
+
+---
+
+**次へ:** [02 — System V AMD64 ABI](02_abi.md)

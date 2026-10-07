@@ -468,3 +468,7 @@ In tiny-c's world the "optimizations" are minimal, but **we now have a structure
 - **Block scope**: layered on top of single-pass codegen via `enter_scope` / `exit_scope`, which rewind the `locals` linked list's head. Sibling blocks reuse slots; `max_frame_size` holds the backpatch value.
 - AST optimization and peephole can be disabled via `--no-opt`, but backpatching and scope are part of codegen's structure and are always on.
 - `lexer.l / parser.y / ast.h / ast.c` are identical to ch06. The diff is concentrated in three places: `codegen.c` (backpatching + scope), `main.c` (always memstream), and the new `optimize.c`.
+
+---
+
+**Next:** [Back to the top page](../../../README.md)

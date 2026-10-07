@@ -196,3 +196,7 @@ static void gen_expr(Node *node) {
 ## Next
 
 In the next section (`03_control.md`) we put these booleans to use for **branching** — `je`, `jmp`, and **labels**.
+
+---
+
+**Next:** [03 — Codegen for if and while](03_control.md)

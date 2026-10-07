@@ -108,3 +108,7 @@ $ ./tinyc --no-opt --dump-ast test.c  # print the AST (pre-optimization)
 ## 5. Next
 
 In section 01 (`01_const_fold.md`) we look at the inside of AST optimization. Why does `2 + 3 * 4` become `14` before reaching codegen? Why does `x + 0` become just `x`? The mechanism is one small recursive function.
+
+---
+
+**Next:** [01 — AST-level optimization (constant folding + algebraic simplification)](01_const_fold.md)

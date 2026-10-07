@@ -468,3 +468,7 @@ tiny-c の世界では「最適化」は最小限だが、**最適化を後付�
 - **ブロックスコープ**: 単一パス化の上に `enter_scope` / `exit_scope` で locals 連結リストの head 切り戻しを乗せる。兄弟ブロックでスロット再利用、`max_frame_size` がバックパッチ値を保持。
 - AST 最適化とピープホールは `--no-opt` で外せるが、バックパッチとスコープは codegen の構造そのものなので常に有効。
 - `lexer.l / parser.y / ast.h / ast.c` は ch06 と完全に同じ。差分は `codegen.c`（バックパッチ + スコープ）、`main.c`（常に memstream）、`optimize.c` 新規 の 3 箇所。
+
+---
+
+**次へ:** [トップページに戻る](../../../README-jp.md)

@@ -323,3 +323,7 @@ In ch03, the only lvalue is a variable, so `find_local(name)` is enough to get t
 ## Next
 
 In the last section (`03_build.md`) we lay out the full files, build, and run.
+
+---
+
+**Next:** [03 — Complete files and build](03_build.md)

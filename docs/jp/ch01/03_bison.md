@@ -440,3 +440,7 @@ $ bison -d -o parser.tab.c parser.y
 ## 次へ
 
 次の節（`04_ast.md`）では、ここで作った木そのものの実装（`ast.h` と `ast.c`）を設計の意図から見ていく。
+
+---
+
+**次へ:** [04 — AST と ast.h / ast.c](04_ast.md)

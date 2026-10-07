@@ -148,3 +148,7 @@ There are other regex features — `?`, `|`, `{n,m}`, grouping `(...)`, etc. —
 ## Next
 
 In the next section (`02_flex.md`), we use these regular expressions to write the lexer.
+
+---
+
+**Next:** [02 — Intro to flex and lexer.l](02_flex.md)

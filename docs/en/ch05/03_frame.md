@@ -191,3 +191,7 @@ This pre-allocation scheme still uses ch03's flat symbol table, so at ch05, rede
 ## Next
 
 In the next section (`04_call.md`) we look at the **caller's** codegen. Set up arguments, keep alignment, `call` — introducing the alignment-tracking variable `stack_offset`.
+
+---
+
+**Next:** [04 — Codegen for function calls](04_call.md)

@@ -405,3 +405,7 @@ From Chapter 2 onward, we'll add flesh to this skeleton by extending lexer / par
 ## 8. Next
 
 In the next chapter, we make the compiler handle arithmetic expressions like `return 2 + 3 * 4;`. The themes are: how grammar expresses precedence, and how to manage multiple intermediate values.
+
+---
+
+**Next:** [Chapter 2 — Build a calculator](../ch02/00_overview.md)

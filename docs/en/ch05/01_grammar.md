@@ -169,3 +169,7 @@ Under `PROGRAM` are two `FUNC_DEF`s. `add` has `PARAM a`, `PARAM b`, and a body 
 ## Next
 
 In the next section (`02_abi.md`) we look at the rules for calling a function — **the System V AMD64 ABI**.
+
+---
+
+**Next:** [02 — The System V AMD64 ABI](02_abi.md)

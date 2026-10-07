@@ -111,3 +111,7 @@ The `WHILE` node has two children: condition and body. The AST's nesting structu
 ## 4. Next
 
 In section 01 (`01_grammar.md`) we look at the comparison-operator hierarchy, the `if`/`while`/`{ ... }` statements, and dealing with the dangling-else.
+
+---
+
+**Next:** [01 — Grammar additions](01_grammar.md)

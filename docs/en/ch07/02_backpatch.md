@@ -136,3 +136,7 @@ case NODE_BLOCK:
 ## 6. Next
 
 In the next section (`03_scope.md`) we put **block scope** on top of the single-pass codegen. `{ int x=1; }{ int x=2; }` (same name in different blocks) becomes legal. The two-phase design would have made keeping scope state in sync between phases complex; with single-pass, scope just rides on the normal codegen flow.
+
+---
+
+**Next:** [03 — Block scope](03_scope.md)

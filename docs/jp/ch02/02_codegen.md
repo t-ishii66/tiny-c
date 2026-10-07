@@ -227,3 +227,7 @@ static void gen_expr(Node *node) {
 ## 次へ
 
 最後の節（`03_build.md`）で、`lexer.l` `parser.y` `ast.h/c` `codegen.c` の完全形を並べ、ビルドして動かす。
+
+---
+
+**次へ:** [03 — 完全形とビルド](03_build.md)

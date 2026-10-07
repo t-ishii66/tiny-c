@@ -119,3 +119,7 @@ The x86-64 stack **grows downward (toward lower addresses)**. Each `subq $8, %rs
 ## 4. Next
 
 In section 01 (`01_grammar.md`) we look at the `int x = expr;` statement, assignment expressions, and using identifiers as expressions.
+
+---
+
+**Next:** [01 — Grammar additions](01_grammar.md)

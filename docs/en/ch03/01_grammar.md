@@ -141,3 +141,7 @@ Three statements in a row, each made of new node kinds (`VAR_DECL`, `EXPR_STMT` 
 ## Next
 
 Next, codegen — converting names like `x` and `y` into addresses like **`-8(%rbp)`**. The symbol table makes its entrance.
+
+---
+
+**Next:** [02 — Stack frame and symbol table](02_codegen.md)

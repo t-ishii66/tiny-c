@@ -410,3 +410,7 @@ Leaves (`INT_LIT`) become `movl $N, %eax`; inner nodes (`BINARY`) become their o
 ## 9. Next
 
 Chapter 3 adds **variables**. Expressions like `int x = 1; int y = 2; return x + y;` start working. We make room for variables on the stack frame and put in the machinery to turn names into addresses.
+
+---
+
+**Next:** [Chapter 3 — Variables](../ch03/00_overview.md)

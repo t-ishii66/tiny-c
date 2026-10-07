@@ -482,3 +482,7 @@ Compared to ch02, the only difference is that leaves can be `IDENT` instead of `
 ## 10. Next
 
 Chapter 4 adds **branches (`if`/`else`)** and **loops (`while`)**, the comparison operators (`< <= > >= == !=`), and logical negation `!`. The new codegen tools are **labels** and **conditional jumps**.
+
+---
+
+**Next:** [Chapter 4 — Branches and loops](../ch04/00_overview.md)

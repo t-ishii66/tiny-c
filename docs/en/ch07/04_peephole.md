@@ -224,3 +224,7 @@ So whether `peephole_pushpop()` runs before or after `peephole_dead_after_ret()`
 ## 8. Next
 
 In the final section (`05_build.md`) we lay out the full diff of `optimize.c` and the `main.c` changes side-by-side, with before/after demos.
+
+---
+
+**Next:** [05 — Complete files and build](05_build.md)

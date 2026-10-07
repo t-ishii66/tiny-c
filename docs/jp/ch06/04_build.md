@@ -377,3 +377,7 @@ main:
 - `.bss` でグローバル、`.rodata` で文字列リテラル、`%rip` 相対でアクセス。
 - char/int/pointer のサイズ別 load/store: `movsbl`/`movl`/`movq`、`movb`/`movl`/`movq`。
 - `printf` が呼べるようになり、tiny-c は実用的な C のサブセットに到達した。
+
+---
+
+**次へ:** [第7章 — 最適化とバックパッチ](../ch07/00_overview.md)

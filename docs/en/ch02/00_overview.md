@@ -111,3 +111,7 @@ Unlike Chapter 1, we don't re-explain flex, bison, ASTs, or x86 basics. We use t
 ## 4. Next
 
 In the next section (`01_precedence.md`) we look at why `2 + 3 * 4` becomes `2 + (3*4)` — the mechanism at the grammar level.
+
+---
+
+**Next:** [01 — Grammar determines precedence](01_precedence.md)

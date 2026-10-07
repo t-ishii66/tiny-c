@@ -377,3 +377,7 @@ By the end of Chapter 6, tiny-c covers most of the language spec we initially se
 - Globals in `.bss`, string literals in `.rodata`, accessed via `%rip`-relative addressing.
 - Size-aware load/store for char/int/pointer: `movsbl`/`movl`/`movq`, `movb`/`movl`/`movq`.
 - `printf` now works, and tiny-c has reached a practical subset of C.
+
+---
+
+**Next:** [Chapter 7 — Optimization and backpatching](../ch07/00_overview.md)

@@ -440,3 +440,7 @@ In `main.c` we only do three things:
 ## Next
 
 In the next section (`04_ast.md`) we look at the tree itself — the implementation (`ast.h` and `ast.c`) — starting from the design intent.
+
+---
+
+**Next:** [04 — The AST and ast.h / ast.c](04_ast.md)
