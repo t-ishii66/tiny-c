@@ -11,6 +11,8 @@ permalink: /
 
 **English** | [日本語](README-jp.md)
 
+> 📖 For a nicer reading experience, view the documentation on **GitHub Pages**: <https://t-ishii66.github.io/tiny-c/>
+
 **tiny-c** is a teaching **C compiler** that compiles a tiny subset of C to **x86-64 assembly**. The compiler source is about **1500 lines of C**. The documentation is written so that knowledge of C alone is enough to follow along — reading the seven chapters in order naturally walks you through every line of the codebase.
 
 If you have ever wanted to **build your own C compiler from scratch**, understand how **lexers, parsers, and code generators** fit together, or see how a real compiler emits x86-64 assembly for variables, pointers, function calls, and recursion — this **compiler tutorial** is for you. Topics covered: **lexical analysis with flex**, **parsing with bison**, **abstract syntax tree (AST)** construction, **code generation**, **System V AMD64 ABI**, **lvalue/rvalue** handling, **stack frames**, **block scope**, **constant folding**, **peephole optimization**, and **backpatching**.
