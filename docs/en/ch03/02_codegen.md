@@ -1,4 +1,4 @@
-# 02 — Stack frame and symbol table
+# 3.2 Stack frame and symbol table
 
 ![](../../images/play-ch03-02-cat-yarn.png)
 
@@ -9,7 +9,7 @@ Two new tools appear:
 - **Stack frame** — the per-function local memory region, addressed relative to `%rbp`.
 - **Symbol table** — the name → offset translation table. Used only inside codegen.
 
-## 1. Stack frame, recap
+## 3.2.1 Stack frame, recap
 
 The function prologue we wrote in ch01:
 
@@ -31,7 +31,7 @@ ret                  # jump to the return address
 
 In ch01 and ch02 we added nothing in between — there were no local variables. In ch03 we put **room for local variables** between the prologue and the first `leave`.
 
-## 2. Where local variables live
+## 3.2.2 Where local variables live
 
 The stack grows downward (toward lower addresses). Right after the prologue, `%rbp` points to the location where the caller's `%rbp` was saved.
 
@@ -74,7 +74,7 @@ The simple reason: **the stack's natural unit is 8 bytes**. On x86-64, `pushq` a
 
 Production compilers manage alignment and size carefully per type, but tiny-c takes the shortcut: "everything is 8 bytes."
 
-## 3. The symbol table
+## 3.2.3 The symbol table
 
 "When I see `x` written, that means `-8(%rbp)`." We need a structure that remembers that mapping — the symbol table.
 
@@ -131,7 +131,7 @@ Walk the list, return the offset if found, error otherwise.
 
 The symbol table is a static device used **only inside `codegen.c`**. The AST and `parser.y` stay at the name level; address resolution doesn't touch them. `tinyc` gets away with "one flat table per function" — when `if`/`while` arrive in ch04 and global variables arrive in ch06, the local mechanism stays the same. In ch07, when we introduce block scope, we extend this by saving and restoring the head of the `locals` list.
 
-## 4. Codegen for NODE_VAR_DECL
+## 3.2.4 Codegen for NODE_VAR_DECL
 
 How to compile `int x = 1;`:
 
@@ -156,7 +156,7 @@ The `subq $8, %rsp` matters. Why? Right after the prologue, `%rsp` is at the sam
 
 `subq $8, %rsp` **moves `%rsp` below `x`'s slot**. Subsequent `pushq`s now go to `-16(%rbp)` or lower, so `x`'s region is safe. The `subq` is `%rsp`'s way of saying "above this is variable territory; below is scratch."
 
-## 5. Codegen for NODE_IDENT
+## 3.2.5 Codegen for NODE_IDENT
 
 For example, reading `x` while computing the right-hand side of `y = x + 1;`. One instruction does it.
 
@@ -170,7 +170,7 @@ case NODE_IDENT: {
 
 Resolve the name with `find_local`, load from there into `%eax`. The contract — **"the expression's value is in `%eax`"** — is preserved.
 
-## 6. Codegen for NODE_ASSIGN
+## 3.2.6 Codegen for NODE_ASSIGN
 
 Continuing with `y = x + 1;`: the part that writes the result of `x + 1` into `y`. Assignment is "compute the rhs, then write to the lhs's location."
 
@@ -193,7 +193,7 @@ The order is **evaluate rhs first**. Assignment evaluates the right of `=`, then
 
 The **value of an assignment expression** is **the value written**. In a chain like `a = (b = 7)`, the inner assignment's result (7) is the outer rhs. In our code, the `movl` doesn't change `%eax`, so **the value we wrote remains in `%eax`** — the assignment expression's own value also lives in `%eax`.
 
-## 7. Codegen for NODE_EXPR_STMT
+## 3.2.7 Codegen for NODE_EXPR_STMT
 
 The `ASSIGN` above is an **expression** node: it computes a value, which ends up in `%eax`. `EXPR_STMT`, on the other hand, is a **statement** node — its role is to run the expression but throw away the result. An assignment terminated by `;`, like `y = x + 1;`, becomes a two-layer AST with `EXPR_STMT` wrapping `ASSIGN` — "the computing" is `ASSIGN`, "throwing away the value and moving on" is `EXPR_STMT`.
 
@@ -233,7 +233,7 @@ In other words:
 
 `NODE_EXPR_STMT` is the node for the latter pattern.
 
-## 8. A look at chained assignment
+## 3.2.8 A look at chained assignment
 
 Trace the codegen for `a = b = 7`.
 
@@ -270,7 +270,7 @@ movl %eax, -8(%rbp)        # a = 7
 
 Three instructions for the chain. This is what right-associativity buys us — left-associative would have given `(a = b) = 7`, which breaks both grammar and code.
 
-## 9. The whole codegen.c (gen_expr / gen_stmt excerpts)
+## 3.2.9 The whole codegen.c (gen_expr / gen_stmt excerpts)
 
 ```c
 static void gen_expr(Node *node) {
@@ -313,7 +313,7 @@ static void gen_stmt(Node *node) {
 }
 ```
 
-## 10. lvalue / rvalue
+## 3.2.10 lvalue / rvalue
 
 - **rvalue** = the **value** of an expression. What ends up in `%eax`. The result of `gen_expr`.
 - **lvalue** = a **memory location**. The `x` in `x = 5`. An address like `-8(%rbp)`.
@@ -326,4 +326,4 @@ In the last section (`03_build.md`) we lay out the full files, build, and run.
 
 ---
 
-**Next:** [03 — Complete files and build](03_build.md)
+**Next:** [3.3 Complete files and build](03_build.md)

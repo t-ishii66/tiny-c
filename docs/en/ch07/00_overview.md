@@ -2,7 +2,7 @@
 
 # Chapter 7 — Optimization and backpatching
 
-## 0. Introduction
+## Introduction
 
 The assembly produced through ch01–ch06 has plenty of waste.
 
@@ -12,10 +12,10 @@ Chapter 7 tackles both of these "issues" together. The key is **buffering the as
 
 | Theme | Contents | Relation to the buffer |
 |------|------|----------------|
-| **AST optimization** (section 01) | Constant folding + algebraic simplification | None directly (lives on the AST) |
-| **Backpatching** (section 02, required) | Patch the prologue's `subq $N` afterwards → codegen becomes single-pass | `ftell` / `fseek` on the buffer |
-| **Block scope** (section 03) | A by-product of single-pass codegen: `{ int x=1; }{ int x=2; }` works | None directly (rides on codegen's flow) |
-| **Peephole optimization** (section 04) | Look at the emitted asm and rewrite adjacent instructions | Read the buffer and re-emit |
+| **AST optimization** (Section 7.1) | Constant folding + algebraic simplification | None directly (lives on the AST) |
+| **Backpatching** (Section 7.2, required) | Patch the prologue's `subq $N` afterwards → codegen becomes single-pass | `ftell` / `fseek` on the buffer |
+| **Block scope** (Section 7.3) | A by-product of single-pass codegen: `{ int x=1; }{ int x=2; }` works | None directly (rides on codegen's flow) |
+| **Peephole optimization** (Section 7.4) | Look at the emitted asm and rewrite adjacent instructions | Read the buffer and re-emit |
 
 Backpatching and optimization are **different things**. Backpatching is structural plumbing for codegen — it doesn't change what the code does. Optimization actually shortens the code. `--no-opt` disables AST optimization and peephole only; **backpatching is always on**. Block scope is a language-feature addition.
 
@@ -30,7 +30,7 @@ source → lex → parse → AST → [AST opt] → codegen → asm → [peephole
 
 The asm is written to an in-memory buffer, polished by the peephole, and then flows to stdout. Backpatching happens on the same buffer.
 
-## 1. The effect, sampled
+## The effect, sampled
 
 Compiling `return 2 + 3 * 4;`:
 
@@ -71,7 +71,7 @@ main:
 **Without optimization**: `pushq %rax; popq %rdi` remains.
 **With optimization**: replaced with a single `movq %rax, %rdi`, and trailing dead code is gone.
 
-## 2. Diff against ch06
+## Diff against ch06
 
 | File | Change |
 |---------|------|
@@ -83,7 +83,7 @@ main:
 
 Optimization (AST + peephole) is **a completely separate pass** flanking codegen. Backpatching is an **internal improvement** to codegen — from the outside, it just turned two phases into one; the emitted code is the same as ch06. Block scope is **a language-feature addition** that drops in naturally now that codegen is single-pass.
 
-## 3. Usage
+## Usage
 
 ```bash
 $ ./tinyc test.c              # optimized (default)
@@ -94,21 +94,20 @@ $ ./tinyc --no-opt --dump-ast test.c  # print the AST (pre-optimization)
 
 `--no-opt` lets us directly compare before/after, which is how we demo things in ch07.
 
-## 4. Section layout
+## Section layout
 
 | Section | Contents |
 |--------|------|
-| 00 (this file) | Map of the chapter |
-| 01 | AST-level optimization — constant folding + algebraic simplification |
-| 02 | Eliminating Phase 1 with backpatching — patch the prologue's `subq $N` and make codegen single-pass |
-| 03 | Block scope — drops in naturally on the single-pass codegen; `locals` head save/restore (with slot reuse) |
-| 04 | Peephole optimization — look at emitted asm and rewrite |
-| 05 | The complete diffs, build, and before/after comparisons |
+| [7.1](01_const_fold.md) | AST-level optimization — constant folding + algebraic simplification |
+| [7.2](02_backpatch.md) | Eliminating Phase 1 with backpatching — patch the prologue's `subq $N` and make codegen single-pass |
+| [7.3](03_scope.md) | Block scope — drops in naturally on the single-pass codegen; `locals` head save/restore (with slot reuse) |
+| [7.4](04_peephole.md) | Peephole optimization — look at emitted asm and rewrite |
+| [7.5](05_build.md) | The complete diffs, build, and before/after comparisons |
 
-## 5. Next
+## Next
 
-In section 01 (`01_const_fold.md`) we look at the inside of AST optimization. Why does `2 + 3 * 4` become `14` before reaching codegen? Why does `x + 0` become just `x`? The mechanism is one small recursive function.
+In Section 7.1 (`01_const_fold.md`) we look at the inside of AST optimization. Why does `2 + 3 * 4` become `14` before reaching codegen? Why does `x + 0` become just `x`? The mechanism is one small recursive function.
 
 ---
 
-**Next:** [01 — AST-level optimization (constant folding + algebraic simplification)](01_const_fold.md)
+**Next:** [7.1 AST-level optimization (constant folding + algebraic simplification)](01_const_fold.md)

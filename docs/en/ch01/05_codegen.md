@@ -1,4 +1,4 @@
-# 05 — A minimum of x86 assembly, and codegen.c
+# 1.5 A minimum of x86 assembly, and codegen.c
 
 ![](../../images/play-ch01-05-puddles.png)
 
@@ -18,7 +18,7 @@ main:
 We'll build up the meaning of these seven lines from the minimum amount of background.
 
 
-## 1. What assembly is
+## 1.5.1 What assembly is
 
 What a CPU actually executes is **machine code** — a sequence of binary instructions. Strings of numbers like `0x48 0x89 0xe5`. Writing that by hand is impossible.
 
@@ -34,7 +34,7 @@ Assembly and machine code are in **one-to-one correspondence**. If you write `mo
 In other words, assembly is "machine code you can read and write." If the compiler emits assembly, the assembler and linker turn it into an executable.
 
 
-## 2. Registers — the CPU's scratchpad
+## 1.5.2 Registers — the CPU's scratchpad
 
 When the CPU does computation, it uses small storage areas called **registers**. Registers live inside the CPU and are vastly faster than memory. Think of them as a "workbench" where you keep values temporarily while computing.
 
@@ -63,7 +63,7 @@ The relationship between `%rax` and `%eax`:
 We use `%eax` for integers (`int` is 32 bits) and `%rax` for pointers and addresses (those need 64 bits).
 
 
-## 3. How to write instructions — AT&T syntax
+## 1.5.3 How to write instructions — AT&T syntax
 
 There are two flavors of x86 assembly: Intel syntax and AT&T syntax. We use **AT&T syntax** (it's what gcc uses by default). Linux's `as` assembler also defaults to AT&T.
 
@@ -82,7 +82,7 @@ movq %rsp, %rbp       # copy rsp into rbp (8-byte move)
 pushq %rbp            # push the value of rbp onto the stack (8 bytes)
 ```
 
-## 4. Functions and the stack — where values live
+## 1.5.4 Functions and the stack — where values live
 
 When you call a function, you need:
 
@@ -113,7 +113,7 @@ low addr   └──────────────┘
 `%rbp` is the register that points to **the base of the current function's frame**. When code inside a function asks "where do my local variables live?", the answer is given as an offset from `%rbp`. `%rbp` doesn't move from the start of the function to the end, so it provides a stable anchor.
 
 
-## 5. Function prologue and epilogue
+## 1.5.5 Function prologue and epilogue
 
 There's a **standard pattern** when implementing a function on x86-64. The code at a function's entrance is called the **prologue**, and the code at the exit is the **epilogue**.
 
@@ -140,7 +140,7 @@ Line 2: `ret` pops the return address off the stack and jumps to it. Control flo
 Chapter 1 doesn't use local variables, so the prologue is just "save and update rbp," and the epilogue is just `leave` and `ret` — the simplest possible form. Chapter 3 brings in variables, and the prologue grows slightly (an instruction is added to reserve frame space).
 
 
-## 6. Returning a value — the `%eax` convention
+## 1.5.6 Returning a value — the `%eax` convention
 
 When a C function returns a value, where does it put it?
 
@@ -157,7 +157,7 @@ That becomes the process **exit code**. That's why `echo $?` prints 42.
 "**Put the `int` return value in `%eax` and `ret`.**"
 
 
-## 7. The full picture
+## 1.5.7 The full picture
 
 The seven lines again:
 
@@ -188,7 +188,7 @@ Lines starting with `.` are **directives** — instructions to the assembler. Th
 Without the `main` label, the linker asks "where is `main`?". Without `.globl`, `main` is invisible to the linker (it becomes a private name visible only inside the file).
 
 
-## 8. Reading codegen.c
+## 1.5.8 Reading codegen.c
 
 ```c
 #include <stdio.h>
@@ -339,7 +339,7 @@ void codegen(Node *program, FILE *out);
 #endif
 ```
 
-## 9. Tree shape ⇄ instruction order
+## 1.5.9 Tree shape ⇄ instruction order
 
 Lay the AST of `int main() { return 42; }` next to its assembly:
 
@@ -371,4 +371,4 @@ In the last section (`06_build.md`) we look at `main.c` and the `Makefile` that 
 
 ---
 
-**Next:** [06 — main.c, Makefile, and assembling the whole thing](06_build.md)
+**Next:** [1.6 main.c, Makefile, and assembling the whole thing](06_build.md)

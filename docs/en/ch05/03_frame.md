@@ -1,10 +1,10 @@
-# 03 — Redesigning the stack frame
+# 5.3 Redesigning the stack frame
 
 ![](../../images/play-ch05-03-rain-origami.png)
 
 To meet the ABI's alignment rule, we replace ch04's lazy frame allocation with a **pre-pass**.
 
-## 1. The ch04 scheme and its problem
+## 5.3.1 The ch04 scheme and its problem
 
 In ch03 and ch04, we emitted `subq $8, %rsp` inline for each variable declaration.
 
@@ -19,7 +19,7 @@ That was fine through ch04. Why? **We never made a `call`.** Without `call`, the
 
 ch05 introduces `call`. Before every `call`, `%rsp` must be 16-aligned. **We can't tell in advance when a call will appear** (mid-declaration, inside nested ifs, during recursion, etc.). The lazy scheme is out.
 
-## 2. The fix — pre-pass allocation
+## 5.3.2 The fix — pre-pass allocation
 
 Survey the whole function: count **how many locals and parameters it has**, and allocate the total once with `subq`.
 
@@ -38,7 +38,7 @@ Prologue:
 
 Each `var_decl` **no longer emits a `subq`** — the location is already allocated. It just evaluates the initializer and writes the value into the variable's slot via `movl` (e.g., `int x = 5;` becomes `movl $5, %eax; movl %eax, -8(%rbp)`).
 
-## 3. Two-phase codegen — use a pre-pass to learn the structure
+## 5.3.3 Two-phase codegen — use a pre-pass to learn the structure
 
 To pre-allocate, we need to know "how many variables" before entering the body. We can find out by **walking the AST once**.
 
@@ -141,7 +141,7 @@ case NODE_VAR_DECL: {
 
 We use `find_local`, not `add_local`. Phase 1 already registered every variable, so **redeclaration can't happen by accident**, and the local region was **already allocated** by the prologue's `subq`.
 
-## 4. Parameter spill
+## 5.3.4 Parameter spill
 
 Argument-passing registers carry the values **`%rdi, %rsi, ...`** the instant the function body begins. But these are caller-saved — calling another function inside the body **destroys** them.
 
@@ -157,7 +157,7 @@ From there on, the function body accesses parameters **just like local variables
 
 In the symbol table, parameters are registered as ordinary `LVar`s. At codegen time, seeing `IDENT a` triggers `find_local("a")` → offset (say `8`) → `movl -8(%rbp), %eax` — exactly the same as any local variable.
 
-## 5. Frame layout
+## 5.3.5 Frame layout
 
 The frame layout for a function like `int fact(int n) { ... uses other variables and calls ... }`:
 
@@ -184,7 +184,7 @@ low address
 
 A function with zero locals and zero parameters (e.g. `int main() { return fact(5); }`) has `frame_size = 0` and `aligned = 0`, i.e., **no `subq` emitted at all**. The prologue is just `pushq %rbp; movq %rsp, %rbp`.
 
-## 6. The limits of "don't reuse variables"
+## 5.3.6 The limits of "don't reuse variables"
 
 This pre-allocation scheme still uses ch03's flat symbol table, so at ch05, redeclaring `int y = ...;` in a different block is an error. **ch07 introduces block scope**, where the same name can be declared in different blocks (we save `locals`' head on scope entry and roll it back on exit; sibling blocks reuse stack slots because `frame_size` is also saved/restored).
 
@@ -194,4 +194,4 @@ In the next section (`04_call.md`) we look at the **caller's** codegen. Set up a
 
 ---
 
-**Next:** [04 — Codegen for function calls](04_call.md)
+**Next:** [5.4 Codegen for function calls](04_call.md)

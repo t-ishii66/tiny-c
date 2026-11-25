@@ -1,10 +1,10 @@
-# 03 — 完全形とビルド
+# 2.3 完全形とビルド
 
 ![](../../images/play-ch02-03-watering.png)
 
 ch02 のソース全体を ch01 との差分とともに並べる。ビルドして動かし、生成アセンブリを追う。
 
-## 1. lexer.l — トークン5つ追加
+## 2.3.1 lexer.l — トークン5つ追加
 
 ```flex
 %{
@@ -37,7 +37,7 @@ ch02 のソース全体を ch01 との差分とともに並べる。ビルドし
 
 ch01 との差分は5行だけ。`+ - * / %` のトークンを追加。
 
-## 2. parser.y — 式の階層を導入
+## 2.3.2 parser.y — 式の階層を導入
 
 ```yacc
 %{
@@ -117,7 +117,7 @@ primary                                                         /* 追加 */
 
 ch01 では `expr : INT_LIT` の1行だけだった。ch02 ではここを5階層に拡張。`%type` 宣言にも `add_expr mul_expr unary primary` を加える。
 
-## 3. ast.h — ノード型2つ追加
+## 2.3.3 ast.h — ノード型2つ追加
 
 ```c
 #ifndef AST_H
@@ -170,7 +170,7 @@ void print_ast(Node *node, int indent);
 
 `NodeKind` に2つ、フィールドに4つ、コンストラクタ宣言に2つ。`Node` 構造体は素朴に「全種類のフィールドを並べたもの」なので、新しいノード種別を増やすだけ。
 
-## 4. ast.c — コンストラクタ2つ + print_ast 拡張
+## 2.3.4 ast.c — コンストラクタ2つ + print_ast 拡張
 
 ```c
 #include <stdio.h>
@@ -245,7 +245,7 @@ void print_ast(Node *node, int level) {
 
 実際のソースは省略していない（`steps/ch02/src/ast.c` を参照）。ここでは差分が見えるよう、ch01 と同じ部分は省いた。
 
-## 5. codegen.c — gen_expr に2ケース追加
+## 2.3.5 codegen.c — gen_expr に2ケース追加
 
 `gen_stmt` と `codegen` 関数は ch01 と同じ。`gen_expr` だけが太る。
 
@@ -297,11 +297,11 @@ static void gen_stmt(Node *node) { /* ch01 と同じ */ }
 void codegen(Node *prog, FILE *output) { /* ch01 と同じ */ }
 ```
 
-## 6. main.c / Makefile / codegen.h — 変更なし
+## 2.3.6 main.c / Makefile / codegen.h — 変更なし
 
 ch01 のものをそのまま使う。
 
-## 7. ビルドして動かす
+## 2.3.7 ビルドして動かす
 
 ```bash
 $ cd steps/ch02
@@ -360,7 +360,7 @@ $ ./tinyc test.c > test.s && gcc -o test test.s && ./test; echo $?
 
 `--dump-ast` で確かめると、`+` の左に `*` の塊が、右に `%` の塊が、それぞれ独立して座っている。文法の階層がそのまま AST の形に出る。
 
-## 8. 生成アセンブリを追う
+## 2.3.8 生成アセンブリを追う
 
 `return 2 + 3 * 4;` の生成アセンブリを上から読む。
 
@@ -407,7 +407,7 @@ BINARY +                       <-- 一番最後の addl に対応
 
 葉 (`INT_LIT`) は `movl $N, %eax`、内部ノード (`BINARY`) はそのオペレーション命令。木の **後行順** (postorder) で命令が並ぶ。
 
-## 9. 次へ
+## 2.3.9 次へ
 
 第3章では **変数** が加わる。`int x = 1; int y = 2; return x + y;` のような式が書けるようになる。スタックフレーム上に変数の場所を取り、名前をアドレスに変換する仕組みが入る。
 

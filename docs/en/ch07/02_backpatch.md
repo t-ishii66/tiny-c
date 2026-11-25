@@ -1,4 +1,4 @@
-# 02 — Eliminating Phase 1 with backpatching
+# 7.2 Eliminating Phase 1 with backpatching
 
 ![](../../images/play-ch07-02-puzzle.png)
 
@@ -6,9 +6,9 @@ The ch06 codegen was structured as **Phase 1 (collect) → Phase 2 (emit)**. The
 
 ch07 removes that constraint with **backpatching**: "write a placeholder where N isn't known yet, then write back later." Codegen becomes **single-pass**.
 
-Optimization (the AST folding in section 01; peephole in section 04) is a separate topic, but the **memory buffer** introduced in ch07 enables backpatching — well worth covering here.
+Optimization (the AST folding in Section 7.1; peephole in Section 7.4) is a separate topic, but the **memory buffer** introduced in ch07 enables backpatching — well worth covering here.
 
-## 1. What was the problem
+## 7.2.1 What was the problem
 
 ch06's `gen_func` ran in this order:
 
@@ -30,9 +30,9 @@ Two AST walks. The first calculates frame size only; the second actually emits a
 
 Why two? **Because we wrote with `fprintf` immediately.** Once `subq $N` was emitted with a value, there was no way to go back and rewrite it later. That made Phase 1 necessary.
 
-## 2. With a memory buffer, we can rewrite
+## 7.2.2 With a memory buffer, we can rewrite
 
-In ch07 we accumulate assembly output in a **memory buffer** (`open_memstream`). This was introduced for peephole optimization (section 04), but a side effect is that **`ftell` and `fseek` work on the buffer** — we can return to a written position and overwrite it.
+In ch07 we accumulate assembly output in a **memory buffer** (`open_memstream`). This was introduced for peephole optimization (Section 7.4), but a side effect is that **`ftell` and `fseek` work on the buffer** — we can return to a written position and overwrite it.
 
 ```c
 /* main.c */
@@ -52,7 +52,7 @@ else
 
 In ch07 we **use the buffer even with `--no-opt`** (we just `fputs` it). Backpatching is needed regardless of optimization, so the buffer itself is always required.
 
-## 3. Backpatching the prologue
+## 7.2.3 Backpatching the prologue
 
 `gen_func` changes to:
 
@@ -94,7 +94,7 @@ Key points:
 - **The write-back uses the same fixed width.** If the byte length changed, we'd clobber the following code; **keeping the length constant is mandatory**. 10 digits can represent frame sizes up to ~10 GB, plenty for tiny-c.
 - Assemblers (`as` / GAS / LLVM as) accept **extra whitespace inside operands** like `subq $16        , %rsp` — the spaces before `,` are not part of the number; they're just whitespace and ignored.
 
-## 4. Codegen becomes single-pass
+## 7.2.4 Codegen becomes single-pass
 
 With Phase 1 gone, `gen_func` allocates LVars during body generation. `NODE_VAR_DECL` handling:
 
@@ -124,7 +124,7 @@ case NODE_BLOCK:
     return;
 ```
 
-## 5. ch06 vs ch07
+## 7.2.5 ch06 vs ch07
 
 | Item | ch06 (two-phase) | ch07 (single-pass + backpatch) |
 |------|-----------|---------------------------|
@@ -133,10 +133,10 @@ case NODE_BLOCK:
 | Prologue's `subq $N` | finalize N first, then write | write a placeholder, fill in N later |
 | Where `add_local` is called | Phase 1 (inside `collect_locals`) | during body generation (inside `NODE_VAR_DECL`) |
 
-## 6. Next
+## 7.2.6 Next
 
 In the next section (`03_scope.md`) we put **block scope** on top of the single-pass codegen. `{ int x=1; }{ int x=2; }` (same name in different blocks) becomes legal. The two-phase design would have made keeping scope state in sync between phases complex; with single-pass, scope just rides on the normal codegen flow.
 
 ---
 
-**Next:** [03 — Block scope](03_scope.md)
+**Next:** [7.3 Block scope](03_scope.md)

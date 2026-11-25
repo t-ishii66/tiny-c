@@ -1,10 +1,10 @@
-# 02 — Codegen for comparison and logical negation
+# 4.2 Codegen for comparison and logical negation
 
 ![](../../images/play-ch04-02-blanket-fort.png)
 
 How do we express "expressions that produce a boolean," like `a < b` or `!x`, in assembly? Three new instructions appear: **`cmpl`**, **`setcc`**, and **`movzbl`**.
 
-## 1. C has no bool type (and neither does tiny-c)
+## 4.2.1 C has no bool type (and neither does tiny-c)
 
 The result of C's comparison operators `<` `<=` `>` `>=` `==` `!=` is **`int`**: 1 for true, 0 for false.
 
@@ -19,7 +19,7 @@ Logical negation `!` is the same: `!0` is 1, `!nonzero` is 0.
 
 So "computing a boolean" boils down to "writing 0 or 1 into `%eax`."
 
-## 2. The compare instruction `cmpl`
+## 4.2.2 The compare instruction `cmpl`
 
 x86 has an instruction `cmpl src, dst` that compares two values:
 
@@ -42,7 +42,7 @@ cmpl %ecx, %eax    # internally: eax - ecx = 5 - 3 = 2
 
 Subsequent instructions read these flags, which is how the comparison result gets used.
 
-## 3. Conditional set `setcc`
+## 4.2.3 Conditional set `setcc`
 
 `setXX` instructions **set an 8-bit register to 0 or 1** based on flags. The `XX` part is the condition name.
 
@@ -64,7 +64,7 @@ cmpl %ecx, %eax    # compare
 setl %al           # %al = 1 if %eax < %ecx else 0
 ```
 
-## 4. Zero extension `movzbl`
+## 4.2.4 Zero extension `movzbl`
 
 Updating only `%al` leaves **old garbage** in the upper 24 bits of `%eax`. To make all of `%eax` exactly 0 or 1, we zero-extend `%al` into `%eax`.
 
@@ -76,7 +76,7 @@ movzbl %al, %eax   # %eax = (32-bit unsigned extension of %al)
 
 Now `%eax` is exactly 0 or 1. The "value in `%eax`" contract is honored.
 
-## 5. The three-instruction comparison set
+## 4.2.5 The three-instruction comparison set
 
 The full pattern for `a < b`:
 
@@ -116,7 +116,7 @@ static void emit_compare(const char *setcc) {
 
 One helper, six comparison operators, all neatly together.
 
-## 6. Mind the operand order of `cmpl`
+## 4.2.6 Mind the operand order of `cmpl`
 
 AT&T syntax `cmpl src, dst` computes **`dst - src`**. The same order as `addl`, `subl`, etc. (the operation goes to the right register).
 
@@ -130,7 +130,7 @@ Just what we want. Combined with ch02's convention ("evaluate rhs first → rhs 
 
 If we reversed the order (`cmpl %eax, %ecx`), the sign of the flags would flip and every comparison would invert. **We can write comparisons naturally because we kept ch02's ordering (rhs → ecx, lhs → eax).**
 
-## 7. Logical negation `!`
+## 4.2.7 Logical negation `!`
 
 `!x` is equivalent to `x == 0`. The implementation is the same:
 
@@ -155,7 +155,7 @@ case '!':
 
 One added case in the unary `switch`.
 
-## 8. Comparison codegen as a whole (additions to gen_expr)
+## 4.2.8 Comparison codegen as a whole (additions to gen_expr)
 
 ```c
 static void gen_expr(Node *node) {
@@ -199,4 +199,4 @@ In the next section (`03_control.md`) we put these booleans to use for **branchi
 
 ---
 
-**Next:** [03 — Codegen for if and while](03_control.md)
+**Next:** [4.3 Codegen for if and while](03_control.md)

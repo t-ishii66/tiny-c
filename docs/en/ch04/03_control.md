@@ -1,4 +1,4 @@
-# 03 — Codegen for if and while
+# 4.3 Codegen for if and while
 
 ![](../../images/play-ch04-03-cherry-blossoms.png)
 
@@ -9,7 +9,7 @@
 
 The compiler's job is to translate the source's control structure into **jumps and labels**.
 
-## 1. Labels and jumps
+## 4.3.1 Labels and jumps
 
 A **label** is "a name for a jump target" in assembly.
 
@@ -31,7 +31,7 @@ static int new_label(void) { return label_count++; }
 
 Each call to `new_label()` returns a unique integer. Build label names like `.Lelse_3` and `.Lendif_3` and there's no collision.
 
-## 2. The conditional jump we use most — `je`
+## 4.3.2 The conditional jump we use most — `je`
 
 `je` (jump if equal) jumps **when ZF (the zero flag) is set**. Placed right after a `cmpl` or `testl`, it jumps "when equal" or "when the result was zero."
 
@@ -48,7 +48,7 @@ In our codegen, comparison and condition expressions leave **0 or 1 in `%eax`**.
 
 The core of an `if (cond)` translation (evaluate the condition → jump away on false) is expressed in just those two instructions. Then we put a label at the target and lay out the then-body and else-body.
 
-## 3. Translating if (without else)
+## 4.3.3 Translating if (without else)
 
 ```c
 if (cond)
@@ -69,7 +69,7 @@ If `cond` is 0, `je` jumps to `.Lendif_N`, skipping the body. Otherwise `je` fal
 
 The label number `N` is issued just for this `if`. Multiple `if`s in the same function get different numbers, so they don't collide.
 
-## 4. Translating if-else
+## 4.3.4 Translating if-else
 
 ```c
 if (cond)
@@ -120,7 +120,7 @@ case NODE_IF: {
 
 The shape differs depending on whether `else` is present. Without `else`, we skip `.Lelse_N` entirely and jump straight to `.Lendif_N`.
 
-## 5. Translating while
+## 4.3.5 Translating while
 
 ```c
 while (cond)
@@ -163,7 +163,7 @@ case NODE_WHILE: {
 }
 ```
 
-## 6. Nesting doesn't break it
+## 4.3.6 Nesting doesn't break it
 
 Even with an `if` inside a `while`, or a `while` inside an `if`, label numbers are **unique per `new_label()` call**, so there's no collision.
 
@@ -200,4 +200,4 @@ In the last section (`04_build.md`) we lay out the full files and build & run.
 
 ---
 
-**Next:** [04 — Complete files and build](04_build.md)
+**Next:** [4.4 Complete files and build](04_build.md)

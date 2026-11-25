@@ -1,4 +1,4 @@
-# 03 — Block scope
+# 7.3 Block scope
 
 ![](../../images/play-ch07-03-camping.png)
 
@@ -6,7 +6,7 @@
 
 **The previous section (backpatching) is a prerequisite.** Adding scope to ch06's two-phase codegen creates the complexity of tracking the same scope state **in sync** across Phase 1 (collection) and Phase 2 (emission). With the single-pass codegen from the last section, scope operations are integrated into the codegen flow **just once**.
 
-## 1. Data structures — scope tracking
+## 7.3.1 Data structures — scope tracking
 
 We add the following state for scope management:
 
@@ -29,7 +29,7 @@ The idea is simple:
 
 But rewinding `frame_size` loses the value we needed for the prologue's `subq $N`. So **`max_frame_size`** separately tracks "the largest `frame_size` ever reached." Backpatching uses this `max_frame_size` to write the `subq`.
 
-## 2. Two scope functions
+## 7.3.2 Two scope functions
 
 ```c
 static void enter_scope(void) {
@@ -47,7 +47,7 @@ static void exit_scope(void) {
 
 Six lines. **`enter_scope`** saves the current state; **`exit_scope`** restores it. That makes "variables declared in this scope" automatically disappear from `locals`, and the associated `frame_size` is released.
 
-## 3. `add_local`'s scope boundary
+## 7.3.3 `add_local`'s scope boundary
 
 We want to reject same-name re-declaration within a scope but allow it across scopes — this falls out from controlling **the scan range** in `add_local`'s duplicate check:
 
@@ -72,7 +72,7 @@ static LVar *add_local(char *name, Type *type) {
 
 The scan range is the half-open interval **head ↓ scope_top[depth-1]** — it covers only "the variables already declared in this scope." Variables in outer scopes aren't touched, so **shadowing** (declaring a new variable in an inner scope with the same name as an outer one, temporarily hiding the outer) just works (no redeclaration error; a new variable is registered in a different slot).
 
-## 4. Integration into codegen
+## 7.3.4 Integration into codegen
 
 Scope operations are called in three places:
 
@@ -113,7 +113,7 @@ Key points:
 - Backpatching uses **`max_frame_size`, not `frame_size`**. `frame_size` rewinds when scopes exit, but `max_frame_size` holds the "biggest value ever reached" as a high-water mark.
 - Single-pass means scope operations live in one continuous codegen flow. The "Phase 1 scope state has to be re-created in Phase 2" complexity of the two-phase design is gone.
 
-## 5. Example: slot reuse
+## 7.3.5 Example: slot reuse
 
 ```c
 int main() {
@@ -139,7 +139,7 @@ The progression:
 
 Final `max_frame_size = 16`. Backpatching fills `subq $16, %rsp` — four variables but only 16 bytes of stack.
 
-## 6. Shadowing an outer variable
+## 7.3.6 Shadowing an outer variable
 
 ```c
 int main() {
@@ -157,7 +157,7 @@ The inner `return x;` does `find_var("x")`, which **starts at the head of `local
 
 When the inner `}` runs `exit_scope`, `locals` rolls back up to the outer x, and `frame_size` returns to 8. From here on, `find_var("x")` returns the outer x (offset 8, value 5).
 
-## 7. ch06 vs. ch07
+## 7.3.7 ch06 vs. ch07
 
 | | ch06 (the main text) | ch07 (this section) |
 |---|------------|-----------|
@@ -166,10 +166,10 @@ When the inner `}` runs `exit_scope`, `locals` rolls back up to the outer x, and
 | Slot reuse | none | yes (across sibling blocks) |
 | `add_local` scan range | all of locals | current scope only |
 
-## 8. Next
+## 7.3.8 Next
 
 In the next section (`04_peephole.md`) we cover the last optimization piece — **peephole optimization**, which looks at the emitted asm and rewrites adjacent instructions. Like backpatching, it works on the memory buffer.
 
 ---
 
-**Next:** [04 — Peephole optimization](04_peephole.md)
+**Next:** [7.4 Peephole optimization](04_peephole.md)

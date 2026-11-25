@@ -1,10 +1,10 @@
-# 04 — Complete files and build
+# 4.4 Complete files and build
 
 ![](../../images/play-ch04-04-badminton.png)
 
 We lay out the complete ch04 files with their diffs against ch03, then build and run factorial and branching examples.
 
-## 1. lexer.l — new keywords and operators
+## 4.4.1 lexer.l — new keywords and operators
 
 Add three keywords (`if`/`else`/`while`), four multi-character operators, and three single-character symbols to the ch03 lexer.
 
@@ -50,7 +50,7 @@ Add three keywords (`if`/`else`/`while`), four multi-character operators, and th
 
 The multi-character tokens (`==`, etc.) can sit alongside the single-character versions (`=`, etc.). Longest-match in flex makes `==` win. The order doesn't change meaning here, but pairing them visually is tidier.
 
-## 2. parser.y — hierarchy and statement additions
+## 4.4.2 parser.y — hierarchy and statement additions
 
 ```yacc
 %{
@@ -137,7 +137,7 @@ primary     : ...   /* same as ch03 */
 
 The full version is in `steps/ch04/src/parser.y`. `%expect 1` declares "exactly one shift/reduce expected" — for the dangling-else.
 
-## 3. ast.h — new node kinds and widened op
+## 4.4.3 ast.h — new node kinds and widened op
 
 ```c
 typedef enum {
@@ -194,7 +194,7 @@ NodeList *new_node_list(Node *node, NodeList *next);
 void print_ast(Node *node, int indent);
 ```
 
-## 4. ast.c — constructors + print_ast extended
+## 4.4.4 ast.c — constructors + print_ast extended
 
 Add `new_if` and `new_while`. Add `NODE_IF`/`NODE_WHILE` to `print_ast`. To stringify multi-character operators, introduce a small helper `op_str`.
 
@@ -241,7 +241,7 @@ case NODE_WHILE:                                                          /* add
 
 The full version is at `steps/ch04/src/ast.c`.
 
-## 5. codegen.c — comparison, negation, if, while
+## 4.4.5 codegen.c — comparison, negation, if, while
 
 Add `'!'` and six comparison cases to `gen_expr`. Add `NODE_IF` and `NODE_WHILE` to `gen_stmt`. Add a static `label_count`, a `new_label` issuer, and an `emit_compare` helper for the three-instruction comparison.
 
@@ -338,9 +338,9 @@ case NODE_WHILE: {
 
 Full file at `steps/ch04/src/codegen.c`.
 
-## 6. main.c / Makefile — no changes
+## 4.4.6 main.c / Makefile — no changes
 
-## 7. Build & run
+## 4.4.7 Build & run
 
 ```bash
 $ cd steps/ch04
@@ -454,7 +454,7 @@ $ ./tinyc test.c > test.s && gcc -o test test.s && ./test; echo $?
 
 As expected.
 
-## 8. Reading the factorial assembly
+## 4.4.8 Reading the factorial assembly
 
 Input (repeated):
 
@@ -515,7 +515,7 @@ From `.Lbegin_0:` to `.Lendwhile_0:` is one while. Evaluate condition → `je` t
 
 Five passes of the loop leave `1 * 5 * 4 * 3 * 2 = 120` in `%eax`, which `return` hands back.
 
-## 9. Next
+## 4.4.9 Next
 
 Chapter 5 adds **function definitions and calls**. Multiple functions, parameters, calls to external functions. The new theme is the **System V AMD64 ABI** — the calling convention that passes arguments in registers and keeps the stack aligned to 16 bytes.
 

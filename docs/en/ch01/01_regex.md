@@ -1,4 +1,4 @@
-# 01 — Regular expression basics
+# 1.1 Regular expression basics
 
 ![](../../images/play-ch01-01-bubbles.png)
 
@@ -15,7 +15,7 @@ To do this, we need to tell the machine **"which patterns of characters become w
 flex writes lexing rules as regular expressions. Let's go through the minimum needed for Chapter 1.
 
 
-## 1. Literal strings
+## 1.1.1 Literal strings
 
 The simplest pattern is a literal string.
 
@@ -41,7 +41,7 @@ This also matches "the six-character sequence `return`." For alphanumerics, with
 In flex, we make a habit of quoting symbols to avoid confusion.
 
 
-## 2. Character classes `[...]`
+## 1.1.2 Character classes `[...]`
 
 A **character class** represents "**any one of these characters**."
 
@@ -61,7 +61,7 @@ Ranges can be combined.
 ```
 
 
-## 3. Repetition `+` and `*`
+## 1.1.3 Repetition `+` and `*`
 
 **Quantifiers** express "repetition of the same pattern."
 
@@ -81,7 +81,7 @@ Ranges can be combined.
 `[0-9]+` works directly as the pattern for an "integer literal."
 
 
-## 4. Concatenating patterns
+## 1.1.4 Concatenating patterns
 
 Place patterns side by side and they mean "appear in this order."
 
@@ -97,7 +97,7 @@ This means:
 That's the pattern for an **identifier** (a C variable or function name). It matches `x`, `main`, `my_var`, `buf123`, and so on. It does *not* match something like `1var` that starts with a digit.
 
 
-## 5. Any single character `.`
+## 1.1.5 Any single character `.`
 
 A period `.` matches **"any single character except a newline."**
 
@@ -114,7 +114,7 @@ Combined with `*`, it becomes "everything up to a newline."
 That's the pattern for a C++-style line comment.
 
 
-## 6. Whitespace and newlines
+## 1.1.6 Whitespace and newlines
 
 ```
 [ \t\n]+
@@ -129,7 +129,7 @@ This means "one or more consecutive whitespace, tab, or newline characters."
 Anything escaped with `\` is treated as "a single character with a special meaning." flex uses this pattern to skip whitespace.
 
 
-## 7. Regex summary for Chapter 1
+## 1.1.7 Regex summary for Chapter 1
 
 | Notation | Meaning |
 |------|------|
@@ -151,4 +151,4 @@ In the next section (`02_flex.md`), we use these regular expressions to write th
 
 ---
 
-**Next:** [02 — Intro to flex and lexer.l](02_flex.md)
+**Next:** [1.2 Intro to flex and lexer.l](02_flex.md)

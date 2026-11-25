@@ -2,7 +2,7 @@
 
 # Chapter 3 — Variables
 
-## 0. Introduction
+## Introduction
 
 Chapter 3 introduces **variables**.
 
@@ -24,7 +24,7 @@ int main() {
 }
 ```
 
-## 1. Diff against ch02
+## Diff against ch02
 
 | File | Change |
 |---------|------|
@@ -38,7 +38,7 @@ The central new theme: **"convert names into addresses on the stack."** That's i
 
 A variable is actually a location in memory. The name `x` is a label for humans; what the CPU sees is just an address. The compiler's job is to build a translation table (the symbol table) from **name → address**.
 
-## 2. Run it first
+## Run it first
 
 ```bash
 $ cat test.c
@@ -107,19 +107,18 @@ $ ./tinyc test.c > test.s && gcc -o test test.s && ./test; echo $?
 
 The x86-64 stack **grows downward (toward lower addresses)**. Each `subq $8, %rsp` reserves one slot of space, and we hand out the resulting fixed addresses (`-8(%rbp)`, `-16(%rbp)`) to variables. How the compiler builds the mapping between addresses and names is what this chapter is about.
 
-## 3. Section layout
+## Section layout
 
 | Section | Contents |
 |--------|------|
-| 00 (this file) | Map of the chapter |
-| 01 | Grammar additions — `var_decl`, `assign`, `IDENT` in expressions |
-| 02 | Stack frame and symbol table — turning names into offsets |
-| 03 | Complete files with diffs; build and run |
+| [3.1](01_grammar.md) | Grammar additions — `var_decl`, `assign`, `IDENT` in expressions |
+| [3.2](02_codegen.md) | Stack frame and symbol table — turning names into offsets |
+| [3.3](03_build.md) | Complete files with diffs; build and run |
 
-## 4. Next
+## Next
 
-In section 01 (`01_grammar.md`) we look at the `int x = expr;` statement, assignment expressions, and using identifiers as expressions.
+In Section 3.1 (`01_grammar.md`) we look at the `int x = expr;` statement, assignment expressions, and using identifiers as expressions.
 
 ---
 
-**Next:** [01 — Grammar additions](01_grammar.md)
+**Next:** [3.1 Grammar additions](01_grammar.md)

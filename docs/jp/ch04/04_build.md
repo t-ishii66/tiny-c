@@ -1,10 +1,10 @@
-# 04 — 完全形とビルド
+# 4.4 完全形とビルド
 
 ![](../../images/play-ch04-04-badminton.png)
 
 ch04 の各ファイルの完全形を、ch03 との差分とともに並べる。最後に実際にビルドして階乗と分岐を動かす。
 
-## 1. lexer.l — 新キーワードと演算子
+## 4.4.1 lexer.l — 新キーワードと演算子
 
 ch03 のものに、`if`/`else`/`while` のキーワード3つ、複数文字演算子4つ、1文字記号3つを追加する。
 
@@ -50,7 +50,7 @@ ch03 のものに、`if`/`else`/`while` のキーワード3つ、複数文字演
 
 複数文字トークン（`==` など）は1文字版（`=` など）と並べて書ける。flex の最長一致で `==` のほうが優先される。順序は意味を持たないが、整理上ペアで並べると見やすい。
 
-## 2. parser.y — 階層と文の追加
+## 4.4.2 parser.y — 階層と文の追加
 
 ```yacc
 %{
@@ -137,7 +137,7 @@ primary     : ...   /* ch03 と同じ */
 
 完全版は `steps/ch04/src/parser.y` を参照。`%expect 1` は dangling-else の shift/reduce を「想定通り 1 個」と宣言するもの。
 
-## 3. ast.h — ノード型とop拡張
+## 4.4.3 ast.h — ノード型とop拡張
 
 ```c
 typedef enum {
@@ -194,7 +194,7 @@ NodeList *new_node_list(Node *node, NodeList *next);
 void print_ast(Node *node, int indent);
 ```
 
-## 4. ast.c — コンストラクタ + print_ast 拡張
+## 4.4.4 ast.c — コンストラクタ + print_ast 拡張
 
 `new_if` と `new_while` を追加。`print_ast` に `NODE_IF` `NODE_WHILE` を追加。複数文字演算子の文字列化のために小さなヘルパー `op_str` を入れる。
 
@@ -241,7 +241,7 @@ case NODE_WHILE:                                                          /* 追
 
 完全版は `steps/ch04/src/ast.c`。
 
-## 5. codegen.c — 比較・否定・if・while
+## 4.4.5 codegen.c — 比較・否定・if・while
 
 `gen_expr` に `'!'`、6個の比較演算ケースを追加。`gen_stmt` に `NODE_IF`、`NODE_WHILE` を追加。`label_count` という静的変数とラベル発行関数 `new_label`、比較3命令を出すヘルパー `emit_compare`。
 
@@ -338,9 +338,9 @@ case NODE_WHILE: {
 
 完全版は `steps/ch04/src/codegen.c`。
 
-## 6. main.c / Makefile — 変更なし
+## 4.4.6 main.c / Makefile — 変更なし
 
-## 7. ビルドして動かす
+## 4.4.7 ビルドして動かす
 
 ```bash
 $ cd steps/ch04
@@ -454,7 +454,7 @@ $ ./tinyc test.c > test.s && gcc -o test test.s && ./test; echo $?
 
 期待通り。
 
-## 8. 階乗の生成アセンブリを読む
+## 4.4.8 階乗の生成アセンブリを読む
 
 入力（再掲）:
 
@@ -515,7 +515,7 @@ main:
 
 5回ループして `1 * 5 * 4 * 3 * 2 = 120` が `%eax` に残り、`return` で返される。
 
-## 9. 次へ
+## 4.4.9 次へ
 
 第5章では **関数の定義と呼び出し** を加える。複数の関数、引数、外部関数呼び出し。新しいテーマは **System V AMD64 ABI** ── レジスタで引数を渡し、16バイトでスタックを揃える呼び出し規約だ。
 

@@ -1,10 +1,10 @@
-# 02 — Managing intermediate values with the stack
+# 2.2 Managing intermediate values with the stack
 
 ![](../../images/play-ch02-02-board-game.png)
 
 How do we evaluate a multi-operator expression like `2 + 3 * 4` using just the register `%eax`? The answer: **use the stack**.
 
-## 1. The ch01 codegen, recalled
+## 2.2.1 The ch01 codegen, recalled
 
 In ch01, `gen_expr` had a single case:
 
@@ -22,7 +22,7 @@ The contract was: "the value of an expression ends up in `%eax`." For an integer
 
 In ch02 we add `NODE_BINARY` and `NODE_UNARY` cases here. The contract is unchanged: **after `gen_expr`, the result is in `%eax`**.
 
-## 2. The problem with binary operators
+## 2.2.2 The problem with binary operators
 
 `2 + 3` as assembly:
 
@@ -44,7 +44,7 @@ If we insist that "after `gen_expr`, `%eax` holds the value," then evaluating a 
 
 The tool that solves this is the **stack**.
 
-## 3. Saving intermediate values to the stack
+## 2.2.3 Saving intermediate values to the stack
 
 The stack is a special memory region whose address decreases on each function call. `%rsp` (the stack pointer) points to its current top. The CPU manipulates it with `pushq` and `popq`.
 
@@ -57,7 +57,7 @@ popq  %rcx     # rcx = *(rsp);  rsp += 8;
 
 With this, we can temporarily stash `%eax`, do another computation, and recover the value later. **Registers are limited, but the stack is orders of magnitude larger** — there's no shortage of room for intermediate values.
 
-## 4. The binary-operator pattern
+## 2.2.4 The binary-operator pattern
 
 A binary operator — the shape **left(lhs) operator right(rhs)** (e.g. `a + b`, `x * y`) — is generated like this:
 
@@ -104,7 +104,7 @@ Summary:
 
 Add, subtract, and multiply share the same pattern. Just change the instruction.
 
-## 5. Nesting doesn't break the pattern
+## 2.2.5 Nesting doesn't break the pattern
 
 Does this pattern actually work for `(1 + 2) + (3 + 4)`?
 
@@ -133,7 +133,7 @@ The stack progresses `[7]` → `[2, 7]` → `[7]` → `[]`.
 
 Because each level's `pushq`/`popq` come in pairs, the stack balances. **Each level of recursion allocates and frees the stack space it uses.**
 
-## 6. Division and modulo are special
+## 2.2.6 Division and modulo are special
 
 Up to `+ - *` we get away with two-operand instructions, but `/ %` are different. x86's `idivl` works like this:
 
@@ -163,7 +163,7 @@ idivl %ecx
 movl %edx, %eax       # remainder → eax
 ```
 
-## 7. Unary minus
+## 2.2.7 Unary minus
 
 `-x` takes one instruction: `negl %eax`.
 
@@ -176,7 +176,7 @@ case NODE_UNARY:
 
 `negl` flips the sign in two's-complement. The stack is untouched.
 
-## 8. The full ch02 gen_expr
+## 2.2.8 The full ch02 gen_expr
 
 Three new cases is all it takes.
 
@@ -218,7 +218,7 @@ static void gen_expr(Node *node) {
 
 `gen_stmt` and `codegen` don't change from ch01 at all.
 
-## 9. Why push `%rax` when working with 32-bit values
+## 2.2.9 Why push `%rax` when working with 32-bit values
 
 `pushq %rax` pushes the entire 64-bit register. `movl $4, %eax` writes the low 32 bits (`%eax`), but on x86-64, writing to `%eax` **automatically zeroes the upper 32 bits**. So the whole `%rax` ends up holding the right value (zero on top, the integer in the bottom).
 
@@ -230,4 +230,4 @@ In the last section (`03_build.md`) we lay out the full `lexer.l`, `parser.y`, `
 
 ---
 
-**Next:** [03 — Complete files and build](03_build.md)
+**Next:** [2.3 Complete files and build](03_build.md)

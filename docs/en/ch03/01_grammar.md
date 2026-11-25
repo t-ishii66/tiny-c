@@ -1,4 +1,4 @@
-# 01 — Grammar additions
+# 3.1 Grammar additions
 
 ![](../../images/play-ch03-01-sandcastle.png)
 
@@ -8,7 +8,7 @@ Here are the changes to `parser.y`. Three things to do:
 2. Add an **assignment expression** to the expression hierarchy (at the lowest precedence).
 3. Add **identifiers** to `primary`.
 
-## 1. New statements
+## 3.1.1 New statements
 
 Through ch02, `stmt` had only one form: `RETURN expr ';'`. We add two more.
 
@@ -29,7 +29,7 @@ stmt
 
 A line beginning with `int` and a line beginning with an IDENT (a variable name) can be distinguished by bison's one-token lookahead. The `INT` token is a keyword (the lexer matches `"int"` with top priority), so it never becomes an IDENT. Hence the two rules don't conflict.
 
-## 2. Assignment expressions
+## 3.1.2 Assignment expressions
 
 In C, assignment is "the lowest-precedence expression" and "right-associative." `a = b = 7` is interpreted as `a = (b = 7)`. We encode that in the grammar.
 
@@ -54,7 +54,7 @@ The grammar above says `add_expr '=' assign`, so bison accepts anything on the l
 
 In ch03, the only thing we accept as an lvalue is `IDENT`. Array `[]` and indirection `*` come in ch06.
 
-## 3. Add the identifier to expressions
+## 3.1.3 Add the identifier to expressions
 
 In `x + y`, the `x` and `y` are identifiers appearing as expressions. We add one line to `primary`.
 
@@ -68,7 +68,7 @@ primary
 
 `new_ident` produces a `NODE_IDENT` node. The only content is the name string. **The physical location like `-8(%rbp)` is decided by codegen** — the AST stops at the "name" level.
 
-## 4. The big picture of ch03 parser.y
+## 3.1.4 The big picture of ch03 parser.y
 
 The grammar with the diffs applied (header section like `%union` elided):
 
@@ -107,7 +107,7 @@ primary
 
 bison **shouldn't issue a conflict warning** with `-d`. The assignment rule `add_expr '=' assign` looks like a shift/reduce hazard at first, but the only symbols that can follow `assign` are `;` and `)` — never `=`. One-token lookahead lets bison decide unambiguously.
 
-## 5. AST shape
+## 3.1.5 AST shape
 
 Input:
 
@@ -144,4 +144,4 @@ Next, codegen — converting names like `x` and `y` into addresses like **`-8(%r
 
 ---
 
-**Next:** [02 — Stack frame and symbol table](02_codegen.md)
+**Next:** [3.2 Stack frame and symbol table](02_codegen.md)

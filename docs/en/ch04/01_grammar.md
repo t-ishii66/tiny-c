@@ -1,8 +1,8 @@
-# 01 — Grammar additions
+# 4.1 Grammar additions
 
 ![](../../images/play-ch04-01-snowman.png)
 
-## 1. Comparison operators and logical negation
+## 4.1.1 Comparison operators and logical negation
 
 Here's tiny-c's precedence table again. The same symbols `*` and `-` appear at multiple precedence levels, so we write the entries as actual expressions to make the usage clear.
 
@@ -54,7 +54,7 @@ unary
 
 `EQ_OP`, `NE_OP`, `LE_OP`, and `GE_OP` are named tokens for bison so that we can use multi-character tokens. The single-character `<` and `>` stay as plain character tokens.
 
-## 2. Extending the operator code
+## 4.1.2 Extending the operator code
 
 `==`, `!=`, `<=`, and `>=` don't fit in a single character. Through ch03, `Node->op` was a 1-byte `char`; we widen it to `int` and assign values outside the ASCII range to the multi-character operators.
 
@@ -78,7 +78,7 @@ Now `node->op == '+'` and `node->op == OP_LE` are both plain `int` comparisons. 
 
 256 and above never collide with ASCII (0–255). It's the same allocation scheme as ch01's "named tokens start at 256."
 
-## 3. Lexer additions
+## 4.1.3 Lexer additions
 
 Add the multi-character tokens, the new keywords, and `!` `<` `>`.
 
@@ -99,7 +99,7 @@ flex defaults to **longest match**, so even if the `==` rule appears below the `
 
 The keywords (`if`, `else`, `while`) must be **listed before** the identifier rule `[a-zA-Z_][a-zA-Z0-9_]*` (when the longest match ties, earlier wins). The same reason `int` and `return` came before identifiers in ch01.
 
-## 4. New statements — if, while, block
+## 4.1.4 New statements — if, while, block
 
 ```yacc
 stmt
@@ -119,7 +119,7 @@ We add the block statement (`'{' stmts '}'`). Without it, you couldn't group mul
 
 `new_if` and `new_while` are similar constructors we add to `ast.c`. They return `NODE_IF` and `NODE_WHILE` nodes respectively.
 
-## 5. The dangling-else problem
+## 4.1.5 The dangling-else problem
 
 ```c
 if (a) if (b) x = 1; else x = 2;
@@ -161,7 +161,7 @@ To suppress the warning, we declare `%expect 1`, saying "exactly one conflict is
 
 With this declared, a single conflict no longer warns. Zero or two-or-more do warn, so unexpected conflicts still come to our attention.
 
-## 6. AST shapes
+## 4.1.6 AST shapes
 
 Three new node kinds.
 
@@ -202,7 +202,7 @@ Node *new_while(Node *cond, Node *body) {
 }
 ```
 
-## 7. AST examples
+## 4.1.7 AST examples
 
 Input:
 
@@ -254,7 +254,7 @@ WHILE
          └─ INT_LIT 1
 ```
 
-## 8. A note on block scope
+## 4.1.8 A note on block scope
 
 ch04 treats `{ ... }` as a block statement, but **this chapter does not yet implement block scope**. At ch04 the codegen still uses one flat symbol table per function, so writing `int y = ...;` again in another block produces a "redeclared" error. **Block scope is introduced in ch07**, where we extend `locals` so its head is saved on scope entry and rolled back on exit (so `{ int x = 1; } { int x = 2; }` becomes legal).
 
@@ -264,4 +264,4 @@ In the next section (`02_compare.md`) we look at codegen for comparison and logi
 
 ---
 
-**Next:** [02 — Codegen for comparison and logical negation](02_compare.md)
+**Next:** [4.2 Codegen for comparison and logical negation](02_compare.md)

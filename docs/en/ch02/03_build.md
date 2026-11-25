@@ -1,10 +1,10 @@
-# 03 — Complete files and build
+# 2.3 Complete files and build
 
 ![](../../images/play-ch02-03-watering.png)
 
 Let's lay out the full ch02 source alongside its diff against ch01, then build, run, and trace the generated assembly.
 
-## 1. lexer.l — 5 tokens added
+## 2.3.1 lexer.l — 5 tokens added
 
 ```flex
 %{
@@ -37,7 +37,7 @@ Let's lay out the full ch02 source alongside its diff against ch01, then build, 
 
 Just five lines different from ch01: tokens for `+ - * / %`.
 
-## 2. parser.y — introduce the expression hierarchy
+## 2.3.2 parser.y — introduce the expression hierarchy
 
 ```yacc
 %{
@@ -117,7 +117,7 @@ primary                                                         /* added */
 
 In ch01 we had a single line `expr : INT_LIT`. In ch02 we expand it into five levels. We also add `add_expr mul_expr unary primary` to the `%type` declarations.
 
-## 3. ast.h — 2 new node kinds
+## 2.3.3 ast.h — 2 new node kinds
 
 ```c
 #ifndef AST_H
@@ -170,7 +170,7 @@ void print_ast(Node *node, int indent);
 
 Two new entries in `NodeKind`, four new fields, two new constructor declarations. Since the `Node` struct is just "all fields for all kinds laid out flat," we add a new kind by simply adding fields.
 
-## 4. ast.c — two new constructors + print_ast extended
+## 2.3.4 ast.c — two new constructors + print_ast extended
 
 ```c
 #include <stdio.h>
@@ -245,7 +245,7 @@ void print_ast(Node *node, int level) {
 
 The real source omits nothing (see `steps/ch02/src/ast.c`). Here, to make the diff stand out, the parts identical to ch01 are elided.
 
-## 5. codegen.c — 2 cases added to gen_expr
+## 2.3.5 codegen.c — 2 cases added to gen_expr
 
 `gen_stmt` and `codegen` are identical to ch01. Only `gen_expr` grows.
 
@@ -297,11 +297,11 @@ static void gen_stmt(Node *node) { /* same as ch01 */ }
 void codegen(Node *prog, FILE *output) { /* same as ch01 */ }
 ```
 
-## 6. main.c / Makefile / codegen.h — no changes
+## 2.3.6 main.c / Makefile / codegen.h — no changes
 
 We use the ones from ch01 unchanged.
 
-## 7. Build & run
+## 2.3.7 Build & run
 
 ```bash
 $ cd steps/ch02
@@ -360,7 +360,7 @@ $ ./tinyc test.c > test.s && gcc -o test test.s && ./test; echo $?
 
 Checked with `--dump-ast`, you'll see a `*` clump on the left of `+` and a `%` clump on the right, each standing on its own. The grammar's layering shows up directly in the shape of the AST.
 
-## 8. Tracing the generated assembly
+## 2.3.8 Tracing the generated assembly
 
 Read the assembly emitted for `return 2 + 3 * 4;` from top to bottom.
 
@@ -407,7 +407,7 @@ BINARY +                       <-- the final addl
 
 Leaves (`INT_LIT`) become `movl $N, %eax`; inner nodes (`BINARY`) become their operation instructions. The instructions come out in **postorder** traversal.
 
-## 9. Next
+## 2.3.9 Next
 
 Chapter 3 adds **variables**. Expressions like `int x = 1; int y = 2; return x + y;` start working. We make room for variables on the stack frame and put in the machinery to turn names into addresses.
 

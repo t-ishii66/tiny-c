@@ -1,10 +1,10 @@
-# 02 — lvalue and rvalue — the world of `gen_addr`
+# 6.2 lvalue and rvalue — the world of `gen_addr`
 
 ![](../../images/play-ch06-02-toy-tea.png)
 
 The left and right sides of `x = 5`, the left and right of `*p = 10`, and `a[i]` — what lets us treat all of these uniformly is the **lvalue / rvalue** distinction. ch06's codegen computes these two with separate functions.
 
-## 1. Recap: rvalue was the world through ch05
+## 6.2.1 Recap: rvalue was the world through ch05
 
 As introduced in ch06/00, the essence of the distinction is **"does it have an address?"**:
 
@@ -23,7 +23,7 @@ In ch06, **places that have addresses** (= lvalues) multiply:
 
 We want to handle all of these with **"a function that computes an address."** That's **`gen_addr`**.
 
-## 2. When is an lvalue needed — only 2 places in tiny-c
+## 6.2.2 When is an lvalue needed — only 2 places in tiny-c
 
 ch06's codegen is made of two functions:
 
@@ -44,7 +44,7 @@ Everywhere else (`return x;`, `y = x + 1;`, `x` inside `f(x)`, ...) is an rvalue
 
 `gen_stmt` always calls `gen_expr`; it never calls `gen_addr` directly.
 
-## 3. lvalue / rvalue table — note the difference between `int x` and `char *p`
+## 6.2.3 lvalue / rvalue table — note the difference between `int x` and `char *p`
 
 When pointers and arrays enter, **the number of "places with addresses" goes up**. Compare a type like `int x` (one location) with a type like `char *p` (two locations: the pointer variable itself, and the place it points to). The difference shows up as more lvalue/rvalue combinations.
 
@@ -84,18 +84,18 @@ Key insight: **`*p`'s lvalue equals `p`'s rvalue**. That's the meat of "`&` and 
 - A pointer variable involves **two layers** — `p` and `*p`.
 - An array name's rvalue is identical to its lvalue (decay) — that's C's quirk.
 
-In the remaining sections we first look at the **lvalue side** (how to get the address of each form, section 4), then the **users of lvalues** (section 5), and finally the **rvalue side** (section 6).
+In the remaining sections we first look at the **lvalue side** (how to get the address of each form, 6.2.4), then the **users of lvalues** (6.2.5), and finally the **rvalue side** (6.2.6).
 
-## 4. The lvalue side — getting an address (`gen_addr`)
+## 6.2.4 The lvalue side — getting an address (`gen_addr`)
 
 `gen_addr`'s contract: **place the lvalue's address in `%rax`**. Three cases — `IDENT`, `*`, `a[i]` — all honor that contract and return.
 
 ```c
 static void gen_addr(Node *node) {
     switch (node->kind) {
-    case NODE_IDENT: { ... }                  /* 4.1 */
-    case NODE_UNARY: if (node->op == '*') ... /* 4.2 */
-    case NODE_INDEX: { ... }                  /* 4.3 */
+    case NODE_IDENT: { ... }                  /* 6.2.4.1 */
+    case NODE_UNARY: if (node->op == '*') ... /* 6.2.4.2 */
+    case NODE_INDEX: { ... }                  /* 6.2.4.3 */
     default:
         fprintf(stderr, "not an lvalue\n");
         exit(1);
@@ -105,7 +105,7 @@ static void gen_addr(Node *node) {
 
 Falling into `default` means "tried to take the address of a non-lvalue node" — error.
 
-### 4.1 Address of `IDENT` (variables like `x`, `p`, `a`)
+### 6.2.4.1 Address of `IDENT` (variables like `x`, `p`, `a`)
 
 ```c
 /* inside gen_addr's switch — lvalue side, address into %rax */
@@ -131,9 +131,9 @@ Note that tiny-c **allocates every variable in 8-byte units on the stack** (to k
 
 Locals use `-off(%rbp)`; globals use `name(%rip)` (PC-relative addressing).
 
-**The trick for arrays**: `int a[5]` has type size 20, extended to 24 bytes. At registration time, `add_local` bumps `frame_size` by 24 and sets `v->offset` to "the distance between the array's first byte and `%rbp`." So `leaq -off(%rbp), %rax` alone gives `&a[0]`. No `a + i * elem_size` math here — that's `NODE_INDEX`'s job for `a[i]` (section 4.3).
+**The trick for arrays**: `int a[5]` has type size 20, extended to 24 bytes. At registration time, `add_local` bumps `frame_size` by 24 and sets `v->offset` to "the distance between the array's first byte and `%rbp`." So `leaq -off(%rbp), %rax` alone gives `&a[0]`. No `a + i * elem_size` math here — that's `NODE_INDEX`'s job for `a[i]` (6.2.4.3).
 
-### 4.2 Address of `*p`
+### 6.2.4.2 Address of `*p`
 
 ```c
 /* inside gen_addr's switch — lvalue side, *p's address into %rax */
@@ -150,12 +150,12 @@ case NODE_UNARY:
 
 If you want the **address** of `*p`, just take the **value** of `p` — because the value of `p` *is* that address (the section-3 table noted "`*p`'s lvalue equals `p`'s rvalue").
 
-### 4.3 Address of `a[i]` (the `[]` form — works for arrays and pointers)
+### 6.2.4.3 Address of `a[i]` (the `[]` form — works for arrays and pointers)
 
-What we handle here is the AST's `NODE_INDEX`, i.e., when the **`[]` form** is used. Whether `lhs` is the **array name `a`** or the **pointer `p`**, the AST node is the same `NODE_INDEX`, and it lands in this 4.3:
+What we handle here is the AST's `NODE_INDEX`, i.e., when the **`[]` form** is used. Whether `lhs` is the **array name `a`** or the **pointer `p`**, the AST node is the same `NODE_INDEX`, and it lands in this 6.2.4.3:
 
-- `a[i]` → `NODE_INDEX(a, i)` → 4.3
-- `p[i]` → `NODE_INDEX(p, i)` → 4.3 (lhs-is-pointer branch)
+- `a[i]` → `NODE_INDEX(a, i)` → 6.2.4.3
+- `p[i]` → `NODE_INDEX(p, i)` → 6.2.4.3 (lhs-is-pointer branch)
 - `*(p + i)` → `NODE_UNARY * → NODE_BINARY +` → **doesn't come here** (covered below)
 
 The `if/else` in the code below splits on "is the lhs an array or a pointer." For an array name, `gen_addr` gives the array's address; for a pointer, `gen_expr` gives the pointer's value (= the pointee address). Either way, we end up with a "base address."
@@ -189,9 +189,9 @@ Here `i` is **any expression** — integer literal (`a[5]`), variable (`a[n]`), 
 
 Then we compute `(base) + i × elem_size` and place the result in `%rax`.
 
-### How we reach 4.3 — `a[i]` and `*(p+i)` go different ways
+### How we reach 6.2.4.3 — `a[i]` and `*(p+i)` go different ways
 
-`gen_expr` is the entry point throughout ch06/02 (see section 2). The path into `case NODE_INDEX` (this 4.3) is taken **only via the `a[i]` form (i.e., `[]`)**. `*(p+i)` has a different surface syntax, takes a different case, and doesn't end up at 4.3.
+`gen_expr` is the entry point throughout ch06/02 (see 6.2.2). The path into `case NODE_INDEX` (this 6.2.4.3) is taken **only via the `a[i]` form (i.e., `[]`)**. `*(p+i)` has a different surface syntax, takes a different case, and doesn't end up at 6.2.4.3.
 
 **`a[i] = X;`** (lvalue path, on the left of ASSIGN):
 
@@ -199,8 +199,8 @@ Then we compute `(base) + i × elem_size` and place the result in `%rax`.
 gen_stmt(EXPR_STMT)
 └─ gen_expr(NODE_ASSIGN)        ← entry
     ├─ gen_addr(node->lhs)       ← lhs = NODE_INDEX(a, i)
-    │  └─ case NODE_INDEX        ← ★ arrives at 4.3
-    │     ├─ gen_addr(IDENT a)   ← 4.1 (the array's base address)
+    │  └─ case NODE_INDEX        ← ★ arrives at 6.2.4.3
+    │     ├─ gen_addr(IDENT a)   ← 6.2.4.1 (the array's base address)
     │     ├─ gen_expr(IDENT i)
     │     ├─ imulq $4, %rax     ← scaling!
     │     └─ addq → %rax = &a[i]
@@ -213,16 +213,16 @@ gen_stmt(EXPR_STMT)
 gen_stmt(EXPR_STMT)
 └─ gen_expr(NODE_ASSIGN)        ← entry
     ├─ gen_addr(node->lhs)       ← lhs = NODE_UNARY '*'
-    │  └─ case NODE_UNARY '*'    ← arrives at 4.2 (not 4.3!)
+    │  └─ case NODE_UNARY '*'    ← arrives at 6.2.4.2 (not 6.2.4.3!)
     │     └─ gen_expr(operand)   ← operand = NODE_BINARY '+'
-    │        └─ case NODE_BINARY ← not 4.3 or 4.2, just an addl
+    │        └─ case NODE_BINARY ← not 6.2.4.3 or 6.2.4.2, just an addl
     │           ├─ gen_expr(rhs = i)
     │           ├─ gen_expr(lhs = p)
     │           └─ addl %ecx, %eax  ← no scaling!
     └─ ... store
 ```
 
-The decisive difference is in **`NODE_BINARY '+'`'s codegen** (`case NODE_BINARY` in `steps/ch06/src/codegen.c`) — tiny-c emits a plain `addl` here without looking at types. So `*(p+i)` becomes "p bytes + i" and doesn't advance by element size. `a[i]`, by contrast, reaches 4.3 via `NODE_INDEX`, where `imulq $elem_size` does the scaling.
+The decisive difference is in **`NODE_BINARY '+'`'s codegen** (`case NODE_BINARY` in `steps/ch06/src/codegen.c`) — tiny-c emits a plain `addl` here without looking at types. So `*(p+i)` becomes "p bytes + i" and doesn't advance by element size. `a[i]`, by contrast, reaches 6.2.4.3 via `NODE_INDEX`, where `imulq $elem_size` does the scaling.
 
 ### Contrast with the C standard
 
@@ -236,20 +236,20 @@ Concrete examples:
 
 These aren't computed at compile time — the generated assembly evaluates the same expressions at runtime. Even with a constant index like `a[2]`, tiny-c doesn't fold it; it emits `imulq $4, %rax` (optimization comes in ch07).
 
-## 5. Users of lvalues — `NODE_ASSIGN` and `&`
+## 6.2.5 Users of lvalues — `NODE_ASSIGN` and `&`
 
-ASSIGN and `&` are the consumers of the "addresses" produced in section 4.
+ASSIGN and `&` are the consumers of the "addresses" produced in 6.2.4.
 
-### 5.1 `NODE_ASSIGN`
+### 6.2.5.1 `NODE_ASSIGN`
 
 **ASSIGN always needs an lvalue on its left** — writing a value into that location is what assignment does. Whatever the left's form (`x` / `*p` / `a[i]`), we first call `gen_addr(node->lhs)` for the lvalue's address, push it, then compute the right-hand side.
 
 ```c
 /* inside gen_expr's switch — uses an lvalue internally to write */
 case NODE_ASSIGN: {
-    gen_addr(node->lhs);    /* compute lhs's address (section 4) */
+    gen_addr(node->lhs);    /* compute lhs's address (6.2.4) */
     emit_push();            /* save it */
-    gen_expr(node->rhs);    /* %eax = rhs's value (section 6) */
+    gen_expr(node->rhs);    /* %eax = rhs's value (6.2.6) */
     emit_pop("%rcx");       /* %rcx = lhs address */
     Type *t = expr_type(node->lhs);
     int sz = t->is_pointer ? 8 : t->base_size;
@@ -260,7 +260,7 @@ case NODE_ASSIGN: {
 
 `x = 5;`, `p = some_addr;`, `*p = 10;`, `a[i] = 7;` — all the same pattern. **Whether something is an lvalue funnels into `gen_addr`'s "not an lvalue" error.**
 
-### 5.2 The `&` operator
+### 6.2.5.2 The `&` operator
 
 `&x`'s value is "x's address." It's literally `gen_addr(x)`:
 
@@ -274,20 +274,20 @@ case NODE_UNARY:
     ...
 ```
 
-Just call `gen_addr` from inside `gen_expr`. The ordinary identifier read (`gen_expr(x)`, section 6.1) follows up with a load from that address (= dereference `%rax`, fetch the memory contents, overwrite `%rax`). With `&x`, we skip that load. As a result, **`%rax` retains the address as-is, untouched by the data at that address.**
+Just call `gen_addr` from inside `gen_expr`. The ordinary identifier read (`gen_expr(x)`, 6.2.6.1) follows up with a load from that address (= dereference `%rax`, fetch the memory contents, overwrite `%rax`). With `&x`, we skip that load. As a result, **`%rax` retains the address as-is, untouched by the data at that address.**
 
-## 6. The rvalue side — getting the value (`gen_expr`)
+## 6.2.6 The rvalue side — getting the value (`gen_expr`)
 
 This is the side that puts the **value** of each form (`x` / `*p` / `a[i]`) into `%eax` / `%rax`. The basic pattern is "get the address with `gen_addr`, then load."
 
-### 6.1 Reading an `IDENT` as a value (including array decay)
+### 6.2.6.1 Reading an `IDENT` as a value (including array decay)
 
-What we handle here is **a bare identifier in an expression** — `x`, `p`, `a` with no subscript or operator attached. A subscripted form like `a[i]` is built as `NODE_INDEX` by the parser, so it doesn't come into this `case NODE_IDENT` (it's section 6.3's job).
+What we handle here is **a bare identifier in an expression** — `x`, `p`, `a` with no subscript or operator attached. A subscripted form like `a[i]` is built as `NODE_INDEX` by the parser, so it doesn't come into this `case NODE_IDENT` (it's 6.2.6.3's job).
 
 | Source form | AST built by the parser | Case |
 |-----------|------------------|----------|
-| Bare `a` | `NODE_IDENT("a")` | This 6.1 |
-| `a[i]` | `NODE_INDEX(a, i)` | Section 6.3 |
+| Bare `a` | `NODE_IDENT("a")` | This 6.2.6.1 |
+| `a[i]` | `NODE_INDEX(a, i)` | 6.2.6.3 |
 
 In other words, the "with vs. without subscript" distinction is **already settled at AST construction**, so each codegen case can focus on its own form.
 
@@ -317,11 +317,11 @@ int *p = a;       /* a decays to &a[0] */
 strlen(s);        /* if s is char*, s itself is an address */
 ```
 
-Implementation-wise, **`gen_expr(IDENT array)` short-circuits to `gen_addr(IDENT array)`**. An array's "value" and its "address" are identified — that's why section 3's table said `a`'s rvalue "decays into the address."
+Implementation-wise, **`gen_expr(IDENT array)` short-circuits to `gen_addr(IDENT array)`**. An array's "value" and its "address" are identified — that's why 6.2.3's table said `a`'s rvalue "decays into the address."
 
-The subscripted use `a[i]` is on a different path (section 6.3) via `NODE_INDEX`.
+The subscripted use `a[i]` is on a different path (6.2.6.3) via `NODE_INDEX`.
 
-### 6.2 Reading `*p` as a value
+### 6.2.6.2 Reading `*p` as a value
 
 `*p`'s value is "the value read from the address stored in p."
 
@@ -339,22 +339,22 @@ case NODE_UNARY:
 
 The size for `emit_load` is "the size of what p points to." 4 bytes for `int *p`; 1 byte for `char *s`.
 
-Compared to `gen_addr(*p)` in section 4.2, the only difference is whether we add a load on top. That's what "`*` adds a load" means.
+Compared to `gen_addr(*p)` in 6.2.4.2, the only difference is whether we add a load on top. That's what "`*` adds a load" means.
 
-### 6.3 Reading `a[i]` as a value
+### 6.2.6.3 Reading `a[i]` as a value
 
 ```c
 /* inside gen_expr's switch — rvalue side, place a[i]'s value in %eax/%rax */
 case NODE_INDEX: {
     /* place the element address in %rax via gen_addr, then load from it */
-    gen_addr(node);                            /* %rax = &a[i] (section 4.3) */
+    gen_addr(node);                            /* %rax = &a[i] (6.2.4.3) */
     Type *t = expr_type(node->lhs);
     emit_load(t->base_size);                   /* %rax = a[i]'s value */
     return;
 }
 ```
 
-One load on top of section 4.3's `gen_addr`.
+One load on top of 6.2.4.3's `gen_addr`.
 
 ### Same `a[2]`, rvalue vs. lvalue
 
@@ -365,7 +365,7 @@ One load on top of section 4.3's `gen_addr`.
 
 **The address computation is identical**; the only difference is whether we follow it with a load (to read) or a store (to write). The lvalue/rvalue symmetry makes `gen_addr` stand out as a shared component.
 
-## 7. Size-aware load / store
+## 6.2.7 Size-aware load / store
 
 ### `emit_load`
 
@@ -395,7 +395,7 @@ static void emit_store(int sz) {
 
 `%al` is the low 1 byte of `%rax`, `%eax` the low 4 bytes, `%rax` the full 8. We use different views of the same register depending on the store size.
 
-## 8. Summary
+## 6.2.8 Summary
 
 - An lvalue is required only at **the left of `NODE_ASSIGN`** and **the operand of `&`** — everywhere else is rvalue context.
 - `gen_expr` computes the **rvalue (value)**; `gen_addr` computes the **lvalue (address)** — both leave the result in `%rax` (or `%eax`).
@@ -411,4 +411,4 @@ In the next section (`03_globals_strings.md`) we look at global variables (`.bss
 
 ---
 
-**Next:** [03 — Global variables and string literals](03_globals_strings.md)
+**Next:** [6.3 Global variables and string literals](03_globals_strings.md)

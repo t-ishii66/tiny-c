@@ -1,4 +1,4 @@
-# 04 — 関数呼び出しの codegen
+# 5.4 関数呼び出しの codegen
 
 ![](../../images/play-ch05-04-paper-boats.png)
 
@@ -10,7 +10,7 @@
 
 簡単そうに見えて、引数の評価が **互いを壊さない** ようにする工夫と、整列の **動的な調整** が要る。
 
-## 1. 引数評価の難しさ
+## 5.4.1 引数評価の難しさ
 
 ABI で決まっている引数とレジスタの対応を再掲しておく:
 
@@ -55,7 +55,7 @@ f(2, g(1))
 
 これでは引数が正しく渡らない。
 
-## 2. 解決策 — 全部スタックに積んでから popq
+## 5.4.2 解決策 — 全部スタックに積んでから popq
 
 順序立ててこうする:
 
@@ -97,7 +97,7 @@ static int push_args(NodeList *l) {
 
 NodeList の末端まで再帰してから戻りながら push するので、結果として **末尾の引数から先に積まれる**。スタックの一番上に最初の引数が乗る。
 
-## 3. アライメント追跡 — `stack_offset`
+## 5.4.3 アライメント追跡 — `stack_offset`
 
 call の前に `%rsp` を 16-aligned にする。だが、現時点で `%rsp` がどれだけずれているかを **静的に** 追跡しないといけない。
 
@@ -123,7 +123,7 @@ static void emit_pop(const char *reg) {
 - `stack_offset` が偶数 → 8バイトのずれが偶数個なので、`%rsp` は 16の倍数に乗っている（16-aligned）
 - `stack_offset` が奇数 → 8バイト単位で奇数個ずれているので、`%rsp` は 16の倍数から 8 バイトずれている（8-misaligned）
 
-## 4. call 時のパディング
+## 5.4.4 call 時のパディング
 
 `call` を出す前に、`stack_offset` が奇数（つまり `%rsp` が 8-misaligned）なら、`subq $8, %rsp` で 8 バイト下げて 16-aligned に直す。call のあとは `addq $8, %rsp` で元に戻す。
 
@@ -151,7 +151,7 @@ case NODE_CALL: {
 }
 ```
 
-ここで使う `arg_regs64[] = {"%rdi", "%rsi", "%rdx", "%rcx", "%r8", "%r9"}` は、節 03 の callee 側で見た `arg_regs32[]`（`%edi`, `%esi`, ...）の **64-bit 版**だ。呼び出し側は `popq`（64-bit 命令）でスタックから取り出すので 64-bit 名、callee 側は `movl`（32-bit 命令）で int をスロットに保存するので 32-bit 名 ── という非対称になる。これで辻褄が合う理由は **節 6（引数 32ビット問題と caller / callee の食い違い）** で説明する。
+ここで使う `arg_regs64[] = {"%rdi", "%rsi", "%rdx", "%rcx", "%r8", "%r9"}` は、5.3 節の callee 側で見た `arg_regs32[]`（`%edi`, `%esi`, ...）の **64-bit 版**だ。呼び出し側は `popq`（64-bit 命令）でスタックから取り出すので 64-bit 名、callee 側は `movl`（32-bit 命令）で int をスロットに保存するので 32-bit 名 ── という非対称になる。これで辻褄が合う理由は **5.4.6（引数 32ビット問題と caller / callee の食い違い）** で説明する。
 
 ここでのキモ:
 
@@ -159,9 +159,9 @@ case NODE_CALL: {
 - パディングは push_args の前に出す。push_args は同数の push と pop で釣り合うから、`stack_offset` を変えない（一時的に増えて戻る）。
 - call の瞬間、`stack_offset` はパディング後の偶数 → `%rsp` は 16-aligned。
 
-## 5. 入れ子の call で動くか確認
+## 5.4.5 入れ子の call で動くか確認
 
-`f(1) + f(2)` の codegen を追う（入れ子の call の典型）。コメントの `so` は `stack_offset` の略、`PAD` はセクション 4 で見たパディング（`subq $8, %rsp` で 16-align に整える操作）の略。**PAD のチェックは `CALL` に入る瞬間にだけ行う**（具体的には `gen_expr` で `NODE_CALL` 分岐に入った直後、引数を push する前） ── 他の場面（メモリロード、加減算など）では `%rsp` が一時的に misalign していても問題にならない（call を跨がないので）。
+`f(1) + f(2)` の codegen を追う（入れ子の call の典型）。コメントの `so` は `stack_offset` の略、`PAD` は 5.4.4 で見たパディング（`subq $8, %rsp` で 16-align に整える操作）の略。**PAD のチェックは `CALL` に入る瞬間にだけ行う**（具体的には `gen_expr` で `NODE_CALL` 分岐に入った直後、引数を push する前） ── 他の場面（メモリロード、加減算など）では `%rsp` が一時的に misalign していても問題にならない（call を跨がないので）。
 
 ```c
 gen_expr(BINARY +, lhs=f(1), rhs=f(2)):
@@ -195,12 +195,12 @@ gen_expr(BINARY +, lhs=f(1), rhs=f(2)):
 
 `stack_offset` という数字を持っているだけで、入れ子の任意の深さで正しく整列できる。
 
-## 6. 引数 32ビット問題と caller / callee の食い違い
+## 5.4.6 引数 32ビット問題と caller / callee の食い違い
 
 ここまで眺めると、面白い不一致に気付く:
 
 - **caller** は引数に対して `pushq %rax` / `popq %rdi`（64-bit op）を使う。
-- **callee**（節 03 の spill 部分）は `movl %edi, -off(%rbp)`（32-bit op）で受け取る。
+- **callee**（5.3 節の spill 部分）は `movl %edi, -off(%rbp)`（32-bit op）で受け取る。
 
 64-bit で渡して 32-bit で受け取って大丈夫なのか? 大丈夫だ。これは **x86-64 の重要なルール**で辻褄が合っている:
 
@@ -224,11 +224,11 @@ callee は **`%edi` しか見ない**。上位 32 ビットがゼロなのは「
 
 ch06 でポインタが入ると callee 側で `movq` 分岐が必要になるが、ch05 では int だけなので `movl` 一択で済む。
 
-## 7. variadic ABI への対応
+## 5.4.7 variadic ABI への対応
 
 `call` の直前に `movl $0, %eax`。これで `%al = 0`（XMM レジスタ使用数 = 0）になり、`printf` のような可変引数関数を呼んでも安全。可変引数でない関数にも害はないので、tiny-c では **常に出す**。
 
-## 8. 再帰呼び出しが「自然に」動く理由
+## 5.4.8 再帰呼び出しが「自然に」動く理由
 
 題材として階乗 `fact` を考える:
 
@@ -272,4 +272,4 @@ int fact(int n) {
 
 ---
 
-**次へ:** [05 — 完全形とビルド](05_build.md)
+**次へ:** [5.5 完全形とビルド](05_build.md)

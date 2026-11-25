@@ -2,7 +2,7 @@
 
 # Chapter 2 — Build a calculator
 
-## 0. Introduction
+## Introduction
 
 In Chapter 1 we got `int main() { return 42; }` working — the skeleton is complete. In Chapter 2 we add **arithmetic** to that skeleton.
 
@@ -24,7 +24,7 @@ return -5 + 8;                        // works
 return -(2 + 3);                      // works
 ```
 
-## 1. Diff against ch01
+## Diff against ch01
 
 There isn't much to add.
 
@@ -41,7 +41,7 @@ Two central themes for the chapter:
 - **How grammar expresses precedence** — how should `parser.y` be written so `2 + 3 * 4` is interpreted correctly as `2 + (3 * 4)`?
 - **Managing intermediate values with the stack** — we still only use `%eax`, yet complex expressions evaluate correctly. How?
 
-## 2. Run it first
+## Run it first
 
 Feed a `.c` file to **the `tinyc` we build in this chapter** and assembly comes out.
 
@@ -97,21 +97,20 @@ FUNC_DEF main
 
 The right child of the `+` node is the `*` node. The structure "first compute `3*4`, then add the result to `2`" is expressed in the shape of the tree itself.
 
-## 3. Section layout
+## Section layout
 
 | Section | Contents |
 |--------|------|
-| 00 (this file) | Map of the chapter |
-| 01 | Encoding precedence in the grammar — the layered structure of parser.y |
-| 02 | Managing intermediate values with the stack — binary operators in codegen.c |
-| 03 | The complete files with their diffs; build and run |
+| [2.1](01_precedence.md) | Encoding precedence in the grammar — the layered structure of parser.y |
+| [2.2](02_codegen.md) | Managing intermediate values with the stack — binary operators in codegen.c |
+| [2.3](03_build.md) | The complete files with their diffs; build and run |
 
 Unlike Chapter 1, we don't re-explain flex, bison, ASTs, or x86 basics. We use the same tools from Chapter 1.
 
-## 4. Next
+## Next
 
 In the next section (`01_precedence.md`) we look at why `2 + 3 * 4` becomes `2 + (3*4)` — the mechanism at the grammar level.
 
 ---
 
-**Next:** [01 — Grammar determines precedence](01_precedence.md)
+**Next:** [2.1 Grammar determines precedence](01_precedence.md)

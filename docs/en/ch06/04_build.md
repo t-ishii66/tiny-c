@@ -1,10 +1,10 @@
-# 04 — Complete files and build
+# 6.4 Complete files and build
 
 ![](../../images/play-ch06-04-rainbow.png)
 
 We lay out ch06's main diffs against ch05, then run Hello, world and strlen.
 
-## 1. lexer.l — new keywords and tokens
+## 6.4.1 lexer.l — new keywords and tokens
 
 Add to ch05's lexer:
 
@@ -21,7 +21,7 @@ Add to ch05's lexer:
 
 An `unescape` helper handles `\n`, `\t`, `\\`, `\'`, `\"`, `\0`. The full version is in `steps/ch06/src/lexer.l`.
 
-## 2. parser.y — types, pointers, arrays, globals
+## 6.4.2 parser.y — types, pointers, arrays, globals
 
 Main additions and changes:
 
@@ -90,7 +90,7 @@ primary
     ;
 ```
 
-## 3. ast.h — the Type struct and new nodes
+## 6.4.3 ast.h — the Type struct and new nodes
 
 ```c
 typedef enum {
@@ -134,7 +134,7 @@ Node *new_index(Node *base, Node *idx);
 Node *new_var_decl(char *name, Type *type, Node *init);
 ```
 
-## 4. codegen.c — major overhaul
+## 6.4.4 codegen.c — major overhaul
 
 New machinery:
 
@@ -219,9 +219,9 @@ void codegen(Node *prog, FILE *output) {
 
 Full version in `steps/ch06/src/codegen.c`.
 
-## 5. main.c / Makefile — no changes
+## 6.4.5 main.c / Makefile — no changes
 
-## 6. Build & run
+## 6.4.6 Build & run
 
 ```bash
 $ cd steps/ch06
@@ -308,7 +308,7 @@ $ echo $?
 
 `s[n]` reads one byte at a time, counting until the null terminator.
 
-## 7. Reading the Hello, world assembly
+## 6.4.7 Reading the Hello, world assembly
 
 Translating `int main() { char *s = "hello"; printf("%s\n", s); return 0; }`:
 
@@ -355,7 +355,7 @@ main:
 
 `.LS0` and `.LS1` sit in `.rodata`. `leaq ...(%rip), %rax` fetches their addresses, which we line up in `%rdi` and `%rsi` before calling `printf`. The stack is kept 16-aligned per the System V ABI (the 16-byte local allocation for `s` ensures alignment right before `call printf`).
 
-## 8. tiny-c's journey: what we've built
+## 6.4.8 tiny-c's journey: what we've built
 
 By the end of Chapter 6, tiny-c covers most of the language spec we initially set out:
 

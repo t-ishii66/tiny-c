@@ -1,10 +1,10 @@
-# 03 — 完全形とビルド
+# 3.3 完全形とビルド
 
 ![](../../images/play-ch03-03-autumn-leaves.png)
 
 ch02 との差分を意識しつつ、ch03 の各ファイルの完全形を並べる。最後に実際にビルドして動かす。
 
-## 1. lexer.l — `=` を1行追加
+## 3.3.1 lexer.l — `=` を1行追加
 
 ```flex
 %{
@@ -36,7 +36,7 @@ ch02 との差分を意識しつつ、ch03 の各ファイルの完全形を並�
 %%
 ```
 
-## 2. parser.y — 文・代入・識別子
+## 3.3.2 parser.y — 文・代入・識別子
 
 ```yacc
 %{
@@ -122,7 +122,7 @@ primary
 %%
 ```
 
-## 3. ast.h — ノード型4つ追加
+## 3.3.3 ast.h — ノード型4つ追加
 
 ```c
 #ifndef AST_H
@@ -181,7 +181,7 @@ void print_ast(Node *node, int indent);
 #endif
 ```
 
-## 4. ast.c — コンストラクタ4つ + print_ast 拡張
+## 3.3.4 ast.c — コンストラクタ4つ + print_ast 拡張
 
 新規コンストラクタは ch02 までと同じ素朴なパターン。`calloc(1, sizeof(Node))` してフィールドを埋めるだけ。
 
@@ -240,7 +240,7 @@ case NODE_EXPR_STMT:
 
 完全版は `steps/ch03/src/ast.c` で。
 
-## 5. codegen.c — シンボルテーブルと新ノード4つ
+## 3.3.5 codegen.c — シンボルテーブルと新ノード4つ
 
 ch02 にシンボルテーブル（`LVar`, `add_local`, `find_local`）を追加し、`gen_expr` に `NODE_IDENT` と `NODE_ASSIGN` を、`gen_stmt` に `NODE_VAR_DECL` と `NODE_EXPR_STMT` を追加。
 
@@ -337,11 +337,11 @@ case NODE_EXPR_STMT:
 
 完全版は `steps/ch03/src/codegen.c` で。
 
-## 6. main.c / Makefile / codegen.h — 変更なし
+## 3.3.6 main.c / Makefile / codegen.h — 変更なし
 
 ch02 と同じ。
 
-## 7. ビルドして動かす
+## 3.3.7 ビルドして動かす
 
 ```bash
 $ cd steps/ch03
@@ -426,7 +426,7 @@ $ ./tinyc test.c > /dev/null
 redeclared variable: x
 ```
 
-## 8. 生成アセンブリを追う
+## 3.3.8 生成アセンブリを追う
 
 入力:
 
@@ -462,7 +462,7 @@ main:
   ret
 ```
 
-## 9. AST と生成アセンブリの対応
+## 3.3.9 AST と生成アセンブリの対応
 
 ```
 FUNC_DEF main                       <-- main: ラベル + プロローグ + エピローグ
@@ -479,7 +479,7 @@ FUNC_DEF main                       <-- main: ラベル + プロローグ + エ�
 
 ch02 のときと比べて、葉が `INT_LIT` ではなく `IDENT` になることがある、という違いだけ。`gen_expr` で見れば、`INT_LIT` は `movl $定数, %eax`、`IDENT` は `movl 番地, %eax`。同じ「`%eax` に値を入れる」という約束を、両方が守っている。
 
-## 10. 次へ
+## 3.3.10 次へ
 
 第4章では **分岐 (if/else)** と **ループ (while)**、比較演算子 (`< <= > >= == !=`)、論理否定 `!` を加える。codegen の新しい道具は **ラベル** と **条件ジャンプ**。
 

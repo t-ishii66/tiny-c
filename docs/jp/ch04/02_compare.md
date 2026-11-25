@@ -1,10 +1,10 @@
-# 02 — 比較と論理否定の codegen
+# 4.2 比較と論理否定の codegen
 
 ![](../../images/play-ch04-02-blanket-fort.png)
 
 `a < b` や `!x` といった「真偽値を返す式」を、アセンブリでどう表現するか。新しい命令が3つ登場する: **`cmpl`**、**`setcc`**、**`movzbl`**。
 
-## 1. C には bool 型がない（tiny-c も）
+## 4.2.1 C には bool 型がない（tiny-c も）
 
 C の比較演算子 `<` `<=` `>` `>=` `==` `!=` の結果は **`int`** だ。真なら 1、偽なら 0。
 
@@ -19,7 +19,7 @@ tiny-c も同じ。比較式の値は `int` で 0 または 1。式の値は **�
 
 つまり「真偽値を計算する」ことは、「`%eax` に 0 か 1 を書き込む」ことに尽きる。
 
-## 2. 比較命令 `cmpl`
+## 4.2.2 比較命令 `cmpl`
 
 x86 には2つの値を比較するための命令 `cmpl src, dst` がある。
 
@@ -42,7 +42,7 @@ cmpl %ecx, %eax    # 内部で: eax - ecx = 5 - 3 = 2
 
 このフラグを後続の命令が読み取ることで、「比較結果」を活用できる。
 
-## 3. 条件代入 `setcc`
+## 4.2.3 条件代入 `setcc`
 
 `setXX` 系の命令は、フラグの状態に応じて **8ビットのレジスタを 0 か 1 にセット** する。`XX` の部分が条件名。
 
@@ -64,7 +64,7 @@ cmpl %ecx, %eax    # 比較
 setl %al           # %al = 1 if %eax < %ecx else 0
 ```
 
-## 4. ゼロ拡張 `movzbl`
+## 4.2.4 ゼロ拡張 `movzbl`
 
 `%al` だけ更新しても、`%eax` の上位24ビットには **古いゴミ** が残っている。`%eax` 全体を 0 か 1 にするには、`%al` を `%eax` にゼロ拡張する。
 
@@ -76,7 +76,7 @@ movzbl %al, %eax   # %eax = (32-bit unsigned extension of %al)
 
 これで `%eax` には正確に 0 か 1 が入る。約束事「式の値は `%eax`」に対応できた。
 
-## 5. 比較演算3点セットを並べる
+## 4.2.5 比較演算3点セットを並べる
 
 `a < b` のフルパターン:
 
@@ -116,7 +116,7 @@ static void emit_compare(const char *setcc) {
 
 ヘルパーひとつで6つの比較演算がきれいにまとまる。
 
-## 6. cmpl のオペランド順に注意
+## 4.2.6 cmpl のオペランド順に注意
 
 AT&T 構文の `cmpl src, dst` は **`dst - src`** を計算する。`addl` `subl` などと同じ順番（演算は右側のレジスタ）。
 
@@ -130,7 +130,7 @@ AT&T 構文の `cmpl src, dst` は **`dst - src`** を計算する。`addl` `sub
 
 逆順 (`cmpl %eax, %ecx`) で書くとフラグの符号が逆向きになり、すべての比較が裏返る。**ch02 で確立した順序（rhs → ecx, lhs → eax）を維持するから、比較も自然に書ける**。
 
-## 7. 論理否定 `!`
+## 4.2.7 論理否定 `!`
 
 `!x` は `x == 0` と等価。実装も同じ:
 
@@ -155,7 +155,7 @@ case '!':
 
 unary 演算子の switch に1ケース足すだけ。
 
-## 8. 比較演算の codegen 全体（gen_expr の追加分）
+## 4.2.8 比較演算の codegen 全体（gen_expr の追加分）
 
 ```c
 static void gen_expr(Node *node) {
@@ -199,4 +199,4 @@ static void gen_expr(Node *node) {
 
 ---
 
-**次へ:** [03 — if と while の codegen](03_control.md)
+**次へ:** [4.3 if と while の codegen](03_control.md)

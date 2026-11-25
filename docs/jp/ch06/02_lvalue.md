@@ -1,10 +1,10 @@
-# 02 — lvalue と rvalue ── `gen_addr` の世界
+# 6.2 lvalue と rvalue ── `gen_addr` の世界
 
 ![](../../images/play-ch06-02-toy-tea.png)
 
 `x = 5` の左辺と右辺、`*p = 10` の左辺と右辺、`a[i]` ── これらを統一的に扱える視点が **lvalue / rvalue** だ。ch06 の codegen はこの2つを別々の関数で計算する。
 
-## 1. 復習: rvalue は ch05 までの世界
+## 6.2.1 復習: rvalue は ch05 までの世界
 
 ch06/00 で導入したように、判別の本質は **「アドレスを持つかどうか」** だ:
 
@@ -23,7 +23,7 @@ ch06 では **アドレスを持つ場所**（= lvalue）が増える:
 
 これらすべてを「**アドレスを計算する関数**」で扱いたい。それが **`gen_addr`** だ。
 
-## 2. lvalue が必要になる場面 ── tiny-c では 2 つだけ
+## 6.2.2 lvalue が必要になる場面 ── tiny-c では 2 つだけ
 
 ch06 の codegen は次の2つの関数で構成される:
 
@@ -44,7 +44,7 @@ static void gen_addr(Node *node);
 
 `gen_stmt` から呼ばれるのは常に `gen_expr` で、`gen_addr` が直接呼ばれることはない。
 
-## 3. lvalue / rvalue の対応表 ── `int x` と `char *p` の違いに注目
+## 6.2.3 lvalue / rvalue の対応表 ── `int x` と `char *p` の違いに注目
 
 ポインタや配列が入ると、**アドレスを持つ場所が複数** になる。`int x` のように場所が 1 つだけの型と、`char *p` のように場所が 2 つある型（ポインタ変数自身と、それが指す先）の違いが、lvalue / rvalue の組み合わせ数を変える。
 
@@ -84,18 +84,18 @@ static void gen_addr(Node *node);
 - ポインタ変数では `p` と `*p` の **2 階層** を意識する必要がある
 - 配列名の rvalue は decay によって lvalue と同じになる ── これが C の特殊事情
 
-これ以降の節では、まず **lvalue 側** で各記述のアドレス取得を見たあと（節 4）、**lvalue を使う側**（節 5）、最後に **rvalue 側**（節 6）と進む。
+これ以降の節では、まず **lvalue 側** で各記述のアドレス取得を見たあと（6.2.4）、**lvalue を使う側**（6.2.5）、最後に **rvalue 側**（6.2.6）と進む。
 
-## 4. lvalue 側 ── アドレス取得 (`gen_addr`)
+## 6.2.4 lvalue 側 ── アドレス取得 (`gen_addr`)
 
 `gen_addr` の約束: **対象 (lvalue) のアドレスを `%rax` に置く**。3 つの case ── `IDENT`、`*`、`a[i]` ── すべてこの約束を守って return する。
 
 ```c
 static void gen_addr(Node *node) {
     switch (node->kind) {
-    case NODE_IDENT: { ... }                  /* 4.1 */
-    case NODE_UNARY: if (node->op == '*') ... /* 4.2 */
-    case NODE_INDEX: { ... }                  /* 4.3 */
+    case NODE_IDENT: { ... }                  /* 6.2.4.1 */
+    case NODE_UNARY: if (node->op == '*') ... /* 6.2.4.2 */
+    case NODE_INDEX: { ... }                  /* 6.2.4.3 */
     default:
         fprintf(stderr, "not an lvalue\n");
         exit(1);
@@ -105,7 +105,7 @@ static void gen_addr(Node *node) {
 
 `default` ケースに来ると「lvalue でないノードのアドレスを取ろうとした」エラー。
 
-### 4.1 `IDENT` のアドレス（`x`、`p`、`a` などの変数）
+### 6.2.4.1 `IDENT` のアドレス（`x`、`p`、`a` などの変数）
 
 ```c
 /* gen_addr の switch 内 ── lvalue 側、アドレスを %rax に置く */
@@ -131,9 +131,9 @@ case NODE_IDENT: {
 
 ローカル変数は `-off(%rbp)`、グローバル変数は `name(%rip)`（PC 相対参照）で取る。
 
-**配列の場合のからくり**: `int a[5]` は型サイズ 20 バイト、8 バイト単位に拡張して 24 バイトを占有する。変数登録時の `add_local` が `frame_size` を 24 バイトに増やし、`v->offset` を「配列の先頭バイトと %rbp の差」にセットする。よって `leaq -off(%rbp), %rax` だけで `&a[0]` が得られる。`a + i * 要素サイズ` のような添字計算は出てこない ── それは `a[i]` を扱う `NODE_INDEX` の仕事（節 4.3）。
+**配列の場合のからくり**: `int a[5]` は型サイズ 20 バイト、8 バイト単位に拡張して 24 バイトを占有する。変数登録時の `add_local` が `frame_size` を 24 バイトに増やし、`v->offset` を「配列の先頭バイトと %rbp の差」にセットする。よって `leaq -off(%rbp), %rax` だけで `&a[0]` が得られる。`a + i * 要素サイズ` のような添字計算は出てこない ── それは `a[i]` を扱う `NODE_INDEX` の仕事（6.2.4.3）。
 
-### 4.2 `*p` のアドレス
+### 6.2.4.2 `*p` のアドレス
 
 ```c
 /* gen_addr の switch 内 ── lvalue 側、*p のアドレスを %rax に置く */
@@ -148,17 +148,17 @@ case NODE_UNARY:
     break;
 ```
 
-`*p` の **アドレス** が欲しいなら、`p` の **値** を取ればいい。なぜなら p の値そのものがそのアドレスだから（節 3 の対応表で「`*p` の lvalue は `p` の rvalue と一致」と書いた通り）。
+`*p` の **アドレス** が欲しいなら、`p` の **値** を取ればいい。なぜなら p の値そのものがそのアドレスだから（6.2.3 の対応表で「`*p` の lvalue は `p` の rvalue と一致」と書いた通り）。
 
-### 4.3 `a[i]` のアドレス（`[]` 構文 ── 配列でもポインタでも）
+### 6.2.4.3 `a[i]` のアドレス（`[]` 構文 ── 配列でもポインタでも）
 
-ここで扱うのは AST 上の `NODE_INDEX`、つまり **`[]` 構文** が使われたとき。lhs が **配列名 `a`** でも **ポインタ `p`** でも同じ `NODE_INDEX` ノードになり、この 4.3 に来る:
+ここで扱うのは AST 上の `NODE_INDEX`、つまり **`[]` 構文** が使われたとき。lhs が **配列名 `a`** でも **ポインタ `p`** でも同じ `NODE_INDEX` ノードになり、この 6.2.4.3 に来る:
 
-- `a[i]` → `NODE_INDEX(a, i)` → 4.3
-- `p[i]` → `NODE_INDEX(p, i)` → 4.3（lhs がポインタの分岐）
-- `*(p + i)` → `NODE_UNARY * → NODE_BINARY +` → **4.3 には来ない**（後述）
+- `a[i]` → `NODE_INDEX(a, i)` → 6.2.4.3
+- `p[i]` → `NODE_INDEX(p, i)` → 6.2.4.3（lhs がポインタの分岐）
+- `*(p + i)` → `NODE_UNARY * → NODE_BINARY +` → **6.2.4.3 には来ない**（後述）
 
-下のコードの `if/else` は、4.3 に来た時点で「lhs が配列か / ポインタか」を分けている。配列名なら `gen_addr` で配列のアドレスを取り、ポインタ名なら `gen_expr` でポインタの値（= 指す先のアドレス）を取る。どちらも「ベースアドレス」として揃う。
+下のコードの `if/else` は、6.2.4.3 に来た時点で「lhs が配列か / ポインタか」を分けている。配列名なら `gen_addr` で配列のアドレスを取り、ポインタ名なら `gen_expr` でポインタの値（= 指す先のアドレス）を取る。どちらも「ベースアドレス」として揃う。
 
 ```c
 /* gen_addr の switch 内 ── lvalue 側、a[i] のアドレスを %rax に置く */
@@ -189,9 +189,9 @@ lhs も **配列名でもポインタでもよい**。`Type` 構造体（`ast.h`
 
 そのうえで `(base) + i × elem_size` を計算してアドレスを `%rax` に置く。
 
-### 4.3 に至る経路 ── `a[i]` と `*(p+i)` で違う
+### 6.2.4.3 に至る経路 ── `a[i]` と `*(p+i)` で違う
 
-`gen_expr` が入口、というのは ch06/02 全体の前提（節 2 参照）。そこから `case NODE_INDEX`（この 4.3）に至るのは **`a[i]` 構文（`[]`）のときだけ**。`*(p+i)` は構文が違うので別の case を経由し、4.3 には来ない。
+`gen_expr` が入口、というのは ch06/02 全体の前提（6.2.2 参照）。そこから `case NODE_INDEX`（この 6.2.4.3）に至るのは **`a[i]` 構文（`[]`）のときだけ**。`*(p+i)` は構文が違うので別の case を経由し、6.2.4.3 には来ない。
 
 **`a[i] = X;` の場合**（lvalue 経路、ASSIGN の左辺）:
 
@@ -199,8 +199,8 @@ lhs も **配列名でもポインタでもよい**。`Type` 構造体（`ast.h`
 gen_stmt(EXPR_STMT)
 └─ gen_expr(NODE_ASSIGN)        ← 入口
     ├─ gen_addr(node->lhs)       ← lhs = NODE_INDEX(a, i)
-    │  └─ case NODE_INDEX        ← ★ 4.3 に到達
-    │     ├─ gen_addr(IDENT a)   ← 4.1（配列のベースアドレス）
+    │  └─ case NODE_INDEX        ← ★ 6.2.4.3 に到達
+    │     ├─ gen_addr(IDENT a)   ← 6.2.4.1（配列のベースアドレス）
     │     ├─ gen_expr(IDENT i)
     │     ├─ imulq $4, %rax     ← スケーリング!
     │     └─ addq → %rax = &a[i]
@@ -213,16 +213,16 @@ gen_stmt(EXPR_STMT)
 gen_stmt(EXPR_STMT)
 └─ gen_expr(NODE_ASSIGN)        ← 入口
     ├─ gen_addr(node->lhs)       ← lhs = NODE_UNARY '*'
-    │  └─ case NODE_UNARY '*'    ← 4.2 に到達（4.3 ではない!）
+    │  └─ case NODE_UNARY '*'    ← 6.2.4.2 に到達（6.2.4.3 ではない!）
     │     └─ gen_expr(operand)   ← operand = NODE_BINARY '+'
-    │        └─ case NODE_BINARY ← ここの処理は 4.3 にも 4.2 にも入らず、ただの addl
+    │        └─ case NODE_BINARY ← ここの処理は 6.2.4.3 にも 6.2.4.2 にも入らず、ただの addl
     │           ├─ gen_expr(rhs = i)
     │           ├─ gen_expr(lhs = p)
     │           └─ addl %ecx, %eax  ← スケーリングなし!
     └─ ... store
 ```
 
-決定的な違いは **`NODE_BINARY '+'` の codegen** にある（`steps/ch06/src/codegen.c` の `case NODE_BINARY` 内）── tiny-c はここで型を見ずに `addl` を出すだけ。だから `*(p+i)` は「p のバイト + i」になり、要素サイズで進まない。一方 `a[i]` は `NODE_INDEX` 経由でこの 4.3 に来るので、ちゃんと `imulq $elem_size` でスケーリングされる。
+決定的な違いは **`NODE_BINARY '+'` の codegen** にある（`steps/ch06/src/codegen.c` の `case NODE_BINARY` 内）── tiny-c はここで型を見ずに `addl` を出すだけ。だから `*(p+i)` は「p のバイト + i」になり、要素サイズで進まない。一方 `a[i]` は `NODE_INDEX` 経由でこの 6.2.4.3 に来るので、ちゃんと `imulq $elem_size` でスケーリングされる。
 
 ### C 標準との対比
 
@@ -236,20 +236,20 @@ C 標準では `+` のポインタ算術が型に応じてスケーリングす�
 
 これらはコンパイル時計算ではなく、生成されたアセンブリが実行時に同じ式を評価する。`a[2]` のように index が定数でも、tiny-c はあえて畳み込まず `imulq $4, %rax` を出す（最適化は ch07 で導入）。
 
-## 5. lvalue を使う側 ── `NODE_ASSIGN` と `&`
+## 6.2.5 lvalue を使う側 ── `NODE_ASSIGN` と `&`
 
-節 4 で得た「アドレス」を実際に使うのが ASSIGN と `&`。
+6.2.4 で得た「アドレス」を実際に使うのが ASSIGN と `&`。
 
-### 5.1 `NODE_ASSIGN`
+### 6.2.5.1 `NODE_ASSIGN`
 
 **ASSIGN は常に左辺のアドレスを必要とする** ── そこに値を書き込むのが代入の仕事だから。左辺の形（`x` / `*p` / `a[i]`）が何であれ、まず `gen_addr(node->lhs)` を呼んで lvalue のアドレスを取り、それを退避してから右辺を計算する。
 
 ```c
 /* gen_expr の switch 内 ── lvalue を内部で使って書き込む */
 case NODE_ASSIGN: {
-    gen_addr(node->lhs);    /* lhs のアドレスを計算（節 4） */
+    gen_addr(node->lhs);    /* lhs のアドレスを計算（6.2.4） */
     emit_push();            /* スタックに退避 */
-    gen_expr(node->rhs);    /* rhs の値を %eax に（節 6） */
+    gen_expr(node->rhs);    /* rhs の値を %eax に（6.2.6） */
     emit_pop("%rcx");       /* %rcx = lhs アドレス */
     Type *t = expr_type(node->lhs);
     int sz = t->is_pointer ? 8 : t->base_size;
@@ -260,7 +260,7 @@ case NODE_ASSIGN: {
 
 `x = 5;`、`p = some_addr;`、`*p = 10;`、`a[i] = 7;` ── すべて同じパターン。**lvalue かどうかは `gen_addr` が「not an lvalue」エラーを出す形に集約される**。
 
-### 5.2 `&` 演算子
+### 6.2.5.2 `&` 演算子
 
 `&x` の値は「`x` のアドレス」。これは `gen_addr(x)` そのもの:
 
@@ -274,20 +274,20 @@ case NODE_UNARY:
     ...
 ```
 
-`gen_expr` の中で `gen_addr` を呼ぶだけ。普段の識別子読み出し（`gen_expr(x)`、節 6.1）なら `gen_addr` で得たアドレスからさらに値を load する（= `%rax` に入っているアドレスを参照して、そのアドレスが指すメモリの内容を読み出し、`%rax` に上書きする）が、`&x` ではその load をスキップする。結果として **`%rax` にはアドレスがそのまま残り、そのアドレスが指す先のデータには触らない**。
+`gen_expr` の中で `gen_addr` を呼ぶだけ。普段の識別子読み出し（`gen_expr(x)`、6.2.6.1）なら `gen_addr` で得たアドレスからさらに値を load する（= `%rax` に入っているアドレスを参照して、そのアドレスが指すメモリの内容を読み出し、`%rax` に上書きする）が、`&x` ではその load をスキップする。結果として **`%rax` にはアドレスがそのまま残り、そのアドレスが指す先のデータには触らない**。
 
-## 6. rvalue 側 ── 値の取得 (`gen_expr`)
+## 6.2.6 rvalue 側 ── 値の取得 (`gen_expr`)
 
 各記述（`x` / `*p` / `a[i]`）の **値** を `%eax` / `%rax` に置く側。基本パターンは「`gen_addr` でアドレスを取って、そこから load」。
 
-### 6.1 `IDENT` を値として読む（配列の decay も）
+### 6.2.6.1 `IDENT` を値として読む（配列の decay も）
 
-ここで扱うのは **識別子だけが式に出ている** ケース ── `x`、`p`、`a` のように添字や演算子をつけない形。`a[i]` のような添字つきは parser がそもそも `NODE_INDEX` として組み立てるので、この `case NODE_IDENT` には来ない（節 6.3 の担当）。
+ここで扱うのは **識別子だけが式に出ている** ケース ── `x`、`p`、`a` のように添字や演算子をつけない形。`a[i]` のような添字つきは parser がそもそも `NODE_INDEX` として組み立てるので、この `case NODE_IDENT` には来ない（6.2.6.3 の担当）。
 
 | ソース表記 | parser が作る AST | 担当 case |
 |-----------|------------------|----------|
-| `a` 単体 | `NODE_IDENT("a")` | この 6.1 |
-| `a[i]` | `NODE_INDEX(a, i)` | 節 6.3 |
+| `a` 単体 | `NODE_IDENT("a")` | この 6.2.6.1 |
+| `a[i]` | `NODE_INDEX(a, i)` | 6.2.6.3 |
 
 つまり「添字あり / なし」の区別は **AST 構築の時点ですでに済んでいる**ので、codegen の各 case はそれぞれの形に集中できる。
 
@@ -317,11 +317,11 @@ int *p = a;       /* a が decay して &a[0] になる */
 strlen(s);        /* s が char* なら、s 自身がアドレス */
 ```
 
-実装上は **`gen_expr(IDENT 配列)` を `gen_addr(IDENT 配列)` にショートカットする** だけ。配列の「値」と「アドレス」は同一視される ── これが節 3 の表で `a` の rvalue が「アドレスとして decay」と書かれていた理由。
+実装上は **`gen_expr(IDENT 配列)` を `gen_addr(IDENT 配列)` にショートカットする** だけ。配列の「値」と「アドレス」は同一視される ── これが 6.2.3 の表で `a` の rvalue が「アドレスとして decay」と書かれていた理由。
 
-`a[i]` のように添字つきで使うのは AST 上 `NODE_INDEX` で別経路（節 6.3）。
+`a[i]` のように添字つきで使うのは AST 上 `NODE_INDEX` で別経路（6.2.6.3）。
 
-### 6.2 `*p` を値として読む
+### 6.2.6.2 `*p` を値として読む
 
 `*p` の値は「p に格納されているアドレスから読み出した値」。
 
@@ -339,22 +339,22 @@ case NODE_UNARY:
 
 `emit_load` のサイズは「p が指す先の要素サイズ」。`int *p` なら 4 バイト、`char *s` なら 1 バイト。
 
-節 4.2 で見た `gen_addr(*p)` と比べると、違いは「load を上に乗せるか乗せないか」だけ。これが「`*` は load を足す」の意味。
+6.2.4.2 で見た `gen_addr(*p)` と比べると、違いは「load を上に乗せるか乗せないか」だけ。これが「`*` は load を足す」の意味。
 
-### 6.3 `a[i]` を値として読む
+### 6.2.6.3 `a[i]` を値として読む
 
 ```c
 /* gen_expr の switch 内 ── rvalue 側、a[i] の値を %eax/%rax に置く */
 case NODE_INDEX: {
     /* gen_addr で要素アドレスを %rax に置いてから、そこから load */
-    gen_addr(node);                            /* %rax = &a[i]（節 4.3） */
+    gen_addr(node);                            /* %rax = &a[i]（6.2.4.3） */
     Type *t = expr_type(node->lhs);
     emit_load(t->base_size);                   /* %rax = a[i] の値 */
     return;
 }
 ```
 
-節 4.3 で見た `gen_addr` の上に load を 1 段乗せるだけ。
+6.2.4.3 で見た `gen_addr` の上に load を 1 段乗せるだけ。
 
 ### 同じ `a[2]` を rvalue / lvalue で対比
 
@@ -365,7 +365,7 @@ case NODE_INDEX: {
 
 **アドレス計算までは完全に同じ**。違いは「アドレス計算のあとに load を続けて値を読むか / store を続けて書き込むか」だけ。lvalue / rvalue の対称性が `gen_addr` を共通部品として浮かび上がらせる。
 
-## 7. サイズ別 load / store
+## 6.2.7 サイズ別 load / store
 
 ### `emit_load`
 
@@ -395,7 +395,7 @@ static void emit_store(int sz) {
 
 `%al` は `%rax` の最下位 1 バイト、`%eax` は下位 4 バイト、`%rax` 全体は 8 バイト。同じレジスタの違う部分を使い分けて適切なサイズで書き込む。
 
-## 8. まとめ
+## 6.2.8 まとめ
 
 - lvalue が要求されるのは **`NODE_ASSIGN` の左辺** と **`&` のオペランド** の 2 箇所だけ。それ以外は rvalue 文脈。
 - `gen_expr` は **rvalue（値）**、`gen_addr` は **lvalue（アドレス）** を計算 ── どちらも結果は `%rax`（or `%eax`）に置く。
@@ -411,4 +411,4 @@ static void emit_store(int sz) {
 
 ---
 
-**次へ:** [03 — グローバル変数と文字列リテラル](03_globals_strings.md)
+**次へ:** [6.3 グローバル変数と文字列リテラル](03_globals_strings.md)

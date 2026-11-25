@@ -1,11 +1,11 @@
-# 06 — main.c, Makefile, and assembling the whole thing
+# 1.6 main.c, Makefile, and assembling the whole thing
 
 ![](../../images/play-ch01-06-paper-planes.png)
 
 We have `lexer.l`, `parser.y`, `ast.h/ast.c`, and `codegen.c/codegen.h`. What remains is the **entry point** (`main.c`) that ties them together, and the build recipe (`Makefile`).
 
 
-## 1. Who does what
+## 1.6.1 Who does what
 
 ```
 +---------+                                                +---------+
@@ -28,7 +28,7 @@ We have `lexer.l`, `parser.y`, `ast.h/ast.c`, and `codegen.c/codegen.h`. What re
 `main.c` reads the arguments, opens the file, calls `yyparse()`, and hands the resulting AST to `codegen()` — its job is just **outer plumbing**.
 
 
-## 2. Reading main.c
+## 1.6.2 Reading main.c
 
 ```c
 #include <stdio.h>
@@ -148,14 +148,14 @@ return 0;
 If `--dump-ast` is set, print the AST. Otherwise, emit assembly to `stdout`. Because the assembly goes to `stdout`, the user redirects with `./tinyc file.c > file.s`.
 
 
-## 3. main.c is essentially unchanged from here on
+## 1.6.3 main.c is essentially unchanged from here on
 
 `main.c` **doesn't substantively change through Chapter 6**. All it does is the outer choreography: "handle arguments → call `yyparse` → output the AST."
 
 The flesh grows in `lexer.l` (new tokens), `parser.y` (new grammar rules), `ast.h/ast.c` (new node kinds), and `codegen.c` (new code-generation patterns). **These four files are where the compiler expands.**
 
 
-## 4. Reading the Makefile
+## 1.6.4 Reading the Makefile
 
 > The Makefile walkthrough that follows is fine to skim. If you're not interested, jump to "6. Build & run." Writing Makefiles from scratch isn't a common task day-to-day anymore. We use a Makefile here because it's a great teaching tool for expressing dependencies concisely. Just enough understanding of "this is how the build is wired up" is plenty to move on.
 
@@ -295,7 +295,7 @@ clean:
 - `.PHONY: clean` says "even if a file named `clean` exists, ignore it and always run the command."
 
 
-## 5. The build dependency graph
+## 1.6.5 The build dependency graph
 
 ```
 src/parser.y ─→ build/parser.tab.c ─→ build/parser.tab.o ──┐
@@ -315,7 +315,7 @@ src/main.c   ──────────────────────�
 `make` reads this graph and runs commands in the necessary order. Anything unchanged is skipped.
 
 
-## 6. Build & run
+## 1.6.6 Build & run
 
 If you're reading along and want to run the commands yourself, clone the repository first. Each chapter's complete source lives under `steps/chNN/`, and the top-level `Makefile` builds the final ch07 form.
 
@@ -375,7 +375,7 @@ $ echo $?
 (Note: running the executable requires x86-64 Linux. On Mac or Windows the compiler itself works, but assembling and running its output requires a different environment.)
 
 
-## 7. Recap
+## 1.6.7 Recap
 
 What our Chapter 1 compiler **can do**:
 
@@ -402,7 +402,7 @@ The file list:
 From Chapter 2 onward, we'll add flesh to this skeleton by extending lexer / parser / AST / codegen.
 
 
-## 8. Next
+## 1.6.8 Next
 
 In the next chapter, we make the compiler handle arithmetic expressions like `return 2 + 3 * 4;`. The themes are: how grammar expresses precedence, and how to manage multiple intermediate values.
 

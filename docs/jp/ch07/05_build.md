@@ -1,4 +1,4 @@
-# 05 — 完全形とビルド
+# 7.5 完全形とビルド
 
 ![](../../images/play-ch07-05-flower-crowns.png)
 
@@ -12,9 +12,9 @@ ch07 の差分を ch06 と並べる。
 | `optimize.h` / `optimize.c` | **新規** ── `optimize_ast` と `peephole` の 2 関数 |
 | `Makefile` | `optimize.c` をビルド対象に追加 |
 
-「最適化」（節 01・04）と「バックパッチ」（節 02）「ブロックスコープ」（節 03）は別物だが、すべて **メモリバッファ + 単一パス codegen** という共通インフラの上に乗る。`--no-opt` で外せるのは最適化だけで、バックパッチとスコープは常に有効。
+「最適化」（7.1・7.4 節）と「バックパッチ」（7.2 節）「ブロックスコープ」（7.3 節）は別物だが、すべて **メモリバッファ + 単一パス codegen** という共通インフラの上に乗る。`--no-opt` で外せるのは最適化だけで、バックパッチとスコープは常に有効。
 
-## 1. codegen.c — バックパッチ + スコープ部分の差分
+## 7.5.1 codegen.c — バックパッチ + スコープ部分の差分
 
 ch06 の `gen_func` は **二相**（Phase 1 = `collect_locals` で `frame_size` 確定 → Phase 2 = プロローグ + 本体生成）だった。ch07 は **単一パス + バックパッチ + スコープ** に置き換わる:
 
@@ -98,7 +98,7 @@ ch06 の「Phase 1 で `add_local` を呼んで locals を作っておき、Phas
 
 完全版は `steps/ch07/src/codegen.c` を参照。
 
-## 2. optimize.c の骨格
+## 7.5.2 optimize.c の骨格
 
 ```c
 #include "ast.h"
@@ -215,7 +215,7 @@ void peephole(const char *in_buf, int in_len, FILE *out) {
 
 完全版は `steps/ch07/src/optimize.c`。
 
-## 3. main.c の変更
+## 7.5.3 main.c の変更
 
 ch06 では `codegen(program, stdout)` で直接出力していたが、ch07 では **常に memstream** を経由する（バックパッチで `ftell`/`fseek` が必要なため）。`--no-opt` のときはそのまま出し、最適化ありなら peephole を通す:
 
@@ -252,7 +252,7 @@ int main(int argc, char **argv) {
 }
 ```
 
-## 4. Makefile
+## 7.5.4 Makefile
 
 `optimize.c` を追加するだけ:
 
@@ -262,14 +262,14 @@ OBJS    = $(BUILD)/ast.o $(BUILD)/codegen.o $(BUILD)/optimize.o $(BUILD)/main.o 
           $(BUILD)/parser.tab.o $(BUILD)/lex.yy.o
 ```
 
-## 5. ビルド
+## 7.5.5 ビルド
 
 ```bash
 $ cd steps/ch07
 $ make
 ```
 
-## 6. デモ 1: 定数畳み込み + プロローグ subq の見え方
+## 7.5.6 デモ 1: 定数畳み込み + プロローグ subq の見え方
 
 ```bash
 $ cat const.c
@@ -316,7 +316,7 @@ main:
 - `subq $0         , %rsp` の **数字の右に並ぶスペース** はバックパッチの placeholder の幅（10 桁）が固定なため。アセンブラは余分な空白を許容するので問題なく動く。
 - `--no-opt` 版は **19 行**、最適化版は **7 行** に縮む。AST 最適化で `2 + 3 * 4 = 14` が畳み込まれ、ピープホールで末尾の dead code（`movl $0, %eax; leave; ret`）が削れた。
 
-## 7. デモ 2: 代数的単純化
+## 7.5.7 デモ 2: 代数的単純化
 
 ```bash
 $ cat alg.c
@@ -354,7 +354,7 @@ PROGRAM
 
 `x + 0 + x * 1` が `x + x` に縮んだ。
 
-## 8. デモ 3: ピープホール（pushq/popq → movq）
+## 7.5.8 デモ 3: ピープホール（pushq/popq → movq）
 
 ```bash
 $ cat hello.c
@@ -403,7 +403,7 @@ main:
 
 `.section .rodata` は dead code 除去で誤って消されない（`.` で始まるディレクティブ行として認識される）。
 
-## 9. デモ 4: 再帰 fib の行数削減
+## 7.5.9 デモ 4: 再帰 fib の行数削減
 
 ```bash
 $ cat fib.c
@@ -423,7 +423,7 @@ $ ./tinyc fib.c | wc -l
 
 `fib` 内部で関数呼び出しが 2 回あり、それぞれの引数渡しで `pushq %rax; popq %rdi` が出る。さらに `if` 分岐の `then` 部の `return n;` 末尾の dead code（次の `.Lendif_0:` までの数行）が削られる。**全体で約 13% の削減**。
 
-## 10. デモ 5: バックパッチによるフレームサイズ確定
+## 7.5.10 デモ 5: バックパッチによるフレームサイズ確定
 
 ブロックスコープによる **スロット再利用** + バックパッチを同時に見るデモ:
 
@@ -447,7 +447,7 @@ main:
 
 4変数あるのに **フレームは 16 バイト**（兄弟ブロックでスロット再利用：`a, b` と `c, d` が同じ `-8`/`-16` を共有）。ch06 だと Phase 1 で `frame_size` を先に確定してから `subq $16, %rsp` を書いていたが、ch07 では先にプレースホルダ `subq $0         , %rsp` を出して本体を生成し、`max_frame_size` をスコープ走査の中で追跡し、最後に `ftell`/`fseek` で埋めるだけ。プレースホルダの空白パディングが残るので、出力をよく見れば「ここがバックパッチされた」と分かる。
 
-## 11. ここまでで作ったもの
+## 7.5.11 ここまでで作ったもの
 
 第 7 章で:
 

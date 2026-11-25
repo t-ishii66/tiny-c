@@ -1,4 +1,4 @@
-# 05 — Complete files and build
+# 7.5 Complete files and build
 
 ![](../../images/play-ch07-05-flower-crowns.png)
 
@@ -12,9 +12,9 @@ The ch07 diff against ch06:
 | `optimize.h` / `optimize.c` | **New** — two functions, `optimize_ast` and `peephole` |
 | `Makefile` | Add `optimize.c` to the build |
 
-"Optimization" (sections 01 and 04), "backpatching" (section 02), and "block scope" (section 03) are different things, but they all sit on the same shared infrastructure: **memory buffer + single-pass codegen**. `--no-opt` only disables optimization; backpatching and scope are always on.
+"Optimization" (Sections 7.1 and 7.4), "backpatching" (Section 7.2), and "block scope" (Section 7.3) are different things, but they all sit on the same shared infrastructure: **memory buffer + single-pass codegen**. `--no-opt` only disables optimization; backpatching and scope are always on.
 
-## 1. codegen.c — the backpatching + scope diff
+## 7.5.1 codegen.c — the backpatching + scope diff
 
 ch06's `gen_func` was **two-phase** (Phase 1 = `collect_locals` to finalize `frame_size` → Phase 2 = prologue + body emission). ch07 replaces it with **single-pass + backpatching + scope**:
 
@@ -98,7 +98,7 @@ ch06's "call `add_local` in Phase 1 to pre-build locals, then emit the body in P
 
 Full version in `steps/ch07/src/codegen.c`.
 
-## 2. optimize.c skeleton
+## 7.5.2 optimize.c skeleton
 
 ```c
 #include "ast.h"
@@ -215,7 +215,7 @@ void peephole(const char *in_buf, int in_len, FILE *out) {
 
 Full version in `steps/ch07/src/optimize.c`.
 
-## 3. main.c changes
+## 7.5.3 main.c changes
 
 ch06 wrote directly via `codegen(program, stdout)`, but ch07 **always** routes through a memstream (`ftell`/`fseek` for backpatching requires it). For `--no-opt`, just dump the buffer; otherwise pipe it through peephole:
 
@@ -252,7 +252,7 @@ int main(int argc, char **argv) {
 }
 ```
 
-## 4. Makefile
+## 7.5.4 Makefile
 
 Just add `optimize.c`:
 
@@ -262,14 +262,14 @@ OBJS    = $(BUILD)/ast.o $(BUILD)/codegen.o $(BUILD)/optimize.o $(BUILD)/main.o 
           $(BUILD)/parser.tab.o $(BUILD)/lex.yy.o
 ```
 
-## 5. Build
+## 7.5.5 Build
 
 ```bash
 $ cd steps/ch07
 $ make
 ```
 
-## 6. Demo 1: constant folding + how the prologue subq looks
+## 7.5.6 Demo 1: constant folding + how the prologue subq looks
 
 ```bash
 $ cat const.c
@@ -316,7 +316,7 @@ Notes:
 - The **spaces after the number** in `subq $0         , %rsp` come from the placeholder's fixed width (10 digits). Assemblers accept the extra whitespace, so it works fine.
 - The `--no-opt` version is **19 lines**, the optimized version shrinks to **7 lines**. AST optimization folded `2 + 3 * 4 = 14`, and peephole stripped the trailing dead code (`movl $0, %eax; leave; ret`).
 
-## 7. Demo 2: algebraic simplification
+## 7.5.7 Demo 2: algebraic simplification
 
 ```bash
 $ cat alg.c
@@ -354,7 +354,7 @@ PROGRAM
 
 `x + 0 + x * 1` collapses to `x + x`.
 
-## 8. Demo 3: peephole (pushq/popq → movq)
+## 7.5.8 Demo 3: peephole (pushq/popq → movq)
 
 ```bash
 $ cat hello.c
@@ -403,7 +403,7 @@ main:
 
 `.section .rodata` is correctly preserved by dead-code removal (recognized as a directive line starting with `.`).
 
-## 9. Demo 4: line-count reduction for recursive fib
+## 7.5.9 Demo 4: line-count reduction for recursive fib
 
 ```bash
 $ cat fib.c
@@ -423,7 +423,7 @@ $ ./tinyc fib.c | wc -l
 
 `fib` has two function calls internally, each of which emits `pushq %rax; popq %rdi` for argument passing. On top of that, the dead code at the tail of `if`'s `then` branch (`return n;` is followed by several lines up to the next `.Lendif_0:`) gets stripped. **About 13% reduction overall.**
 
-## 10. Demo 5: frame size finalized by backpatching
+## 7.5.10 Demo 5: frame size finalized by backpatching
 
 A demo combining **slot reuse** from block scope with backpatching:
 
@@ -447,7 +447,7 @@ main:
 
 Four variables, yet **the frame is 16 bytes** (sibling blocks reuse slots: `a, b` and `c, d` share `-8`/`-16`). In ch06, Phase 1 finalized `frame_size` first and then wrote `subq $16, %rsp`. In ch07, we first emit the placeholder `subq $0         , %rsp`, generate the body while tracking `max_frame_size` through scope traversal, and fill it in at the end with `ftell`/`fseek`. The placeholder's leftover spaces stay in the output, so a careful read shows "this is where the backpatch happened."
 
-## 11. What we built
+## 7.5.11 What we built
 
 In Chapter 7 we:
 

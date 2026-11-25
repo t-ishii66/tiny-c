@@ -1,10 +1,10 @@
-# 01 — AST-level optimization (constant folding + algebraic simplification)
+# 7.1 AST-level optimization (constant folding + algebraic simplification)
 
 ![](../../images/play-ch07-01-butterflies.png)
 
 The first round of optimization is **AST-level**. Right after parsing, before the AST reaches codegen, we collapse "obviously wasteful structures."
 
-## 1. Constant folding
+## 7.1.1 Constant folding
 
 If both children of a binary operator are constants, we **compute the result at compile time** and replace it with a single constant node.
 
@@ -49,9 +49,9 @@ if (is_int_lit(L) && is_int_lit(R)) {
 }
 ```
 
-`L` / `R` are aliases for `node->lhs` / `node->rhs` (we'll see them in §4). Division by zero we don't fold — we leave the original AST. It's runtime undefined behavior, but better to leave it in the asm and let link/runtime decide than have the compiler crash.
+`L` / `R` are aliases for `node->lhs` / `node->rhs` (we'll see them in 7.1.4). Division by zero we don't fold — we leave the original AST. It's runtime undefined behavior, but better to leave it in the asm and let link/runtime decide than have the compiler crash.
 
-## 2. Algebraic simplification
+## 7.1.2 Algebraic simplification
 
 When just one side is a particular constant, we rewrite to a simpler form without doing any arithmetic:
 
@@ -92,7 +92,7 @@ Notes:
 - We **don't** do `x - x → 0` (it drops a variable, which requires semantic analysis; getting it wrong is a real bug source).
 - Floating-point simplifications are full of traps, but tiny-c only has `int`, so they don't apply.
 
-## 3. Unary operators get the same treatment
+## 7.1.3 Unary operators get the same treatment
 
 We fold `-(constant)` and `!(constant)`:
 
@@ -112,7 +112,7 @@ case NODE_UNARY: {
 
 `!0` becomes `1`, `!1` becomes `0`, `-(5)` becomes `-5`. A loop like `while (!0)` morphs into `while (1)`, and ch05's codegen then handles it as an infinite loop.
 
-## 4. The structure of `optimize_ast`
+## 7.1.4 The structure of `optimize_ast`
 
 ```c
 Node *optimize_ast(Node *node) {
@@ -145,7 +145,7 @@ Node *optimize_ast(Node *node) {
 - Always do `lhs = optimize_ast(lhs)` (re-receive) — never throw away the return value.
 - Cover every node kind in the recursion. Add a `default` fallback so unhandled kinds aren't broken.
 
-## 5. Beware of side effects
+## 7.1.5 Beware of side effects
 
 Algebraic simplification can **discard one expression and replace it with another**. For example, `x * 0 → 0` drops the code that computes the left `x`.
 
@@ -159,7 +159,7 @@ tiny-c's algebraic simplification **doesn't check purity**, so turning `f() * 0`
 
 Production compilers determine "expression purity" before simplifying. tiny-c doesn't (we declare patterns like `f() * 0` outside the supported subset).
 
-## 6. AST, before and after
+## 7.1.6 AST, before and after
 
 Input:
 
@@ -204,10 +204,10 @@ PROGRAM
 
 `x + 0` becomes `x`, `x * 1` becomes `x`, and the surrounding `+` collapses to `x + x`.
 
-## 7. Next
+## 7.1.7 Next
 
 AST-level optimization is done. In the next section (`02_backpatch.md`) we step away from optimization briefly to introduce **backpatching** — in ch06, Phase 1 determined `frame_size` first and then wrote the prologue, but if codegen output is buffered in memory we can "write `subq $N, %rsp` with a placeholder first, then fill in N later." Phase 1 disappears and codegen becomes single-pass.
 
 ---
 
-**Next:** [02 — Eliminating Phase 1 with backpatching](02_backpatch.md)
+**Next:** [7.2 Eliminating Phase 1 with backpatching](02_backpatch.md)

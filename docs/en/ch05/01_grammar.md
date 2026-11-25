@@ -1,10 +1,10 @@
-# 01 — Grammar and AST
+# 5.1 Grammar and AST
 
 ![](../../images/play-ch05-01-strawberries.png)
 
 Make a program a list of functions, and let functions take parameters.
 
-## 1. A program is a list of functions
+## 5.1.1 A program is a list of functions
 
 Change `program : func_def ;` (the ch04 grammar) into "a list of functions."
 
@@ -23,7 +23,7 @@ func_defs                                                         /* added */
 
 The global `Node *program` is still "the root of the parse result," but its contents go from `NODE_FUNC_DEF` to `NODE_PROGRAM`. `NODE_PROGRAM.stmts` is the list of function definitions.
 
-## 2. Parameterized function definitions
+## 5.1.2 Parameterized function definitions
 
 ```yacc
 func_def
@@ -54,7 +54,7 @@ Each `param` returns a `NODE_IDENT` via `new_ident(name)`. That puts the paramet
 
 `new_func_def`'s signature changes from `(name, body)` to **`(name, params, body)`** — three arguments now.
 
-## 3. Function-call expressions
+## 5.1.3 Function-call expressions
 
 Add one rule to `primary`.
 
@@ -86,7 +86,7 @@ Why no conflict? When choosing a rule, bison **peeks at one upcoming token**. Ju
 
 The choice is unambiguous, so no rule conflict.
 
-## 4. New AST nodes
+## 5.1.4 New AST nodes
 
 ```c
 NODE_PROGRAM,    /* top level: stmts = list of func_defs */
@@ -113,7 +113,7 @@ Node *new_program(NodeList *funcs);                          /* added */
 
 `new_func_def` now stores `params` internally.
 
-## 5. About forward references
+## 5.1.5 About forward references
 
 tiny-c **doesn't require prototypes**. The front end doesn't check whether a function exists; it just emits `call name`. Resolution is **delegated to the linker**.
 
@@ -123,13 +123,13 @@ tiny-c **doesn't require prototypes**. The front end doesn't check whether a fun
 
 By skipping semantic analysis, we get mutual recursion and external function calls for free.
 
-## 6. Argument-count checking
+## 5.1.6 Argument-count checking
 
-The "at most 6 arguments" constraint can't be expressed at the grammar level. We check at codegen time (we'll see this in section 04). Before `call`, "error if there are 7 or more."
+The "at most 6 arguments" constraint can't be expressed at the grammar level. We check at codegen time (we'll see this in Section 5.4). Before `call`, "error if there are 7 or more."
 
 Zero-argument calls (`foo()`) are accepted by `args : /* empty */`.
 
-## 7. AST example
+## 5.1.7 AST example
 
 Input:
 
@@ -172,4 +172,4 @@ In the next section (`02_abi.md`) we look at the rules for calling a function �
 
 ---
 
-**Next:** [02 — The System V AMD64 ABI](02_abi.md)
+**Next:** [5.2 The System V AMD64 ABI](02_abi.md)

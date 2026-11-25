@@ -1,10 +1,10 @@
-# 01 — Types and grammar additions
+# 6.1 Types and grammar additions
 
 ![](../../images/play-ch06-01-acorns.png)
 
 Through ch05, tiny-c treated **everything implicitly as `int`**. ch06 introduces type distinctions for the first time: `int`, `char`, `int *`, `char *`, plus arrays `int[N]` and `char[N]`, and `void` for function return types.
 
-## 1. The Type struct
+## 6.1.1 The Type struct
 
 A small struct that represents the type of each variable and parameter. tiny-c's types are quite limited (one level of pointer, one-dimensional arrays), so a flat struct is enough:
 
@@ -36,7 +36,7 @@ Helper functions:
 
 The value of `int *p` is itself 8 bytes (an address), but `*p` reads 4 bytes (an int). We need to distinguish `base_size` from "the size of the value itself."
 
-## 2. New tokens
+## 6.1.2 New tokens
 
 ```flex
 "char"      { return CHAR; }
@@ -61,7 +61,7 @@ Escape examples:
 '\0'        →  value: 0  (ASCII NUL)
 ```
 
-## 3. The type rule
+## 6.1.3 The type rule
 
 ```yacc
 type
@@ -75,7 +75,7 @@ type
 
 Note that `*` is used as a token here, as in `INT '*'`. The `*` is **both** a binary operator (multiplication) and a unary operator (dereference). bison distinguishes them by context.
 
-## 4. Global variables: extending the top level
+## 6.1.4 Global variables: extending the top level
 
 Through ch05, `program : func_defs`. ch06 rewrites the top level so that function definitions and global declarations can sit side by side.
 
@@ -98,7 +98,7 @@ top_level
 
 In tiny-c, globals have **no initializer** — only `int g;` and `int a[10];` are allowed. At code generation time, they land in `.bss` (zero-initialized).
 
-## 5. Local declarations now use type
+## 6.1.5 Local declarations now use type
 
 In ch03 it was `INT IDENT '=' expr ';'`; in ch06 it's `type IDENT '=' expr ';'`. The type information rides in the AST.
 
@@ -113,7 +113,7 @@ stmt
 
 `int x = 5;` becomes `var_decl(name="x", type=int, init=5)`. `int a[5];` becomes `var_decl(name="a", type=int[5], init=NULL)` (arrays have no initializer).
 
-## 6. Parameters use type too
+## 6.1.6 Parameters use type too
 
 ```yacc
 param
@@ -127,7 +127,7 @@ param
 
 Now `int x` and `char *s` are handled by the same machinery.
 
-## 7. Subscript `a[i]`
+## 6.1.7 Subscript `a[i]`
 
 A new node, `NODE_INDEX`. In the AST it holds a left (array/pointer) and a right (index).
 
@@ -143,7 +143,7 @@ primary
 
 `a[0]` and `a[i+1]` are handled by the same rule (the index can be any expression). In practice, tiny-c supports only the `IDENT '[' expr ']'` form (no complex left like `(p+1)[i]`).
 
-## 8. Unary `&` and `*`
+## 6.1.8 Unary `&` and `*`
 
 ```yacc
 unary
@@ -157,7 +157,7 @@ unary
 
 `*` appears **both** as binary `mul_expr '*' unary` and as unary `'*' unary`. `a * b` matches `mul_expr`; `*p` matches `unary`.
 
-## 9. Character / string literals
+## 6.1.9 Character / string literals
 
 ```yacc
 primary
@@ -171,7 +171,7 @@ primary
 - `CHAR_LIT` is just an integer value (in C, the type of `'a'` is `int`).
 - `STRING_LIT` holds the bytes and the length. At codegen time, the bytes land in `.rodata` and the expression's value becomes the **address** of those bytes (equivalent to `char *`).
 
-## 10. New AST fields
+## 6.1.10 New AST fields
 
 ```c
 struct Node {
@@ -184,7 +184,7 @@ struct Node {
 
 `type` attaches to variable declarations and parameters. Expression nodes (`IDENT`, `INDEX`, etc.) don't carry types — codegen looks them up via the symbol table (or infers from the expression's structure).
 
-## 11. AST example
+## 6.1.11 AST example
 
 ```c
 int main() {
@@ -209,10 +209,10 @@ PROGRAM
 
 `s` has type `char*`, `STRING_LIT` holds `"hello"`, and `s[0]` becomes an `INDEX` node. Codegen looks at this type information and emits a single-byte read for char-units (covered in the next section).
 
-## 12. Next
+## 6.1.12 Next
 
 Grammar and AST now carry types. In the next section (`02_lvalue.md`) we look at the heart of code generation — **the `gen_addr` function** and **the symmetry of lvalue / rvalue**. How `*` and `&` correspond in code generation, why an array name "decays" into an address — all of it falls out from how we use `gen_addr` vs. `gen_expr`.
 
 ---
 
-**Next:** [02 — lvalue and rvalue — the world of `gen_addr`](02_lvalue.md)
+**Next:** [6.2 lvalue and rvalue — the world of `gen_addr`](02_lvalue.md)

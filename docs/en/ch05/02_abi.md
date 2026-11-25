@@ -1,4 +1,4 @@
-# 02 — The System V AMD64 ABI
+# 5.2 The System V AMD64 ABI
 
 ![](../../images/play-ch05-02-drawing.png)
 
@@ -10,7 +10,7 @@ The agreement around calling a function — where to put arguments, where to rea
 >
 > tiny-c targets x86-64 Linux, so we follow this ABI. All libc functions, including `printf`, are exposed via the System V ABI, so **using our own scheme would mean we couldn't call libc**. Register-passing instead of stack-passing isn't a choice; it's the default.
 
-## 1. The core of the ABI — register assignment
+## 5.2.1 The core of the ABI — register assignment
 
 ### Integer arguments
 
@@ -43,7 +43,7 @@ Integer return values go in **`%rax`** (or `%eax` for 32-bit values).
 
 Our codegen contract "the expression's value is in `%eax`" was designed **to match this ABI**. For `return expr;`, after `gen_expr(expr)` we just emit `leave; ret`, and the value naturally ends up in the right place (`%eax`).
 
-## 2. caller-saved vs. callee-saved
+## 5.2.2 caller-saved vs. callee-saved
 
 Registers fall into two categories based on who is responsible for preserving them.
 
@@ -72,7 +72,7 @@ If the callee uses these, it's responsible for **saving them and restoring them 
 
 We **don't use** callee-saved registers (`%rbx`, `%r12`–`%r15`). Using them could optimize codegen (fewer push/pop on the stack), but callee-saved registers require save-and-restore, adding complexity. tiny-c is teaching code; simplicity first.
 
-## 3. The 16-byte stack alignment
+## 5.2.3 The 16-byte stack alignment
 
 This is the ABI rule that demands the most care.
 
@@ -91,7 +91,7 @@ Callee subq:  subtract a multiple of 16 → local area stays 16-aligned
 
 Break this, and function calls fail somewhere down the line (even if things seem to work superficially).
 
-## 4. Prologue and epilogue, revisited
+## 5.2.4 Prologue and epilogue, revisited
 
 The prologue/epilogue we've been writing since ch01 is a literal implementation of the ABI's requirements.
 
@@ -112,7 +112,7 @@ Through ch04, tiny-c grew the stack one variable at a time with `subq $8, %rsp`.
 
 The moment ch05 introduces function calls, **16-alignment suddenly becomes mandatory**. The lazy scheme through ch04 won't do. In the next section (`03_frame.md`) we redesign how we build the frame.
 
-## 5. Variadic functions and `%al`
+## 5.2.5 Variadic functions and `%al`
 
 When calling a variadic function like `printf("%d %d", a, b)`, the ABI imposes an extra rule:
 
@@ -129,7 +129,7 @@ call printf
 
 That makes `printf` safe to call (we actually run it when string literals appear in ch06). We emit this single line before every tiny-c call — no need to distinguish variadic from non-variadic, which keeps the code simple.
 
-## 6. The big picture of a function call
+## 5.2.6 The big picture of a function call
 
 Translating "follow the ABI" into a recipe:
 
@@ -158,4 +158,4 @@ In the next section (`03_frame.md`) we replace ch04's lazy frame allocation with
 
 ---
 
-**Next:** [03 — Redesigning the stack frame](03_frame.md)
+**Next:** [5.3 Redesigning the stack frame](03_frame.md)

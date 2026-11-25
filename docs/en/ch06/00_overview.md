@@ -2,7 +2,7 @@
 
 # Chapter 6 — Pointers and arrays
 
-## 0. Introduction
+## Introduction
 
 Chapter 6 introduces **pointers**, **arrays**, **string literals**, and **global variables**. With these, tiny-c becomes a language that can write "Hello, world" via `printf`.
 
@@ -16,7 +16,7 @@ int main() {
 
 `*p` and `&x`, `a[i]`, `'a'`, `"hello"`, `int g;` — by this point, a substantial portion of familiar C works.
 
-## 1. Diff against ch05
+## Diff against ch05
 
 | File | Change |
 |---------|------|
@@ -58,7 +58,7 @@ The pointer operators `&` and `*` move back and forth between lvalue and rvalue:
 
 `&` removes one layer of "load"; `*` adds one — symmetric operations. This duality is the backbone of ch06's code generation.
 
-## 2. Run it first
+## Run it first
 
 ### Hello, world
 
@@ -130,7 +130,7 @@ int main() {
 
 `s[n]` reads one byte at a time at the char level (we handle the type-dependent pointer arithmetic internally).
 
-## 3. The AST gets new shapes
+## The AST gets new shapes
 
 Input:
 
@@ -165,20 +165,19 @@ PROGRAM
 
 Nodes now carry `Type` information (`x : int`, `p : int*`). `UNARY &` and `UNARY *` are the AST representation of pointer operations. In the AST for `*p = 10`, a `UNARY *` sits on the left of `ASSIGN` — "`*p` as an lvalue."
 
-## 4. Section layout
+## Section layout
 
 | Section | Contents |
 |--------|------|
-| 00 (this file) | Map of the chapter |
-| 01 | Types and grammar additions — `Type` struct, `int*`/`char*` types, subscript `[]`, unary `&` and `*`, char/string literals, global declarations |
-| 02 | lvalue and rvalue — the `gen_addr` function, the symmetry of `&` and `*`, array decay |
-| 03 | Global variables and string literals — `.bss` and `.rodata`, size-aware load/store |
-| 04 | Complete files with diffs; Hello, world demo |
+| [6.1](01_types.md) | Types and grammar additions — `Type` struct, `int*`/`char*` types, subscript `[]`, unary `&` and `*`, char/string literals, global declarations |
+| [6.2](02_lvalue.md) | lvalue and rvalue — the `gen_addr` function, the symmetry of `&` and `*`, array decay |
+| [6.3](03_globals_strings.md) | Global variables and string literals — `.bss` and `.rodata`, size-aware load/store |
+| [6.4](04_build.md) | Complete files with diffs; Hello, world demo |
 
-## 5. Next
+## Next
 
-In section 01 (`01_types.md`) we introduce **the concept of type** into tiny-c. Every variable was implicitly `int` before; from ch06, we need to distinguish `char`, `int*`, `char*`, and `int[N]`. We look at the `Type` struct and the related grammar/AST changes.
+In Section 6.1 (`01_types.md`) we introduce **the concept of type** into tiny-c. Every variable was implicitly `int` before; from ch06, we need to distinguish `char`, `int*`, `char*`, and `int[N]`. We look at the `Type` struct and the related grammar/AST changes.
 
 ---
 
-**Next:** [01 — Types and grammar additions](01_types.md)
+**Next:** [6.1 Types and grammar additions](01_types.md)

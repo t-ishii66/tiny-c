@@ -1,11 +1,11 @@
-# 04 — The AST and ast.h / ast.c
+# 1.4 The AST and ast.h / ast.c
 
 ![](../../images/play-ch01-04-cookies.png)
 
 `ast.h` defines the node types; `ast.c` writes the functions that build nodes (constructors). Chapter 1 needs only four kinds of nodes.
 
 
-## 1. Why a "tree"?
+## 1.4.1 Why a "tree"?
 
 Source code is a string, which is awkward for a compiler to work with. Answering "what's the expression after `return`?" from a string means slicing and parsing every time you ask. Add expressions like `2 + 3 * 4` and it gets worse.
 
@@ -19,7 +19,7 @@ So we convert the source, once, into **structured data in memory**. "Inside the 
 Working with strings ends at parsing. Everything from there on (type checking, optimization, code generation) happens **on the tree**.
 
 
-## 2. What "abstract" means
+## 1.4.2 What "abstract" means
 
 The "A" in AST stands for **Abstract**. The word distinguishes it from the *concrete* syntax tree (CST).
 
@@ -32,7 +32,7 @@ An abstract syntax tree keeps **only what affects meaning**. Both `return ( 42 )
 That's why `;`, `(`, and `{` never appear as nodes in the AST. They were there to help us parse the structure of the source; once the structure is known, they're not needed.
 
 
-## 3. Designing the node: one struct, or one per kind?
+## 1.4.3 Designing the node: one struct, or one per kind?
 
 When expressing AST nodes in C, there are two design choices.
 
@@ -71,7 +71,7 @@ Option B leaves unused fields, sure, but that's only a few dozen wasted bytes pe
 The pattern "branch on `switch (node->kind)`" is simple, and it works consistently throughout the compiler.
 
 
-## 4. The four node kinds in Chapter 1
+## 1.4.4 The four node kinds in Chapter 1
 
 Chapter 1 needs:
 
@@ -85,7 +85,7 @@ Chapter 1 needs:
 In later chapters we'll add `NODE_BINARY` (binary operators), `NODE_VAR_DECL` (variable declarations), `NODE_IF`, `NODE_WHILE`, and others, but four are enough for Chapter 1.
 
 
-## 5. Reading ast.h
+## 1.4.5 Reading ast.h
 
 ```c
 #ifndef AST_H
@@ -211,7 +211,7 @@ void print_ast(Node *node, int indent);
 Declarations for the constructors of each kind. The implementations live in `ast.c`. `print_ast` is for debugging and is called by `--dump-ast`.
 
 
-## 6. Reading ast.c
+## 1.4.6 Reading ast.c
 
 ```c
 #include <stdio.h>
@@ -308,7 +308,7 @@ You can see **the compiler's main processing pattern** here:
 This same pattern shows up again in the next section's code generator (`codegen.c`), unchanged in shape. **Recursive tree-walking** — that's the basic motion of a compiler.
 
 
-## 7. Watching the AST come together
+## 1.4.7 Watching the AST come together
 
 Let's trace, for the input `int main() { return 42; }`, which parser actions fire and what tree appears in memory.
 
@@ -371,4 +371,4 @@ In the next section (`05_codegen.md`) we look at the code generator that walks t
 
 ---
 
-**Next:** [05 — A minimum of x86 assembly, and codegen.c](05_codegen.md)
+**Next:** [1.5 A minimum of x86 assembly, and codegen.c](05_codegen.md)

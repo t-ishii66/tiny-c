@@ -2,7 +2,7 @@
 
 # Chapter 4 — Branches and loops
 
-## 0. Introduction
+## Introduction
 
 Chapter 4 introduces **`if/else`** and **`while`**. With these, we can write things that deserve to be called "algorithms." For example, code that computes `5! = 120`:
 
@@ -31,7 +31,7 @@ int main() {
 }
 ```
 
-## 1. Diff against ch03
+## Diff against ch03
 
 | File | Change |
 |---------|------|
@@ -45,7 +45,7 @@ The central new theme: **the CPU only knows conditional jumps**.
 
 `if` and `while` both, at the CPU level, are nothing more than "compute a condition, then jump somewhere depending on the result." The compiler's job is to translate the high-level structure of the source into combinations of jumps and labels.
 
-## 2. Run it first
+## Run it first
 
 ```bash
 $ cat test.c
@@ -98,20 +98,19 @@ FUNC_DEF main
 
 The `WHILE` node has two children: condition and body. The AST's nesting structure mirrors the "nesting of control." In the generated assembly, labels (like `.Lbegin_0`, `.Lendwhile_0`) and conditional jumps (`je`) make their first appearance.
 
-## 3. Section layout
+## Section layout
 
 | Section | Contents |
 |--------|------|
-| 00 (this file) | Map of the chapter |
-| 01 | Grammar additions — comparison-operator hierarchy, if/while/block statements, dangling-else |
-| 02 | Codegen for comparison and logical negation — `cmpl` + `setcc` |
-| 03 | Codegen for if and while — labels and conditional jumps |
-| 04 | Complete files with diffs; build and run |
+| [4.1](01_grammar.md) | Grammar additions — comparison-operator hierarchy, if/while/block statements, dangling-else |
+| [4.2](02_compare.md) | Codegen for comparison and logical negation — `cmpl` + `setcc` |
+| [4.3](03_control.md) | Codegen for if and while — labels and conditional jumps |
+| [4.4](04_build.md) | Complete files with diffs; build and run |
 
-## 4. Next
+## Next
 
-In section 01 (`01_grammar.md`) we look at the comparison-operator hierarchy, the `if`/`while`/`{ ... }` statements, and dealing with the dangling-else.
+In Section 4.1 (`01_grammar.md`) we look at the comparison-operator hierarchy, the `if`/`while`/`{ ... }` statements, and dealing with the dangling-else.
 
 ---
 
-**Next:** [01 — Grammar additions](01_grammar.md)
+**Next:** [4.1 Grammar additions](01_grammar.md)

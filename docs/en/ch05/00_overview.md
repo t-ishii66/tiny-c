@@ -2,7 +2,7 @@
 
 # Chapter 5 — Calling and defining functions
 
-## 0. Introduction
+## Introduction
 
 Chapter 5 introduces **multiple functions**, parameters, function calls, and **recursion**.
 
@@ -19,7 +19,7 @@ int main() {
 
 `fact` calls itself — that's recursion. As long as the prologue/epilogue and stack frame work correctly, recursion **just works**.
 
-## 1. Diff against ch04
+## Diff against ch04
 
 | File | Change |
 |---------|------|
@@ -34,7 +34,7 @@ Two central themes for the chapter:
 - **The calling convention as a "contract"** — how the caller and callee agree on register usage.
 - **Why recursion "just works"** — given a correctly functioning prologue/epilogue and stack frame, a function calling itself is no special case.
 
-## 2. Run it first
+## Run it first
 
 ### A function with parameters
 
@@ -86,7 +86,7 @@ int main() {
 
 `is_even` calls `is_odd`, and `is_odd` calls `is_even`. tiny-c doesn't require declarations (prototypes), so even forward references work (more on this later).
 
-## 3. New AST shapes
+## New AST shapes
 
 Input:
 
@@ -117,21 +117,20 @@ PROGRAM                      ← new; list of function definitions
 
 Where ch04 had `Node *program = func_def` (a single function), now a `PROGRAM` node holds multiple functions. The `CALL` node carries a function name and an argument list.
 
-## 4. Section layout
+## Section layout
 
 | Section | Contents |
 |--------|------|
-| 00 (this file) | Map of the chapter |
-| 01 | Grammar and AST additions — multiple functions, parameters, function calls |
-| 02 | The System V AMD64 ABI — argument registers, return value, save conventions, 16-byte alignment |
-| 03 | Redesigning the stack frame — pre-pass reservation, parameter spill |
-| 04 | Codegen for function calls — set up arguments, keep alignment, and `call` |
-| 05 | Complete files with diffs; build and run recursion |
+| [5.1](01_grammar.md) | Grammar and AST additions — multiple functions, parameters, function calls |
+| [5.2](02_abi.md) | The System V AMD64 ABI — argument registers, return value, save conventions, 16-byte alignment |
+| [5.3](03_frame.md) | Redesigning the stack frame — pre-pass reservation, parameter spill |
+| [5.4](04_call.md) | Codegen for function calls — set up arguments, keep alignment, and `call` |
+| [5.5](05_build.md) | Complete files with diffs; build and run recursion |
 
-## 5. Next
+## Next
 
-In section 01 (`01_grammar.md`) we look at the grammar for multiple functions, argument lists, and function-call expressions.
+In Section 5.1 (`01_grammar.md`) we look at the grammar for multiple functions, argument lists, and function-call expressions.
 
 ---
 
-**Next:** [01 — Grammar and AST](01_grammar.md)
+**Next:** [5.1 Grammar and AST](01_grammar.md)

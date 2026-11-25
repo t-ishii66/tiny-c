@@ -1,10 +1,10 @@
-# 05 — Complete files and build
+# 5.5 Complete files and build
 
 ![](../../images/play-ch05-05-sunflowers.png)
 
 We lay out the diff against ch04, build, and run recursion. With the nested call (`f(1) + f(2)`) we'll watch **the moment padding is inserted** in the generated assembly.
 
-## 1. lexer.l — add the comma
+## 5.5.1 lexer.l — add the comma
 
 Just one line on top of ch04.
 
@@ -12,7 +12,7 @@ Just one line on top of ch04.
 ","         { return ','; }                           /* added */
 ```
 
-## 2. parser.y — substantial expansion
+## 5.5.2 parser.y — substantial expansion
 
 Many changes; just the main points here. Full version in `steps/ch05/src/parser.y`.
 
@@ -65,7 +65,7 @@ arg_list                                               /* added */
 
 `%expect 1` (dangling-else) carries over from ch04.
 
-## 3. ast.h — two new node kinds, two new fields
+## 5.5.3 ast.h — two new node kinds, two new fields
 
 ```c
 typedef enum {
@@ -87,13 +87,13 @@ Node *new_func_def(char *name, NodeList *params, Node *body);/* signature change
 Node *new_program(NodeList *funcs);                          /* added */
 ```
 
-## 4. ast.c — constructors and print_ast
+## 5.5.4 ast.c — constructors and print_ast
 
 Add `new_call` and `new_program`. Change `new_func_def` to accept `params`. Add `NODE_CALL` and `NODE_PROGRAM` cases to `print_ast`, and have the `NODE_FUNC_DEF` case display the parameter list too.
 
 Full version in `steps/ch05/src/ast.c`.
 
-## 5. codegen.c — major overhaul
+## 5.5.5 codegen.c — major overhaul
 
 We **redesign** the `codegen.c` we've been growing since ch03.
 
@@ -174,9 +174,9 @@ void codegen(Node *prog, FILE *output) {                        /* changed: ch04
 }
 ```
 
-## 6. main.c / Makefile — no changes
+## 5.5.6 main.c / Makefile — no changes
 
-## 7. Build & run
+## 5.5.7 Build & run
 
 ```bash
 $ cd steps/ch05
@@ -261,9 +261,9 @@ $ ./tinyc test.c > test.s && gcc -o test test.s && ./test; echo $?
 
 When `is_odd` is called, it **isn't yet defined** (it appears later in the source). tiny-c doesn't do semantic analysis, so forward references work just fine.
 
-## 8. Assembly for the nested call — the moment padding kicks in
+## 5.5.8 Assembly for the nested call — the moment padding kicks in
 
-Let's see the actual assembly for the `f(1) + f(2)` trace from section 04.5.
+Let's see the actual assembly for the `f(1) + f(2)` trace in 5.4.5.
 
 ```
 ; compute f(2)
@@ -292,7 +292,7 @@ After the subsequent `pushq %rax` (to save `f(2)`'s result), `stack_offset = 1`.
 
 Before the second `call f` (= `f(1)`), we detect `stack_offset = 1` → emit `subq $8, %rsp` to pad. After `call`, `addq $8, %rsp` to undo it.
 
-## 9. Next
+## 5.5.9 Next
 
 Chapter 6 adds **pointers and arrays**. `&x`, `*p`, `a[i]`, string literals, global variables. Codegen for addresses (`gen_addr`), the symmetry between `*` and `&`, and address arithmetic for array access.
 

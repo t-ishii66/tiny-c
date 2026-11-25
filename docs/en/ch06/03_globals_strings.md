@@ -1,10 +1,10 @@
-# 03 — Global variables and string literals
+# 6.3 Global variables and string literals
 
 ![](../../images/play-ch06-03-water-play.png)
 
 Through ch05, all data lived **on the stack**: local variables in a function's frame, push/pop intermediates. ch06 is the first time we put data **off the stack** — globals in `.bss` and string literals in `.rodata`.
 
-## 1. A few ELF sections
+## 6.3.1 A few ELF sections
 
 An x86-64 Linux executable (ELF) is divided into **sections**. The ones the tiny-c output uses:
 
@@ -17,7 +17,7 @@ An x86-64 Linux executable (ELF) is divided into **sections**. The ones the tiny
 
 So far we've only used `.text`. ch06 brings in the other two.
 
-## 2. Global variables: `.bss`
+## 6.3.2 Global variables: `.bss`
 
 Globals like `int g;` come **without an initializer** in tiny-c — they're zero-initialized, exactly what `.bss` is for.
 
@@ -41,7 +41,7 @@ arr:
 
 `int g;` is 4 bytes; `int arr[10];` is 40; `char *gp;` is 8 — the `.zero` argument follows the type's size.
 
-## 3. Accessing globals: `name(%rip)`
+## 6.3.3 Accessing globals: `name(%rip)`
 
 Locals used `-off(%rbp)`. Globals use **PC-relative addressing**:
 
@@ -65,7 +65,7 @@ else
 
 Since `gen_addr` absorbs the global/local distinction, `gen_expr` and `NODE_ASSIGN` need no changes. Another benefit of the lvalue abstraction.
 
-## 4. Symbol table extension
+## 6.3.4 Symbol table extension
 
 We keep two symbol tables — locals and globals:
 
@@ -97,7 +97,7 @@ At the codegen entry point:
 
 This lets a function body write `g = 42` to a global.
 
-## 5. String literals: `.rodata`
+## 6.3.5 String literals: `.rodata`
 
 A string literal `"hello"` is **read-only data**. It goes in `.rodata`. Each literal gets a unique label `.LSn`, and the code references that address.
 
@@ -119,7 +119,7 @@ The **value** of a string literal is "the address of those bytes":
 
 This is what gets assigned to `char *s` or passed as a `printf` argument.
 
-## 6. Managing string literals
+## 6.3.6 Managing string literals
 
 To distinguish multiple literals, we accumulate them in a **string literal table** during codegen and dump them all in `.rodata` at the end:
 
@@ -157,7 +157,7 @@ case NODE_STRING_LIT: {
 
 At the end of `codegen()`, we switch to `.rodata` and emit all the literals as `.LS0`, `.LS1`, ...
 
-## 7. Handling char values
+## 6.3.7 Handling char values
 
 A character literal `'a'` is just an `int` value (97). In the AST it's `NODE_CHAR_LIT(int_val=97)`. Codegen emits `movl $97, %eax` — same as `INT_LIT`.
 
@@ -176,7 +176,7 @@ For `return c;`:
 - Read `c`: `movsbl -off(%rbp), %eax` (sign-extend 1 byte to 4)
 - Return 65 via `%eax`
 
-## 8. Size-aware parameter spill
+## 6.3.8 Size-aware parameter spill
 
 In ch05 every parameter spill was `movl %edi, -off(%rbp)` (4 bytes). ch06 introduces 8-byte arguments (like `char *s`), so we branch:
 
@@ -190,7 +190,7 @@ else
 
 In `int strlen(char *s)`, `s` is `char *` (a pointer), so `movq %rdi, -8(%rbp)`. In `int set(int v)`, `v` is `int`, so `movl %edi, -8(%rbp)`.
 
-## 9. Tying it together: Hello, world
+## 6.3.9 Tying it together: Hello, world
 
 ```c
 int main() {
@@ -220,7 +220,7 @@ int main() {
 
 Linked and run, it prints `hello`. The moment tiny-c becomes a language that "**can call printf**."
 
-## 10. Summary
+## 6.3.10 Summary
 
 - Globals go to `.bss` as `name: .zero N`, accessed via `leaq name(%rip), %rax`.
 - `gen_addr` absorbs the global/local difference.
@@ -234,4 +234,4 @@ In the next section (`04_build.md`) we lay out the complete files and run throug
 
 ---
 
-**Next:** [04 — Complete files and build](04_build.md)
+**Next:** [6.4 Complete files and build](04_build.md)

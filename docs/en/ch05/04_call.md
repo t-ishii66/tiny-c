@@ -1,4 +1,4 @@
-# 04 — Codegen for function calls
+# 5.4 Codegen for function calls
 
 ![](../../images/play-ch05-04-paper-boats.png)
 
@@ -10,7 +10,7 @@ Translate `f(a, b, c)` into assembly. Three things to do:
 
 Looks simple, but there's a wrinkle in making sure the argument evaluations **don't clobber each other**, and **dynamic alignment** to manage.
 
-## 1. The difficulty with argument evaluation
+## 5.4.1 The difficulty with argument evaluation
 
 The ABI's argument-to-register mapping again:
 
@@ -55,7 +55,7 @@ Evaluation:
 
 The arguments don't reach `f` correctly.
 
-## 2. The fix — push everything, then popq
+## 5.4.2 The fix — push everything, then popq
 
 Order the work like this:
 
@@ -97,7 +97,7 @@ static int push_args(NodeList *l) {
 
 We recurse to the end of the NodeList and push on the way back up, so **the last argument is pushed first**. The first argument ends up on top of the stack.
 
-## 3. Tracking alignment — `stack_offset`
+## 5.4.3 Tracking alignment — `stack_offset`
 
 Before `call`, `%rsp` must be 16-aligned. But we must track **statically** how far `%rsp` has drifted at any point.
 
@@ -123,7 +123,7 @@ At function entry, `stack_offset = 0`. `%rsp` is 16-aligned.
 - `stack_offset` even → an even number of 8-byte offsets, so `%rsp` is on a multiple of 16 (16-aligned).
 - `stack_offset` odd → odd number of 8-byte offsets, so `%rsp` is 8 bytes off a multiple of 16 (8-misaligned).
 
-## 4. Padding at `call`
+## 5.4.4 Padding at `call`
 
 Before emitting `call`, if `stack_offset` is odd (i.e., `%rsp` is 8-misaligned), `subq $8, %rsp` to drop by 8 and become 16-aligned. After `call`, `addq $8, %rsp` to restore.
 
@@ -151,7 +151,7 @@ case NODE_CALL: {
 }
 ```
 
-The `arg_regs64[] = {"%rdi", "%rsi", "%rdx", "%rcx", "%r8", "%r9"}` used here is the **64-bit version** of `arg_regs32[]` (`%edi`, `%esi`, ...) seen on the callee side in section 03. The caller uses `popq` (a 64-bit instruction) to pull values off the stack, hence 64-bit names; the callee uses `movl` (32-bit) to spill `int` parameters into slots, hence 32-bit names — an asymmetry. Why this still adds up is explained in **section 6 (the 32-bit-argument issue and the caller/callee mismatch)**.
+The `arg_regs64[] = {"%rdi", "%rsi", "%rdx", "%rcx", "%r8", "%r9"}` used here is the **64-bit version** of `arg_regs32[]` (`%edi`, `%esi`, ...) seen on the callee side in Section 5.3. The caller uses `popq` (a 64-bit instruction) to pull values off the stack, hence 64-bit names; the callee uses `movl` (32-bit) to spill `int` parameters into slots, hence 32-bit names — an asymmetry. Why this still adds up is explained in **5.4.6 (the 32-bit-argument issue and the caller/callee mismatch)**.
 
 Key points here:
 
@@ -159,9 +159,9 @@ Key points here:
 - Padding is emitted before push_args. Since push_args pairs equal numbers of pushes and pops, it leaves `stack_offset` unchanged (it grows temporarily and comes back).
 - At the moment of `call`, `stack_offset` is even after padding → `%rsp` is 16-aligned.
 
-## 5. Does this work for nested calls?
+## 5.4.5 Does this work for nested calls?
 
-Trace the codegen of `f(1) + f(2)` (a textbook nested-call case). In the comments, `so` is short for `stack_offset` and `PAD` is the alignment fix from section 4 (`subq $8, %rsp` to 16-align). **The PAD check happens only at the moment we enter `CALL`** (specifically, just after `gen_expr` branches into `NODE_CALL`, before any argument is pushed) — in other situations (memory loads, arithmetic, etc.) `%rsp` being temporarily misaligned doesn't matter (we're not crossing a call).
+Trace the codegen of `f(1) + f(2)` (a textbook nested-call case). In the comments, `so` is short for `stack_offset` and `PAD` is the alignment fix from 5.4.4 (`subq $8, %rsp` to 16-align). **The PAD check happens only at the moment we enter `CALL`** (specifically, just after `gen_expr` branches into `NODE_CALL`, before any argument is pushed) — in other situations (memory loads, arithmetic, etc.) `%rsp` being temporarily misaligned doesn't matter (we're not crossing a call).
 
 ```c
 gen_expr(BINARY +, lhs=f(1), rhs=f(2)):
@@ -195,12 +195,12 @@ The first `call f(2)` enters with `so=0`, naturally 16-aligned. The moment we `p
 
 Just one number, `stack_offset`, lets us align correctly at any depth of nesting.
 
-## 6. The 32-bit-argument issue and the caller/callee mismatch
+## 5.4.6 The 32-bit-argument issue and the caller/callee mismatch
 
 Looking back, there's an interesting asymmetry:
 
 - The **caller** uses `pushq %rax` / `popq %rdi` (64-bit ops) for arguments.
-- The **callee** (the spill in section 03) receives with `movl %edi, -off(%rbp)` (32-bit ops).
+- The **callee** (the spill in Section 5.3) receives with `movl %edi, -off(%rbp)` (32-bit ops).
 
 Is it OK to pass 64-bit and receive 32-bit? Yes. There's a **crucial x86-64 rule** that makes it line up:
 
@@ -224,11 +224,11 @@ Summary:
 
 When pointers arrive in ch06, the callee gets a `movq` branch; in ch05, with only `int`s, `movl` is enough.
 
-## 7. Handling the variadic ABI
+## 5.4.7 Handling the variadic ABI
 
 `movl $0, %eax` right before `call`. This sets `%al = 0` (XMM registers used = 0), making variadic calls like `printf` safe. It's harmless for non-variadic calls too, so we **always emit it** in tiny-c.
 
-## 8. Why recursive calls "just work"
+## 5.4.8 Why recursive calls "just work"
 
 Consider factorial:
 
@@ -272,4 +272,4 @@ In the last section (`05_build.md`) we lay out the complete files and read the g
 
 ---
 
-**Next:** [05 — Complete files and build](05_build.md)
+**Next:** [5.5 Complete files and build](05_build.md)

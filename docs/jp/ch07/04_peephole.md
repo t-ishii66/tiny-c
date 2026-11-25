@@ -1,10 +1,10 @@
-# 04 — ピープホール最適化
+# 7.4 ピープホール最適化
 
 ![](../../images/play-ch07-04-swings.png)
 
 ピープホール（peephole = 覗き穴）最適化は、生成された asm を上から順に **覗き窓ぐらいの幅** で眺めながら、無駄なパターンを書き換えていくシンプルな後処理だ。tiny-c では覗き窓は **隣接 2 行** か、**`ret` 以降のブロック**。
 
-## 1. パイプラインの中の位置（memstream の復習）
+## 7.4.1 パイプラインの中の位置（memstream の復習）
 
 `open_memstream` でアセンブリ出力をメモリバッファに溜める仕組みは、ch07/02 でバックパッチのために導入済み。ピープホールはこの **同じバッファ** を再利用する ── codegen が書き終わった asm を、stdout に流す前に一度走査して書き換える後処理として乗る。
 
@@ -27,7 +27,7 @@ peephole(buf, (int)len, stdout);   /* この節で追加: 行単位の書き換�
 
 codegen 自体は **無変更**。バッファの中身を読んで書き換える peephole 関数を、codegen と stdout の間に挟むだけ。
 
-## 2. 行に分割する
+## 7.4.2 行に分割する
 
 ピープホールは「行単位」で考えると分かりやすい。バッファを `\n` で割って配列に入れる:
 
@@ -42,7 +42,7 @@ static void split_lines(const char *buf, int len) {
 
 各 `lines[i]` は1行（末尾の `\n` を含む）。ピープホールは `lines[]` 上で動き、書き換えたい位置を NULL にしたり別文字列に差し替えたりする。最後に NULL でない行だけを `stdout` にフラッシュする。
 
-## 3. パターン1: `pushq %rax; popq %reg` → `movq %rax, %reg`
+## 7.4.3 パターン1: `pushq %rax; popq %reg` → `movq %rax, %reg`
 
 tiny-c の codegen が出すアセンブリで一番目につく無駄が、関数呼び出しの引数渡しの最後の部分にある:
 
@@ -91,7 +91,7 @@ for (int i = 0; i + 1 < n_lines; i++) {
 
 「lines[i] が `pushq %rax\n` で、lines[i+1] が `popq REG\n` の形」── このパターンを strcmp / strncmp で見て、合致したら lines[i] を `movq` 命令に置き換え、lines[i+1] を NULL にする。
 
-## 4. パターン2: `pushq %rax; popq %rax` → 消去
+## 7.4.4 パターン2: `pushq %rax; popq %rax` → 消去
 
 これも同じ枠組みで処理できる ── push してすぐ同じレジスタに pop しているなら、その push/pop ペア自体が無意味なので両方消す。
 
@@ -108,7 +108,7 @@ if (strcmp(lines[i+1], "  popq %rax\n") == 0) {
 
 このパターンは tiny-c の通常の codegen ではあまり出ないが、AST 最適化で式が縮んだ結果として出てくることがある。「保険」として入れておく。
 
-## 5. パターン3: `ret` 後のデッドコード除去
+## 7.4.5 パターン3: `ret` 後のデッドコード除去
 
 ch05 で導入した「**`gen_func` の末尾に常に `movl $0, %eax; leave; ret` を出す**」（落っこち防止）── `return` 文が明示的にある関数では、これらは到達不能（dead code）になる。
 
@@ -191,7 +191,7 @@ static int is_instr_line(const char *line) {
 }
 ```
 
-## 6. ピープホールの限界
+## 7.4.6 ピープホールの限界
 
 このやり方で簡単に取れる無駄はかなり残っている。例えば:
 
@@ -212,7 +212,7 @@ movl %eax, (%rcx)       ← *rcx = eax
 
 tiny-c の peephole は隣接2行と `ret` 後ブロックの2種類だけ。
 
-## 7. ピープホールパスは順序に依存しない
+## 7.4.7 ピープホールパスは順序に依存しない
 
 実装した3パターンは **互いに干渉しない**:
 
@@ -221,10 +221,10 @@ tiny-c の peephole は隣接2行と `ret` 後ブロックの2種類だけ。
 
 そのため `peephole_pushpop()` を先に呼ぶか `peephole_dead_after_ret()` を先に呼ぶかは結果に影響しない。複雑な最適化では順序が結果を変える（→ pass scheduling）。
 
-## 8. 次へ
+## 7.4.8 次へ
 
 最後の節（`05_build.md`）で、`optimize.c` 全体の差分と `main.c` の変更を並べ、ビフォー・アフターのデモを示す。
 
 ---
 
-**次へ:** [05 — 完全形とビルド](05_build.md)
+**次へ:** [7.5 完全形とビルド](05_build.md)

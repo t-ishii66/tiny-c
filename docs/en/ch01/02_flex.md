@@ -1,4 +1,4 @@
-# 02 — Intro to flex and lexer.l
+# 1.2 Intro to flex and lexer.l
 
 ![](../../images/play-ch01-02-blocks.png)
 
@@ -19,7 +19,7 @@ lexer.l   ─ flex ─→   lex.yy.c   (this is the lexer's C code)
 Write `lexer.l`, run it through flex to produce `lex.yy.c`, then compile that with gcc and you have a lexer.
 
 
-## 1. Structure of a flex file
+## 1.2.1 Structure of a flex file
 
 A `.l` file (flex definition file) is divided into three sections, separated by lines containing `%%`.
 
@@ -48,7 +48,7 @@ A `.l` file (flex definition file) is divided into three sections, separated by 
 Think of `%%` as "section divider."
 
 
-## 2. Patterns and actions
+## 1.2.2 Patterns and actions
 
 Section 2 is written like this:
 
@@ -72,7 +72,7 @@ Example:
 Here `yytext` is a variable that flex provides; **it holds the actual matched string**. If `[0-9]+` matched `42`, then `yytext` is the string `"42"`.
 
 
-## 3. Two important rules
+## 1.2.3 Two important rules
 
 When flex picks a pattern, two implicit rules apply.
 
@@ -105,7 +105,7 @@ For the input `int`, both match "the three characters `int`" — a tie. Since `"
 **If the order were reversed, `int` would be recognized as an IDENT, and keywords and identifiers would become indistinguishable.** That's why keywords come before identifiers.
 
 
-## 4. yylval — carrying a value along
+## 1.2.4 yylval — carrying a value along
 
 When you write `return INT;`, flex returns just the token name (INT) to the caller. But for integer literals and identifiers, we want to send **the actual value** too. When we read `42`, we want to tell the caller "INT_LIT token, with value 42."
 
@@ -120,7 +120,7 @@ This says: "On a match against a run of digits, convert `yytext` (the matched st
 `yylval` is a struct (a union, really) that can hold different kinds of values. We use `int_val` for integers, `name` for strings, and so on. We define this union in the next section (bison).
 
 
-## 5. The full lexer.l for Chapter 1
+## 1.2.5 The full lexer.l for Chapter 1
 
 ```flex
 %{
@@ -149,7 +149,7 @@ This says: "On a match against a run of digits, convert `yytext` (the matched st
 That's all it takes to get a working lexer.
 
 
-## 6. Line by line
+## 1.2.6 Line by line
 
 ### Section 1 (top)
 
@@ -241,7 +241,7 @@ Whitespace and comments. When the action matches but doesn't `return`, flex does
 The fallback. Any single character that doesn't match anything above produces an error here. `.` is "any single non-newline character," but newlines are caught by `[ \t\n]+` above, so we don't miss them.
 
 
-## 7. A walk-through of actual tokenization
+## 1.2.7 A walk-through of actual tokenization
 
 Let's trace how this lexer processes `int main() { return 42; }`. flex scans left to right, applying longest-match plus earlier-wins.
 
@@ -272,7 +272,7 @@ INT, IDENT(main), '(', ')', '{', RETURN, INT_LIT(42), ';', '}'
 A flat character sequence has been turned into nine meaningful chunks. That's lexical analysis.
 
 
-## 8. The code flex generates
+## 1.2.8 The code flex generates
 
 Running `lexer.l` through flex produces a C source file `lex.yy.c`.
 
@@ -294,4 +294,4 @@ In the next section (`03_bison.md`) we build the parser — the part that assemb
 
 ---
 
-**Next:** [03 — Intro to bison and parser.y](03_bison.md)
+**Next:** [1.3 Intro to bison and parser.y](03_bison.md)

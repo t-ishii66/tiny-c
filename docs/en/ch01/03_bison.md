@@ -1,4 +1,4 @@
-# 03 — Intro to bison and parser.y
+# 1.3 Intro to bison and parser.y
 
 ![](../../images/play-ch01-03-picnic.png)
 
@@ -23,7 +23,7 @@ parser.y  ─ bison ─→  parser.tab.c   (the parser's C code)
 ```
 
 
-## 1. What grammar is
+## 1.3.1 What grammar is
 
 To understand parsing, you have to grasp the idea of a **grammar** first.
 
@@ -65,7 +65,7 @@ The things on the right — `RETURN`, `';'`, `INT_LIT` — are **terminals** (= 
 "Nonterminals can be expanded further by other rules; terminals can't be broken down any more." That distinction is key.
 
 
-## 2. The smallest example
+## 1.3.2 The smallest example
 
 Let's look at a slightly larger example written in bison's style. Consider a parser for a tiny language where the only expressions are integer literals.
 
@@ -100,7 +100,7 @@ That gives us the grammar for "a language that accepts only `return N;`." When t
 bison reads the token stream left to right, checking against the rules. At the same time it can run an action (some C code) at the moment a rule matches. We use actions to build the AST.
 
 
-## 3. Actions and `$1`, `$2`, `$$`
+## 1.3.3 Actions and `$1`, `$2`, `$$`
 
 Write an action with `{ ... }` after the right-hand side of a rule.
 
@@ -138,7 +138,7 @@ The `ret_stmt` rule: the right-hand side has three elements `RETURN`, `expr`, `;
 Each match builds a small node, which then becomes an argument to a larger rule's match, and eventually a whole tree comes together. The picture is "growing the tree from leaves toward the root."
 
 
-## 4. `%union`, `%token`, `%type` — telling bison the types
+## 1.3.4 `%union`, `%token`, `%type` — telling bison the types
 
 bison's rules deal with values (`$1`, `$$`), but we need to tell bison what type those values have. "This `$2` is `Node *`," and so on.
 
@@ -184,7 +184,7 @@ This declares "the value types in this parser are: integer, string, node, or nod
 With these declarations in place, bison treats the `$1`s and `$$`s in your actions as the correct type.
 
 
-## 5. The full parser.y for Chapter 1
+## 1.3.5 The full parser.y for Chapter 1
 
 ```c
 %{
@@ -242,7 +242,7 @@ expr
 Sections are divided by `%%` — the same convention as flex.
 
 
-## 6. Section by section
+## 1.3.6 Section by section
 
 ### Section 1 (C code at the top)
 
@@ -333,7 +333,7 @@ expr
 
 "**An expression is just an integer literal.**" `$1` is the value of the INT_LIT token (`int`). `new_int_lit` builds an integer-literal node.
 
-## 7. Walking through a parse
+## 1.3.7 Walking through a parse
 
 Let's trace what happens when the token stream for `int main() { return 42; }` flows through this parser.
 
@@ -386,7 +386,7 @@ FUNC_DEF main
 A nice consequence of bottom-up parsing: the action for each rule runs when "the child nodes are already in place." By the time `stmt : RETURN expr ';'` fires, the `expr` has already been parsed and a node has been built. That's why `new_return($2)` reads naturally.
 
 
-## 8. The code bison generates
+## 1.3.8 The code bison generates
 
 Running `parser.y` through bison produces two files:
 
@@ -402,7 +402,7 @@ The `-d` option is the key to generating the header. Forget it and `parser.tab.h
 When `yyparse()` runs, it calls `yylex()` internally to consume tokens, firing actions whenever a rule matches. By the end, the global variable `program` holds the AST.
 
 
-## 9. flex and bison working together
+## 1.3.9 flex and bison working together
 
 ```
 +-----------+
@@ -443,4 +443,4 @@ In the next section (`04_ast.md`) we look at the tree itself — the implementat
 
 ---
 
-**Next:** [04 — The AST and ast.h / ast.c](04_ast.md)
+**Next:** [1.4 The AST and ast.h / ast.c](04_ast.md)

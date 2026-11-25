@@ -1,10 +1,10 @@
-# 04 — Peephole optimization
+# 7.4 Peephole optimization
 
 ![](../../images/play-ch07-04-swings.png)
 
 Peephole optimization is a simple post-processing pass: walk the emitted asm top-to-bottom through a **narrow window**, and rewrite wasteful patterns as they appear. In tiny-c the window is either **two adjacent lines** or **the block after a `ret`**.
 
-## 1. Where it sits in the pipeline (memstream recap)
+## 7.4.1 Where it sits in the pipeline (memstream recap)
 
 The setup of accumulating assembly output into a memory buffer via `open_memstream` was already introduced in ch07/02 for backpatching. The peephole pass **reuses the same buffer** — after codegen has finished writing the asm, we scan and rewrite it once before flushing to stdout.
 
@@ -27,7 +27,7 @@ peephole(buf, (int)len, stdout);   /* added this section: line-level rewrites */
 
 codegen itself is **unchanged**. We just slot a `peephole` function — which reads the buffer and rewrites it — between codegen and stdout.
 
-## 2. Split into lines
+## 7.4.2 Split into lines
 
 Peephole work is easiest to think about line-by-line. Split the buffer on `\n` into an array:
 
@@ -42,7 +42,7 @@ static void split_lines(const char *buf, int len) {
 
 Each `lines[i]` is one line (including the trailing `\n`). The peephole works on `lines[]`, replacing positions with `NULL` or with a different string. At the end, only the non-NULL lines get flushed to `stdout`.
 
-## 3. Pattern 1: `pushq %rax; popq %reg` → `movq %rax, %reg`
+## 7.4.3 Pattern 1: `pushq %rax; popq %reg` → `movq %rax, %reg`
 
 The most visible waste in tiny-c's emitted asm is at the tail of function-call argument passing:
 
@@ -91,7 +91,7 @@ for (int i = 0; i + 1 < n_lines; i++) {
 
 "lines[i] is `pushq %rax\n` and lines[i+1] is of the form `popq REG\n`" — we recognize the pattern with strcmp/strncmp, and on a match we replace lines[i] with a `movq` instruction and set lines[i+1] to NULL.
 
-## 4. Pattern 2: `pushq %rax; popq %rax` → erase
+## 7.4.4 Pattern 2: `pushq %rax; popq %rax` → erase
 
 Same framing applies — if a push is immediately followed by a pop into the same register, the push/pop pair itself is meaningless, so erase both.
 
@@ -108,7 +108,7 @@ if (strcmp(lines[i+1], "  popq %rax\n") == 0) {
 
 tiny-c's normal codegen doesn't usually produce this pattern, but AST optimization can shrink an expression in a way that exposes it. We keep this case as a safety net.
 
-## 5. Pattern 3: dead code after `ret`
+## 7.4.5 Pattern 3: dead code after `ret`
 
 ch05 introduced "**always emit `movl $0, %eax; leave; ret` at the end of `gen_func`**" (a fall-through guard). When a function has an explicit `return`, those tail instructions are unreachable (dead code).
 
@@ -191,7 +191,7 @@ static int is_instr_line(const char *line) {
 }
 ```
 
-## 6. The limits of peephole
+## 7.4.6 The limits of peephole
 
 There's plenty of waste this approach can't catch easily. For example:
 
@@ -212,7 +212,7 @@ Catching this would require:
 
 tiny-c's peephole sticks to the two kinds: adjacent 2-line and the block after `ret`.
 
-## 7. Peephole passes are order-independent
+## 7.4.7 Peephole passes are order-independent
 
 The three patterns we implemented **don't interfere with each other**:
 
@@ -221,10 +221,10 @@ The three patterns we implemented **don't interfere with each other**:
 
 So whether `peephole_pushpop()` runs before or after `peephole_dead_after_ret()` doesn't change the result. In more complex optimizers, pass order does change the result (→ pass scheduling).
 
-## 8. Next
+## 7.4.8 Next
 
 In the final section (`05_build.md`) we lay out the full diff of `optimize.c` and the `main.c` changes side-by-side, with before/after demos.
 
 ---
 
-**Next:** [05 — Complete files and build](05_build.md)
+**Next:** [7.5 Complete files and build](05_build.md)

@@ -1,10 +1,10 @@
-# 03 — Complete files and build
+# 3.3 Complete files and build
 
 ![](../../images/play-ch03-03-autumn-leaves.png)
 
 We lay out the complete ch03 files with their diffs against ch02, then build and run.
 
-## 1. lexer.l — one line added for `=`
+## 3.3.1 lexer.l — one line added for `=`
 
 ```flex
 %{
@@ -36,7 +36,7 @@ We lay out the complete ch03 files with their diffs against ch02, then build and
 %%
 ```
 
-## 2. parser.y — statements, assignment, identifiers
+## 3.3.2 parser.y — statements, assignment, identifiers
 
 ```yacc
 %{
@@ -122,7 +122,7 @@ primary
 %%
 ```
 
-## 3. ast.h — four new node kinds
+## 3.3.3 ast.h — four new node kinds
 
 ```c
 #ifndef AST_H
@@ -181,7 +181,7 @@ void print_ast(Node *node, int indent);
 #endif
 ```
 
-## 4. ast.c — four new constructors + print_ast extended
+## 3.3.4 ast.c — four new constructors + print_ast extended
 
 The new constructors follow the same plain pattern as before: `calloc(1, sizeof(Node))` and fill in the fields.
 
@@ -240,7 +240,7 @@ case NODE_EXPR_STMT:
 
 The full version lives in `steps/ch03/src/ast.c`.
 
-## 5. codegen.c — symbol table and four new node cases
+## 3.3.5 codegen.c — symbol table and four new node cases
 
 To ch02 we add the symbol table (`LVar`, `add_local`, `find_local`), `NODE_IDENT` and `NODE_ASSIGN` in `gen_expr`, and `NODE_VAR_DECL` and `NODE_EXPR_STMT` in `gen_stmt`.
 
@@ -337,11 +337,11 @@ case NODE_EXPR_STMT:
 
 The full file is at `steps/ch03/src/codegen.c`.
 
-## 6. main.c / Makefile / codegen.h — no changes
+## 3.3.6 main.c / Makefile / codegen.h — no changes
 
 Same as ch02.
 
-## 7. Build & run
+## 3.3.7 Build & run
 
 ```bash
 $ cd steps/ch03
@@ -426,7 +426,7 @@ $ ./tinyc test.c > /dev/null
 redeclared variable: x
 ```
 
-## 8. Tracing the generated assembly
+## 3.3.8 Tracing the generated assembly
 
 Input:
 
@@ -462,7 +462,7 @@ main:
   ret
 ```
 
-## 9. AST ↔ assembly correspondence
+## 3.3.9 AST ↔ assembly correspondence
 
 ```
 FUNC_DEF main                       <-- main: label + prologue + epilogue
@@ -479,7 +479,7 @@ FUNC_DEF main                       <-- main: label + prologue + epilogue
 
 Compared to ch02, the only difference is that leaves can be `IDENT` instead of `INT_LIT`. From `gen_expr`'s perspective, `INT_LIT` becomes `movl $constant, %eax` and `IDENT` becomes `movl address, %eax`. Both honor the same contract: "leave the value in `%eax`."
 
-## 10. Next
+## 3.3.10 Next
 
 Chapter 4 adds **branches (`if`/`else`)** and **loops (`while`)**, the comparison operators (`< <= > >= == !=`), and logical negation `!`. The new codegen tools are **labels** and **conditional jumps**.
 

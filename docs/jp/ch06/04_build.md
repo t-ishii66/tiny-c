@@ -1,10 +1,10 @@
-# 04 — 完全形とビルド
+# 6.4 完全形とビルド
 
 ![](../../images/play-ch06-04-rainbow.png)
 
 ch06 の主要差分を ch05 との対比で並べる。最後に Hello, world と strlen を動かす。
 
-## 1. lexer.l — 新キーワード・新トークン
+## 6.4.1 lexer.l — 新キーワード・新トークン
 
 ch05 のものに以下を追加:
 
@@ -21,7 +21,7 @@ ch05 のものに以下を追加:
 
 `unescape` ヘルパーで `\n`、`\t`、`\\`、`\'`、`\"`、`\0` を処理する。完全版は `steps/ch06/src/lexer.l`。
 
-## 2. parser.y — 型・ポインタ・配列・グローバル
+## 6.4.2 parser.y — 型・ポインタ・配列・グローバル
 
 主要な追加・変更:
 
@@ -90,7 +90,7 @@ primary
     ;
 ```
 
-## 3. ast.h — Type 構造体と新ノード
+## 6.4.3 ast.h — Type 構造体と新ノード
 
 ```c
 typedef enum {
@@ -134,7 +134,7 @@ Node *new_index(Node *base, Node *idx);
 Node *new_var_decl(char *name, Type *type, Node *init);
 ```
 
-## 4. codegen.c — 大改修
+## 6.4.4 codegen.c — 大改修
 
 新登場:
 
@@ -219,9 +219,9 @@ void codegen(Node *prog, FILE *output) {
 
 完全版は `steps/ch06/src/codegen.c`。
 
-## 5. main.c / Makefile — 変更なし
+## 6.4.5 main.c / Makefile — 変更なし
 
-## 6. ビルドして動かす
+## 6.4.6 ビルドして動かす
 
 ```bash
 $ cd steps/ch06
@@ -308,7 +308,7 @@ $ echo $?
 
 `s[n]` で 1 バイトずつ読み出し、ヌル終端まで数える。
 
-## 7. Hello, world の生成アセンブリを読む
+## 6.4.7 Hello, world の生成アセンブリを読む
 
 `int main() { char *s = "hello"; printf("%s\n", s); return 0; }` を変換:
 
@@ -355,7 +355,7 @@ main:
 
 `.LS0` と `.LS1` が `.rodata` に置かれ、`leaq ...(%rip), %rax` でアドレスを取得、`%rdi`/`%rsi` に並べて `printf` を呼ぶ。System V ABI に従ってスタックは 16-aligned に保たれている（ローカル `s` の 16 バイト確保のおかげで `call printf` の直前は 16-aligned）。
 
-## 8. tiny-c の旅、ここまでで作ったもの
+## 6.4.8 tiny-c の旅、ここまでで作ったもの
 
 第6章をもって tiny-c は当初定めた言語仕様をほぼカバーする:
 

@@ -1,10 +1,10 @@
-# 05 — 完全形とビルド
+# 5.5 完全形とビルド
 
 ![](../../images/play-ch05-05-sunflowers.png)
 
 ch04 との差分を並べ、ビルドして再帰を動かす。入れ子の call (`f(1) + f(2)`) の生成アセンブリで、**パディングが入る瞬間**を見届ける。
 
-## 1. lexer.l — カンマ追加
+## 5.5.1 lexer.l — カンマ追加
 
 ch04 のものに `,` を1行追加するだけ。
 
@@ -12,7 +12,7 @@ ch04 のものに `,` を1行追加するだけ。
 ","         { return ','; }                           /* 追加 */
 ```
 
-## 2. parser.y — 大きく拡張
+## 5.5.2 parser.y — 大きく拡張
 
 差分が多いので、要点だけ。完全版は `steps/ch05/src/parser.y`。
 
@@ -65,7 +65,7 @@ arg_list                                               /* 追加 */
 
 `%expect 1` (dangling-else) は ch04 から引き続き。
 
-## 3. ast.h — 新ノード型2つ、新フィールド2つ
+## 5.5.3 ast.h — 新ノード型2つ、新フィールド2つ
 
 ```c
 typedef enum {
@@ -87,13 +87,13 @@ Node *new_func_def(char *name, NodeList *params, Node *body);/* シグネチャ�
 Node *new_program(NodeList *funcs);                          /* 追加 */
 ```
 
-## 4. ast.c — コンストラクタと print_ast
+## 5.5.4 ast.c — コンストラクタと print_ast
 
 `new_call`, `new_program` を追加。`new_func_def` は params を受け取るように変更。`print_ast` に `NODE_CALL`、`NODE_PROGRAM` のケースを追加し、`NODE_FUNC_DEF` でパラメータリストも表示。
 
 完全版は `steps/ch05/src/ast.c`。
 
-## 5. codegen.c — 大改修
+## 5.5.5 codegen.c — 大改修
 
 ch03 から育ててきた `codegen.c` を **再設計**。
 
@@ -174,9 +174,9 @@ void codegen(Node *prog, FILE *output) {                        /* 変更: ch04 
 }
 ```
 
-## 6. main.c / Makefile — 変更なし
+## 5.5.6 main.c / Makefile — 変更なし
 
-## 7. ビルドして動かす
+## 5.5.7 ビルドして動かす
 
 ```bash
 $ cd steps/ch05
@@ -261,9 +261,9 @@ $ ./tinyc test.c > test.s && gcc -o test test.s && ./test; echo $?
 
 `is_odd` を呼んでいる時点で `is_odd` は **まだ定義されていない**（後ろで定義される）。tiny-c は意味解析をしないので forward reference でも問題なく動く。
 
-## 8. 入れ子の call の生成アセンブリ ── パディングが入る瞬間
+## 5.5.8 入れ子の call の生成アセンブリ ── パディングが入る瞬間
 
-ch05/04 節 5 で追った `f(1) + f(2)` の生成アセンブリを実物で見る。
+5.4.5 で追った `f(1) + f(2)` の生成アセンブリを実物で見る。
 
 ```
 ; f(2) を計算
@@ -292,7 +292,7 @@ addl %ecx, %eax          ; eax = f(1) + f(2)
 
 2回目の `call f` (= `f(1)`) の前に `stack_offset = 1` を検出 → `subq $8, %rsp` でパディング。call 後 `addq $8, %rsp` で解除。
 
-## 9. 次へ
+## 5.5.9 次へ
 
 第6章では **ポインタと配列** を加える。`&x`、`*p`、`a[i]`、文字列リテラル、グローバル変数。アドレスを返す codegen (`gen_addr`)、`*` と `&` の対称性、配列アクセスのアドレス計算。
 

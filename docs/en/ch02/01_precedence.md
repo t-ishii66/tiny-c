@@ -1,10 +1,10 @@
-# 01 — Grammar determines precedence
+# 2.1 Grammar determines precedence
 
 ![](../../images/play-ch02-01-kite.png)
 
 Whether `2 + 3 * 4` becomes `14` or `20` is decided by how the grammar is written.
 
-## 1. The problem with the naive style
+## 2.1.1 The problem with the naive style
 
 Let's first see "what happens if we write it naively." Suppose we wrote this in bison:
 
@@ -47,7 +47,7 @@ There are two ways to fix this:
 
 This chapter takes (2). Just by reading the grammar, you can see the precedence. It's the traditional BNF way.
 
-## 2. A layered grammar
+## 2.1.2 A layered grammar
 
 We turn the precedence levels into grammar levels.
 
@@ -100,7 +100,7 @@ Each level's responsibility maps to a specific part of the input. `-2` is a unar
 
 In short, **"stronger operators (like `*`) form their chunks at inner levels, weaker operators (like `+`) at outer levels"** — that division of labor is what encodes precedence.
 
-## 3. Associativity is also decided by the grammar
+## 2.1.3 Associativity is also decided by the grammar
 
 Is `10 - 3 - 2` equal to `(10 - 3) - 2 = 5`, or `10 - (3 - 2) = 9`? The C standard says the former (left associative). The grammar can express this too.
 
@@ -133,7 +133,7 @@ If we wanted right associativity, we'd flip the rule to `add_expr : mul_expr | m
 
 C makes addition/subtraction and multiplication/division left associative, so our grammar follows suit.
 
-## 4. Unary minus
+## 2.1.4 Unary minus
 
 Look again at the `unary` level:
 
@@ -147,7 +147,7 @@ unary    : primary
 
 For something like `-(2 + 3)`, where parentheses follow, the path is `unary → primary → '(' expr ')'`. `primary` accepts `'(' expr ')'`, so the contents inside the parentheses can return to being a full expression. That naturally expresses parenthetical override of precedence.
 
-## 5. The actual AST shape
+## 2.1.5 The actual AST shape
 
 The grammar's layering shows up in the AST shape.
 
@@ -162,7 +162,7 @@ Two things to note:
 - **Parentheses don't survive into the AST.** They're symbols that disambiguate the grammar; once the tree is built, their job is done. The thing "computed first" lives close to the leaves.
 - `UNARY` has one child; `BINARY` has two. As AST node types they're distinct (we define `NODE_UNARY` and `NODE_BINARY` in `ast.h`).
 
-## 6. The parser.y actions
+## 2.1.6 The parser.y actions
 
 When you write `{ ... }` after the right-hand side of a grammar rule, bison runs it on reduce. We build the AST inside these actions.
 
@@ -191,4 +191,4 @@ In the next section (`02_codegen.md`) we look at the other side — generating a
 
 ---
 
-**Next:** [02 — Managing intermediate values with the stack](02_codegen.md)
+**Next:** [2.2 Managing intermediate values with the stack](02_codegen.md)
