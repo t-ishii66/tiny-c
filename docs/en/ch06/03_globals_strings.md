@@ -220,6 +220,12 @@ int main() {
 
 Linked and run, it prints `hello`. The moment tiny-c becomes a language that "**can call printf**."
 
+> **Alice**: Hello, world! It only took six chapters.
+>
+> **Bob**: One line if you're using the language, six chapters if you're building it.
+>
+> **Alice**: We've finally caught up to page one of every beginner's book.
+
 ## 6.3.10 Summary
 
 - Globals go to `.bss` as `name: .zero N`, accessed via `leaq name(%rip), %rax`.

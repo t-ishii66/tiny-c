@@ -161,6 +161,10 @@ To suppress the warning, we declare `%expect 1`, saying "exactly one conflict is
 
 With this declared, a single conflict no longer warns. Zero or two-or-more do warn, so unexpected conflicts still come to our attention.
 
+> **Alice**: bison said "conflict"! Did I break something?
+>
+> **Bob**: You didn't break anything. bison is just a worrier. Tell it up front with `%expect 1` — "one is expected, relax" — and it stops asking.
+
 ## 4.1.6 AST shapes
 
 Three new node kinds.
@@ -215,20 +219,7 @@ else
 
 AST:
 
-```
-IF
-├─ BINARY >          ← condition
-│  ├─ IDENT x
-│  └─ INT_LIT 0
-├─ EXPR_STMT         ← then part
-│  └─ ASSIGN
-│     ├─ IDENT y
-│     └─ INT_LIT 1
-└─ EXPR_STMT         ← else part
-   └─ ASSIGN
-      ├─ IDENT y
-      └─ INT_LIT 2
-```
+![AST of an if-else](../../images/diagrams/en/fig-4-1.svg)
 
 `while` is similar: a tree with two branches (condition and body).
 
@@ -241,18 +232,7 @@ while (i < 10)
 
 AST:
 
-```
-WHILE
-├─ BINARY <          ← condition
-│  ├─ IDENT i
-│  └─ INT_LIT 10
-└─ EXPR_STMT         ← body
-   └─ ASSIGN
-      ├─ IDENT i
-      └─ BINARY +
-         ├─ IDENT i
-         └─ INT_LIT 1
-```
+![AST of a while](../../images/diagrams/en/fig-4-2.svg)
 
 ## 4.1.8 A note on block scope
 

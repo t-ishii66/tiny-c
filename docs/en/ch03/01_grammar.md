@@ -54,6 +54,10 @@ The grammar above says `add_expr '=' assign`, so bison accepts anything on the l
 
 In ch03, the only thing we accept as an lvalue is `IDENT`. Array `[]` and indirection `*` come in ch06.
 
+> **Alice**: `x = x + 1` makes zero sense in math, right?
+>
+> **Bob**: In math, subtract x from both sides and you get 0 = 1. The universe breaks. But here, the `x` on the left is the "address," and the `x` on the right is "whoever lives there."
+
 ## 3.1.3 Add the identifier to expressions
 
 In `x + y`, the `x` and `y` are identifiers appearing as expressions. We add one line to `primary`.

@@ -44,6 +44,10 @@ If we insist that "after `gen_expr`, `%eax` holds the value," then evaluating a 
 
 The tool that solves this is the **stack**.
 
+> **Alice**: I computed the right side, and the left one I'd put in `%eax` just vanished...
+>
+> **Bob**: If there's nowhere to keep the value in `%eax`, jot it on a slip of paper and stack it on the kitchen table next door. Stacking is `pushq`; taking the top slip is `popq`.
+
 ## 2.2.3 Saving intermediate values to the stack
 
 The stack is a special memory region whose address decreases on each function call. `%rsp` (the stack pointer) points to its current top. The CPU manipulates it with `pushq` and `popq`.

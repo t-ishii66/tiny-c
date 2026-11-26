@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 280" width="720" height="280" font-family="'Hiragino Sans','Hiragino Kaku Gothic ProN','Noto Sans JP','Yu Gothic',Meiryo,sans-serif" font-size="14" fill="#1a202c">
+  <style>
+    .sys { fill: #f4f6f8; stroke: #718096; stroke-width: 1.5; }
+    .var { fill: #eef3fb; stroke: #4a6fa5; stroke-width: 1.5; }
+    .free { fill: #ffffff; stroke: #cbd5e0; stroke-width: 1.5; stroke-dasharray: 5 4; }
+    .code { font-family: SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace; }
+    .off { font-family: SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace; font-size: 13px; fill: #4a6fa5; }
+    .note { font-size: 12px; fill: #4a5568; }
+    .ptr { font-family: SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace; font-size: 14px; fill: #b86b14; font-weight: bold; }
+  </style>
+  <defs>
+    <marker id="o" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#dd8a2a"/>
+    </marker>
+  </defs>
+  <rect width="720" height="280" fill="#ffffff"/>
+
+  <rect class="sys" x="200" y="20" width="160" height="44"/>
+  <text x="280" y="47" text-anchor="middle">old <tspan class="code">%rbp</tspan></text>
+
+  <rect class="var" x="200" y="64" width="160" height="44"/>
+  <text class="code" x="280" y="91" text-anchor="middle">x</text>
+  <text class="off" x="186" y="91" text-anchor="end">-8(%rbp)</text>
+  <text class="note" x="380" y="91"><tspan class="code">int x</tspan> (1st)</text>
+
+  <rect class="var" x="200" y="108" width="160" height="44"/>
+  <text class="code" x="280" y="135" text-anchor="middle">y</text>
+  <text class="off" x="186" y="135" text-anchor="end">-16(%rbp)</text>
+  <text class="note" x="380" y="135"><tspan class="code">int y</tspan> (2nd)</text>
+
+  <rect class="var" x="200" y="152" width="160" height="44"/>
+  <text class="code" x="280" y="179" text-anchor="middle">z</text>
+  <text class="off" x="186" y="179" text-anchor="end">-24(%rbp)</text>
+  <text class="note" x="380" y="179"><tspan class="code">int z</tspan> (3rd)</text>
+
+  <rect class="free" x="200" y="196" width="160" height="44"/>
+
+  <text class="ptr" x="110" y="47">%rbp</text>
+  <line x1="154" y1="42" x2="196" y2="42" stroke="#dd8a2a" stroke-width="1.5" marker-end="url(#o)"/>
+  <text class="ptr" x="40" y="179">%rsp</text>
+  <line x1="84" y1="174" x2="104" y2="174" stroke="#dd8a2a" stroke-width="1.5" marker-end="url(#o)"/>
+
+  <text class="note" x="380" y="230">8 bytes per variable, going down from <tspan class="code">%rbp</tspan></text>
+</svg>

@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 250" width="720" height="250" font-family="'Hiragino Sans','Hiragino Kaku Gothic ProN','Noto Sans JP','Yu Gothic',Meiryo,sans-serif" font-size="14" fill="#1a202c">
+  <style>
+    .code { font-family: SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace; }
+    .note { font-size: 13px; fill: #2d3748; }
+    .bit { font-size: 11px; fill: #718096; }
+  </style>
+  <rect width="720" height="250" fill="#ffffff"/>
+
+  <!-- bit ruler: 64 bits over 480px, 7.5px per bit -->
+  <text class="bit code" x="40" y="24">63</text>
+  <text class="bit code" x="280" y="24" text-anchor="middle">31</text>
+  <text class="bit code" x="400" y="24" text-anchor="middle">15</text>
+  <text class="bit code" x="520" y="24" text-anchor="end">0</text>
+
+  <!-- %rax: full 64 bits -->
+  <rect x="40" y="32" width="480" height="44" rx="6" fill="#e3ecf9" stroke="#4a6fa5" stroke-width="1.5"/>
+  <text class="code" x="280" y="60" text-anchor="middle" font-size="16">%rax</text>
+  <text class="note" x="540" y="60">all 64 bits</text>
+
+  <!-- %eax: low 32 bits -->
+  <rect x="280" y="96" width="240" height="44" rx="6" fill="#d3e2f6" stroke="#4a6fa5" stroke-width="1.5"/>
+  <text class="code" x="400" y="124" text-anchor="middle" font-size="16">%eax</text>
+  <text class="note" x="540" y="124">low 32 bits</text>
+
+  <!-- %ax: low 16 bits -->
+  <rect x="400" y="160" width="120" height="44" rx="6" fill="#bfd4f1" stroke="#4a6fa5" stroke-width="1.5"/>
+  <text class="code" x="460" y="188" text-anchor="middle" font-size="16">%ax</text>
+  <text class="note" x="540" y="188">low 16 bits</text>
+
+  <!-- guides showing the nesting -->
+  <line x1="280" y1="76" x2="280" y2="96" stroke="#4a6fa5" stroke-dasharray="3 3"/>
+  <line x1="520" y1="76" x2="520" y2="96" stroke="#4a6fa5" stroke-dasharray="3 3"/>
+  <line x1="400" y1="140" x2="400" y2="160" stroke="#4a6fa5" stroke-dasharray="3 3"/>
+  <line x1="520" y1="140" x2="520" y2="160" stroke="#4a6fa5" stroke-dasharray="3 3"/>
+
+  <text class="bit" x="40" y="232">The lower parts of one register have their own names (writing one changes the overlapping parts too)</text>
+</svg>

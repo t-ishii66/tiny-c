@@ -38,6 +38,7 @@ exclude:
   - build/
   - steps/
   - test/
+  - tools/
   - .github/
   - .gitignore
   - .vscode/

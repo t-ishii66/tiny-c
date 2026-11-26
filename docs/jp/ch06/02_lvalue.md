@@ -69,6 +69,16 @@ static void gen_addr(Node *node);
 
 注目点: **`*p` の lvalue は `p` の rvalue と一致する**。これが「`&` と `*` は対称」の正体だ ── `*` は load を 1 段足し、`&` は load を 1 段取り去る。
 
+> **Alice**: ポインタ、何回読んでも頭がこんがらがる……。
+>
+> **Bob**: `*` は 1 段たどって、`&` は 1 段戻るだけ。だから `&*p` は `p` に戻る。
+>
+> **Alice**: じゃあ `&*&*&*p` も `p`？
+>
+> **Bob**: そう。でも、そんなコードを書いたら嫌われるよ。
+>
+> **Alice**: へへ。
+
 ### `int a[5];` の場合 ── 配列特有のルール（decay）
 
 > **decay（配列 → ポインタの暗黙変換）**: 配列名を式の中で **添字をつけずに使う** と、自動的に「先頭要素のアドレス」（= ポインタ値）として扱われる、という C の言語仕様。`int a[5]; int *p = a;` の `a` は `&a[0]` に変換されて `p` に代入される。配列そのものは「rvalue としての値」を持たず、rvalue 文脈ではアドレスに化ける ── これが decay の中身。
@@ -195,32 +205,11 @@ lhs も **配列名でもポインタでもよい**。`Type` 構造体（`ast.h`
 
 **`a[i] = X;` の場合**（lvalue 経路、ASSIGN の左辺）:
 
-```
-gen_stmt(EXPR_STMT)
-└─ gen_expr(NODE_ASSIGN)        ← 入口
-    ├─ gen_addr(node->lhs)       ← lhs = NODE_INDEX(a, i)
-    │  └─ case NODE_INDEX        ← ★ 6.2.4.3 に到達
-    │     ├─ gen_addr(IDENT a)   ← 6.2.4.1（配列のベースアドレス）
-    │     ├─ gen_expr(IDENT i)
-    │     ├─ imulq $4, %rax     ← スケーリング!
-    │     └─ addq → %rax = &a[i]
-    └─ ... store
-```
+![a[i] = ... の codegen の呼び出し経路](../../images/diagrams/jp/fig-6-1.svg)
 
 **`*(p+i) = X;` の場合**（lvalue 経路、同じ ASSIGN の左辺）:
 
-```
-gen_stmt(EXPR_STMT)
-└─ gen_expr(NODE_ASSIGN)        ← 入口
-    ├─ gen_addr(node->lhs)       ← lhs = NODE_UNARY '*'
-    │  └─ case NODE_UNARY '*'    ← 6.2.4.2 に到達（6.2.4.3 ではない!）
-    │     └─ gen_expr(operand)   ← operand = NODE_BINARY '+'
-    │        └─ case NODE_BINARY ← ここの処理は 6.2.4.3 にも 6.2.4.2 にも入らず、ただの addl
-    │           ├─ gen_expr(rhs = i)
-    │           ├─ gen_expr(lhs = p)
-    │           └─ addl %ecx, %eax  ← スケーリングなし!
-    └─ ... store
-```
+![*(p + i) = ... の codegen の呼び出し経路](../../images/diagrams/jp/fig-6-2.svg)
 
 決定的な違いは **`NODE_BINARY '+'` の codegen** にある（`steps/ch06/src/codegen.c` の `case NODE_BINARY` 内）── tiny-c はここで型を見ずに `addl` を出すだけ。だから `*(p+i)` は「p のバイト + i」になり、要素サイズで進まない。一方 `a[i]` は `NODE_INDEX` 経由でこの 6.2.4.3 に来るので、ちゃんと `imulq $elem_size` でスケーリングされる。
 
@@ -394,6 +383,12 @@ static void emit_store(int sz) {
 - `movq`: 8 バイト store（pointer）
 
 `%al` は `%rax` の最下位 1 バイト、`%eax` は下位 4 バイト、`%rax` 全体は 8 バイト。同じレジスタの違う部分を使い分けて適切なサイズで書き込む。
+
+> **Alice**: `%al` と `%eax` と `%rax`、名前が 3 つもあるのに、同じ箱なの？
+>
+> **Bob**: 入れ子なんだ。`%rax` の下半分が `%eax`、そのいちばん下の 1 バイトが `%al`。
+>
+> **Alice**: マトリョーシカだ！
 
 ## 6.2.8 まとめ
 

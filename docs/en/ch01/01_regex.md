@@ -144,6 +144,14 @@ Anything escaped with `\` is treated as "a single character with a special meani
 
 There are other regex features — `?`, `|`, `{n,m}`, grouping `(...)`, etc. — that we don't need in Chapter 1. We'll introduce them later when they're needed.
 
+> **Alice**: Regular expressions look like a cat walked across the keyboard...
+>
+> **Bob**: `[0-9]+` means "one or more digits." Read it one character at a time and it's a perfectly sensible sentence.
+>
+> **Alice**: Then next time, could you read the one my cat wrote?
+>
+> **Bob**: ...I doubt it matches anything.
+
 
 ## Next
 

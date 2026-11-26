@@ -1,0 +1,64 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 330" width="760" height="330" font-family="'Hiragino Sans','Hiragino Kaku Gothic ProN','Noto Sans JP','Yu Gothic',Meiryo,sans-serif" font-size="14" fill="#1a202c">
+  <style>
+    .box { fill: #eef3fb; stroke: #4a6fa5; stroke-width: 1.5; }
+    .io { fill: #f4f6f8; stroke: #718096; stroke-width: 1.5; }
+    .main { fill: #fff1dc; stroke: #dd8a2a; stroke-width: 1.5; }
+    .code { font-family: SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace; }
+    .sub { font-size: 12px; fill: #4a5568; }
+    .line { stroke: #4a5568; stroke-width: 1.5; fill: none; }
+    .ctl { stroke: #dd8a2a; stroke-width: 1.5; fill: none; stroke-dasharray: 5 3; }
+  </style>
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#4a5568"/>
+    </marker>
+    <marker id="o" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#dd8a2a"/>
+    </marker>
+  </defs>
+  <rect width="760" height="330" fill="#ffffff"/>
+
+  <!-- input / output -->
+  <rect class="io" x="20" y="20" width="110" height="44" rx="8"/>
+  <text x="75" y="47" text-anchor="middle">入力 <tspan class="code">.c</tspan></text>
+  <rect class="io" x="630" y="20" width="110" height="44" rx="8"/>
+  <text x="685" y="47" text-anchor="middle">出力 <tspan class="code">.s</tspan></text>
+
+  <!-- pipeline row -->
+  <rect class="box" x="20" y="120" width="110" height="60" rx="8"/>
+  <text class="code" x="75" y="146" text-anchor="middle">lexer</text>
+  <text class="sub" x="75" y="166" text-anchor="middle">(flex)</text>
+
+  <rect class="box" x="172" y="120" width="120" height="60" rx="8"/>
+  <text class="code" x="232" y="146" text-anchor="middle">parser</text>
+  <text class="sub" x="232" y="166" text-anchor="middle">(bison)</text>
+
+  <rect class="box" x="334" y="120" width="96" height="60" rx="8"/>
+  <text x="382" y="155" text-anchor="middle">AST</text>
+
+  <rect class="box" x="472" y="120" width="120" height="60" rx="8"/>
+  <text class="code" x="532" y="155" text-anchor="middle">codegen</text>
+
+  <rect class="io" x="630" y="120" width="110" height="60" rx="8"/>
+  <text class="code" x="685" y="146" text-anchor="middle">FILE</text>
+  <text class="sub code" x="685" y="166" text-anchor="middle">(stdout)</text>
+
+  <line class="line" x1="75" y1="64" x2="75" y2="118" marker-end="url(#a)"/>
+  <line class="line" x1="130" y1="150" x2="170" y2="150" marker-end="url(#a)"/>
+  <line class="line" x1="292" y1="150" x2="332" y2="150" marker-end="url(#a)"/>
+  <line class="line" x1="430" y1="150" x2="470" y2="150" marker-end="url(#a)"/>
+  <line class="line" x1="592" y1="150" x2="628" y2="150" marker-end="url(#a)"/>
+  <line class="line" x1="685" y1="120" x2="685" y2="66" marker-end="url(#a)"/>
+
+  <!-- main.c drives parser and codegen -->
+  <rect class="main" x="162" y="240" width="140" height="56" rx="8"/>
+  <text class="code" x="232" y="263" text-anchor="middle">main.c</text>
+  <text class="sub code" x="232" y="283" text-anchor="middle">yyparse()</text>
+  <rect class="main" x="462" y="240" width="140" height="56" rx="8"/>
+  <text class="code" x="532" y="263" text-anchor="middle">main.c</text>
+  <text class="sub code" x="532" y="283" text-anchor="middle">codegen()</text>
+  <line class="ctl" x1="232" y1="240" x2="232" y2="182" marker-end="url(#o)"/>
+  <line class="ctl" x1="532" y1="240" x2="532" y2="182" marker-end="url(#o)"/>
+  <text class="sub" x="242" y="215" fill="#b86b14">呼び出す</text>
+  <text class="sub" x="542" y="215" fill="#b86b14">呼び出す</text>
+</svg>

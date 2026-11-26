@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 440" width="720" height="440" font-family="'Hiragino Sans','Hiragino Kaku Gothic ProN','Noto Sans JP','Yu Gothic',Meiryo,sans-serif" font-size="14" fill="#1a202c">
+  <style>
+    .sys { fill: #f4f6f8; stroke: #718096; stroke-width: 1.5; }
+    .f5 { fill: #eef3fb; stroke: #4a6fa5; stroke-width: 1.5; }
+    .f4 { fill: #e3ecf9; stroke: #4a6fa5; stroke-width: 1.5; }
+    .f3 { fill: #d3e2f6; stroke: #4a6fa5; stroke-width: 1.5; }
+    .nval { fill: #fff1dc; stroke: #dd8a2a; stroke-width: 1.5; }
+    .free { fill: #ffffff; stroke: #cbd5e0; stroke-width: 1.5; stroke-dasharray: 5 4; }
+    .code { font-family: SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace; font-size: 13px; }
+    .label { font-size: 13px; fill: #2d3748; }
+    .addr { font-size: 12px; fill: #718096; }
+    .brace { fill: none; stroke: #4a6fa5; stroke-width: 1.4; }
+  </style>
+  <defs>
+    <marker id="g" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#a0aec0"/>
+    </marker>
+  </defs>
+  <rect width="720" height="440" fill="#ffffff"/>
+
+  <text class="addr" x="30" y="30">high address</text>
+  <line x1="60" y1="40" x2="60" y2="398" stroke="#a0aec0" stroke-width="1.5" marker-end="url(#g)"/>
+  <text class="addr" x="30" y="422">low address</text>
+
+  <!-- main -->
+  <rect class="sys" x="180" y="30" width="220" height="32"/>
+  <text class="code" x="290" y="51" text-anchor="middle">main's rbp</text>
+
+  <!-- fact(5) -->
+  <rect class="f5" x="180" y="62" width="220" height="32"/><text class="code" x="290" y="83" text-anchor="middle">rip = main</text>
+  <rect class="f5" x="180" y="94" width="220" height="32"/><text class="code" x="290" y="115" text-anchor="middle">saved rbp</text>
+  <rect class="nval" x="180" y="126" width="220" height="32"/><text class="code" x="290" y="147" text-anchor="middle">n = 5</text>
+  <path class="brace" d="M410,64 L418,64 L418,156 L410,156"/>
+  <text class="label" x="430" y="114">frame of <tspan class="code">fact(5)</tspan></text>
+
+  <!-- fact(4) -->
+  <rect class="f4" x="180" y="158" width="220" height="32"/><text class="code" x="290" y="179" text-anchor="middle">rip = fact</text>
+  <rect class="f4" x="180" y="190" width="220" height="32"/><text class="code" x="290" y="211" text-anchor="middle">saved rbp</text>
+  <rect class="nval" x="180" y="222" width="220" height="32"/><text class="code" x="290" y="243" text-anchor="middle">n = 4</text>
+  <path class="brace" d="M410,160 L418,160 L418,252 L410,252"/>
+  <text class="label" x="430" y="210">frame of <tspan class="code">fact(4)</tspan></text>
+
+  <!-- fact(3) -->
+  <rect class="f3" x="180" y="254" width="220" height="32"/><text class="code" x="290" y="275" text-anchor="middle">rip = fact</text>
+  <rect class="f3" x="180" y="286" width="220" height="32"/><text class="code" x="290" y="307" text-anchor="middle">saved rbp</text>
+  <rect class="nval" x="180" y="318" width="220" height="32"/><text class="code" x="290" y="339" text-anchor="middle">n = 3</text>
+  <path class="brace" d="M410,256 L418,256 L418,348 L410,348"/>
+  <text class="label" x="430" y="306">frame of <tspan class="code">fact(3)</tspan></text>
+
+  <rect class="free" x="180" y="350" width="220" height="48"/>
+  <text x="290" y="380" text-anchor="middle" fill="#718096">…</text>
+
+  <text class="addr" x="430" y="390"><tspan class="code">rip</tspan> = return address (where to go back)</text>
+  <text class="addr" x="430" y="408">each <tspan class="code">n</tspan> is <tspan class="code">-8(%rbp)</tspan> of its own frame</text>
+</svg>

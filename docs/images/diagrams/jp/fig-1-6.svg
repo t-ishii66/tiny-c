@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 170" width="640" height="170" font-family="'Hiragino Sans','Hiragino Kaku Gothic ProN','Noto Sans JP','Yu Gothic',Meiryo,sans-serif" font-size="14" fill="#1a202c">
+  <style>
+    .src { fill: #eef3fb; stroke: #4a6fa5; stroke-width: 1.5; }
+    .gen { fill: #f4f6f8; stroke: #718096; stroke-width: 1.5; stroke-dasharray: 5 3; }
+    .tool { fill: #fff1dc; stroke: #dd8a2a; stroke-width: 1.5; }
+    .code { font-family: SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace; font-size: 14px; }
+    .sub { font-size: 12px; fill: #4a5568; }
+    .line { stroke: #4a5568; stroke-width: 1.6; fill: none; }
+  </style>
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#4a5568"/>
+    </marker>
+  </defs>
+  <rect width="640" height="170" fill="#ffffff"/>
+
+  <rect class="src" x="20" y="62" width="130" height="44" rx="8"/>
+  <text class="code" x="85" y="89" text-anchor="middle">parser.y</text>
+  <text class="sub" x="85" y="126" text-anchor="middle">私たちが書く</text>
+
+  <line class="line" x1="150" y1="84" x2="204" y2="84" marker-end="url(#a)"/>
+  <rect class="tool" x="206" y="66" width="90" height="36" rx="18"/>
+  <text class="code" x="251" y="89" text-anchor="middle">bison</text>
+
+  <path class="line" d="M296,84 L320,84 L320,46 L362,46" marker-end="url(#a)"/>
+  <path class="line" d="M320,84 L320,122 L362,122" marker-end="url(#a)"/>
+
+  <rect class="gen" x="364" y="24" width="150" height="44" rx="8"/>
+  <text class="code" x="439" y="51" text-anchor="middle">parser.tab.c</text>
+  <text class="sub" x="526" y="44">構文解析器の</text>
+  <text class="sub" x="526" y="60">C コード</text>
+
+  <rect class="gen" x="364" y="100" width="150" height="44" rx="8"/>
+  <text class="code" x="439" y="127" text-anchor="middle">parser.tab.h</text>
+  <text class="sub" x="526" y="120">トークン定義の</text>
+  <text class="sub" x="526" y="136">ヘッダ</text>
+</svg>

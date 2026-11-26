@@ -139,6 +139,14 @@ The progression:
 
 Final `max_frame_size = 16`. Backpatching fills `subq $16, %rsp` — four variables but only 16 bytes of stack.
 
+> **Alice**: Four variables, and the stack only needs 16 bytes?
+>
+> **Bob**: When the first block ends, `a` and `b` give up their seats to `c` and `d`.
+>
+> **Alice**: Like a restaurant with really fast table turnover.
+>
+> **Bob**: And the place is only as big as its busiest moment.
+
 ## 7.3.6 Shadowing an outer variable
 
 ```c

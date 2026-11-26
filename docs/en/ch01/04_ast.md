@@ -11,10 +11,7 @@ Source code is a string, which is awkward for a compiler to work with. Answering
 
 So we convert the source, once, into **structured data in memory**. "Inside the return-statement node is an expression node. That expression node is an integer literal, value 42." If we hold the structure, later processing becomes simple pointer-chasing.
 
-```
-"return 42;"           RETURN node
-                        └─ INT_LIT node (value: 42)
-```
+!["return 42;" and the RETURN node](../../images/diagrams/en/fig-1-11.svg)
 
 Working with strings ends at parsing. Everything from there on (type checking, optimization, code generation) happens **on the tree**.
 
@@ -30,6 +27,12 @@ An abstract syntax tree keeps **only what affects meaning**. Both `return ( 42 )
 "Abstract" means "strip off the inessentials." The AST is a tree that retains only the minimum information the compiler needs.
 
 That's why `;`, `(`, and `{` never appear as nodes in the AST. They were there to help us parse the structure of the source; once the structure is known, they're not needed.
+
+> **Alice**: All those parentheses and semicolons I wrote — none of them make it into the AST?
+>
+> **Bob**: Once the tree has its shape, their job is done.
+>
+> **Alice**: Then what was all that yelling about my missing semicolons...
 
 
 ## 1.4.3 Designing the node: one struct, or one per kind?
@@ -343,17 +346,7 @@ Order of token reads and action executions:
 
 The resulting tree in memory:
 
-```
-program ──→ [D: FUNC_DEF "main"]
-              │
-              body: [C: BLOCK]
-                      │
-                      stmts: [L: NodeList]
-                              │
-                              node: [B: RETURN]
-                                      │
-                                      expr: [A: INT_LIT 42]
-```
+![Nodes in memory and the pointers between them](../../images/diagrams/en/fig-1-12.svg)
 
 That is what `--dump-ast` is really showing.
 

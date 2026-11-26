@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 200" width="960" height="200" font-family="'Hiragino Sans','Hiragino Kaku Gothic ProN','Noto Sans JP','Yu Gothic',Meiryo,sans-serif" font-size="13" fill="#1a202c">
+  <style>
+    .box { fill: #eef3fb; stroke: #4a6fa5; stroke-width: 1.5; }
+    .data { fill: #f4f6f8; stroke: #718096; stroke-width: 1.5; }
+    .new { fill: #fff1dc; stroke: #dd8a2a; stroke-width: 1.8; }
+    .code { font-family: SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace; }
+    .tag { font-size: 12px; fill: #b86b14; }
+    .line { stroke: #4a5568; stroke-width: 1.4; fill: none; }
+  </style>
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#4a5568"/>
+    </marker>
+    <marker id="o" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#dd8a2a"/>
+    </marker>
+  </defs>
+  <rect width="960" height="200" fill="#ffffff"/>
+
+  <!-- y center 60, box h 40 -->
+  <rect class="data" x="10" y="40" width="64" height="40" rx="6"/><text x="42" y="65" text-anchor="middle">source</text>
+  <rect class="box" x="96" y="40" width="80" height="40" rx="6"/><text x="136" y="65" text-anchor="middle">lexing</text>
+  <rect class="box" x="198" y="40" width="80" height="40" rx="6"/><text x="238" y="65" text-anchor="middle">parsing</text>
+  <rect class="data" x="300" y="40" width="56" height="40" rx="6"/><text x="328" y="65" text-anchor="middle">AST</text>
+  <rect class="new" x="378" y="40" width="104" height="40" rx="6"/><text x="430" y="65" text-anchor="middle">AST optimizer</text>
+  <rect class="box" x="504" y="40" width="84" height="40" rx="6"/><text class="code" x="546" y="65" text-anchor="middle">codegen</text>
+  <rect class="data" x="610" y="40" width="56" height="40" rx="6"/><text class="code" x="638" y="65" text-anchor="middle">asm</text>
+  <rect class="new" x="688" y="40" width="112" height="40" rx="6"/><text x="744" y="65" text-anchor="middle">peephole</text>
+  <rect class="data" x="822" y="40" width="128" height="40" rx="6"/><text x="886" y="65" text-anchor="middle">output <tspan class="code">asm</tspan></text>
+
+  <line class="line" x1="74" y1="60" x2="94" y2="60" marker-end="url(#a)"/>
+  <line class="line" x1="176" y1="60" x2="196" y2="60" marker-end="url(#a)"/>
+  <line class="line" x1="278" y1="60" x2="298" y2="60" marker-end="url(#a)"/>
+  <line class="line" x1="356" y1="60" x2="376" y2="60" marker-end="url(#a)"/>
+  <line class="line" x1="482" y1="60" x2="502" y2="60" marker-end="url(#a)"/>
+  <line class="line" x1="588" y1="60" x2="608" y2="60" marker-end="url(#a)"/>
+  <line class="line" x1="666" y1="60" x2="686" y2="60" marker-end="url(#a)"/>
+  <line class="line" x1="800" y1="60" x2="820" y2="60" marker-end="url(#a)"/>
+
+  <!-- annotations -->
+  <line x1="430" y1="128" x2="430" y2="84" stroke="#dd8a2a" stroke-width="1.4" marker-end="url(#o)"/>
+  <text class="tag" x="430" y="146" text-anchor="middle">added in ch07</text>
+
+  <line x1="546" y1="128" x2="546" y2="84" stroke="#dd8a2a" stroke-width="1.4" marker-end="url(#o)"/>
+  <text class="tag" x="546" y="146" text-anchor="middle">single pass</text>
+  <text class="tag" x="546" y="164" text-anchor="middle">(backpatching)</text>
+
+  <line x1="744" y1="128" x2="744" y2="84" stroke="#dd8a2a" stroke-width="1.4" marker-end="url(#o)"/>
+  <text class="tag" x="744" y="146" text-anchor="middle">added in ch07</text>
+</svg>

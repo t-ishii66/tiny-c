@@ -44,6 +44,12 @@ To pre-allocate, we need to know "how many variables" before entering the body. 
 
 In implementation, we split it into two phases.
 
+> **Alice**: We read the function twice? What a pain.
+>
+> **Bob**: The first pass counts the variables, the second emits the code. You read a recipe once before cooking to see how many pots you'll need, right?
+>
+> **Alice**: I never read recipes to the end. That's why my cooking always fails.
+
 ### Phase 1: collect names (`collect_locals`)
 
 Register the function's parameters and every `var_decl` in the body in the symbol table. **Emit no code.** Just assign each variable an offset.
@@ -161,24 +167,7 @@ In the symbol table, parameters are registered as ordinary `LVar`s. At codegen t
 
 The frame layout for a function like `int fact(int n) { ... uses other variables and calls ... }`:
 
-```
-high address
- +---------------+
- | return addr   |  ← pushed by the caller's call
- +---------------+
- | old %rbp      |  ← pushed by our pushq %rbp; movq %rsp, %rbp makes %rbp point here
- +---------------+
- | n (= %edi)    |  -8(%rbp)   ← parameter spill
- +---------------+
- | (unused)      |  -16(%rbp)  ← padding for 16-alignment; subq $16 lands %rsp here
- +---------------+
- |               |
- | (grows and   |
- |  shrinks via  |
- |  push/pop)    |
- |               |
-low address
-```
+![Frame with the parameter spill and padding](../../images/diagrams/en/fig-5-1.svg)
 
 `fact`'s frame has just `n`, 8 bytes; we round up to a multiple of 16 (one slot stays unused for alignment) and allocate 16 bytes.
 

@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 569 269" width="569" height="269" font-family="'Hiragino Sans','Hiragino Kaku Gothic ProN','Noto Sans JP','Yu Gothic',Meiryo,sans-serif" font-size="14" fill="#1a202c">
+<defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#4a5568"/></marker></defs>
+<rect width="569" height="269" fill="#ffffff"/>
+<line x1="284.1" y1="66.0" x2="151.0" y2="98.0" stroke="#4a5568" stroke-width="1.3"/>
+<line x1="284.1" y1="66.0" x2="360.9" y2="98.0" stroke="#4a5568" stroke-width="1.3"/>
+<rect x="240.9" y="20.0" width="86.5" height="28" rx="6" fill="#fff1dc" stroke="#dd8a2a" stroke-width="1.5"/>
+<text x="284.1" y="39.0" text-anchor="middle" font-family="SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace" font-size="13">BINARY +</text>
+<text x="284.1" y="62.0" text-anchor="middle" font-size="11" fill="#4a5568">the last addl</text>
+<rect x="103.7" y="98.0" width="94.5" height="28" rx="6" fill="#f4f6f8" stroke="#718096" stroke-width="1.5"/>
+<text x="151.0" y="117.0" text-anchor="middle" font-family="SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace" font-size="13">INT_LIT 2</text>
+<text x="151.0" y="140.0" text-anchor="middle" font-size="11" fill="#4a5568">movl $2, %eax (2nd)</text>
+<line x1="360.9" y1="144.0" x2="284.1" y2="176.0" stroke="#4a5568" stroke-width="1.3"/>
+<line x1="360.9" y1="144.0" x2="417.2" y2="176.0" stroke="#4a5568" stroke-width="1.3"/>
+<rect x="317.7" y="98.0" width="86.5" height="28" rx="6" fill="#fff1dc" stroke="#dd8a2a" stroke-width="1.5"/>
+<text x="360.9" y="117.0" text-anchor="middle" font-family="SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace" font-size="13">BINARY *</text>
+<text x="360.9" y="140.0" text-anchor="middle" font-size="11" fill="#4a5568">the inner imull</text>
+<rect x="236.8" y="176.0" width="94.5" height="28" rx="6" fill="#f4f6f8" stroke="#718096" stroke-width="1.5"/>
+<text x="284.1" y="195.0" text-anchor="middle" font-family="SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace" font-size="13">INT_LIT 3</text>
+<text x="284.1" y="218.0" text-anchor="middle" font-size="11" fill="#4a5568">movl $3, %eax</text>
+<rect x="370.0" y="176.0" width="94.5" height="28" rx="6" fill="#f4f6f8" stroke="#718096" stroke-width="1.5"/>
+<text x="417.2" y="195.0" text-anchor="middle" font-family="SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace" font-size="13">INT_LIT 4</text>
+<text x="417.2" y="218.0" text-anchor="middle" font-size="11" fill="#4a5568">movl $4, %eax (1st)</text>
+<text x="20" y="253" font-size="12" fill="#4a5568">The right child is evaluated first, so the first instruction is movl $4</text>
+</svg>

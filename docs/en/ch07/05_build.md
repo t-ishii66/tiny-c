@@ -459,6 +459,12 @@ In Chapter 7 we:
 
 In tiny-c's world the "optimizations" are minimal, but **we now have a structure where optimization can be inserted as a separate pass**. Real production compilers (GCC/LLVM/clang etc.) extend this idea, running dozens or hundreds of optimization passes in sequence — but each pass has the same shape as tiny-c's `optimize_ast` or `peephole`: "**take an input and return an improved version.**" Backpatching has its analogues too (filling in relative offsets for forward jumps later is a similar trick that shows up in many places).
 
+> **Alice**: It used to just return 42, and now it's running a recursive `fib`.
+>
+> **Bob**: But the skeleton is still the one from Chapter 1: read the source code, turn it into a tree, emit assembly. We've just been adding features on top of that essence.
+>
+> **Alice**: Ooh.
+
 ## Summary
 
 - Two levels of optimization: **on the AST** (constant folding + algebraic simplification) and **on the emitted asm** (peephole).

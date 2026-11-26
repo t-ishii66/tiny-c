@@ -1,0 +1,65 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 780 360" width="780" height="360" font-family="'Hiragino Sans','Hiragino Kaku Gothic ProN','Noto Sans JP','Yu Gothic',Meiryo,sans-serif" font-size="14" fill="#1a202c">
+  <style>
+    .sys { fill: #f4f6f8; stroke: #718096; stroke-width: 1.5; }
+    .var { fill: #eef3fb; stroke: #4a6fa5; stroke-width: 1.5; }
+    .pad { fill: #fafafa; stroke: #a0aec0; stroke-width: 1.5; }
+    .free { fill: #ffffff; stroke: #cbd5e0; stroke-width: 1.5; stroke-dasharray: 5 4; }
+    .code { font-family: SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace; }
+    .off { font-family: SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace; font-size: 13px; fill: #4a6fa5; }
+    .note { font-size: 12px; fill: #4a5568; }
+    .addr { font-size: 12px; fill: #718096; }
+    .ptr { font-family: SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace; font-size: 14px; fill: #b86b14; font-weight: bold; }
+  </style>
+  <defs>
+    <marker id="o" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#dd8a2a"/>
+    </marker>
+    <marker id="g" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#a0aec0"/>
+    </marker>
+    <pattern id="hatch" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+      <line x1="0" y1="0" x2="0" y2="8" stroke="#e2e8f0" stroke-width="3"/>
+    </pattern>
+  </defs>
+  <rect width="780" height="360" fill="#ffffff"/>
+
+  <text class="addr" x="20" y="30">high address</text>
+  <line x1="50" y1="40" x2="50" y2="318" stroke="#a0aec0" stroke-width="1.5" marker-end="url(#g)"/>
+  <text class="addr" x="20" y="340">low address</text>
+
+  <!-- frame bracket -->
+  <path d="M168,76 L160,76 L160,214 L168,214" fill="none" stroke="#4a6fa5" stroke-width="1.2"/>
+  <text class="note" x="154" y="150" text-anchor="end">this function's</text>
+  <text class="note" x="154" y="166" text-anchor="end">frame</text>
+
+  <rect class="sys" x="180" y="30" width="200" height="46"/>
+  <text x="280" y="58" text-anchor="middle">return address</text>
+  <text class="note" x="400" y="58">pushed by the caller's <tspan class="code">call</tspan></text>
+
+  <rect class="sys" x="180" y="76" width="200" height="46"/>
+  <text x="280" y="104" text-anchor="middle">old <tspan class="code">%rbp</tspan></text>
+  <text class="note" x="400" y="96">pushed by our own <tspan class="code">pushq %rbp</tspan></text>
+  <text class="note" x="400" y="114">then <tspan class="code">movq %rsp, %rbp</tspan> makes <tspan class="code">%rbp</tspan> point here</text>
+
+  <rect class="var" x="180" y="122" width="200" height="46"/>
+  <text x="280" y="150" text-anchor="middle"><tspan class="code">n</tspan> (= <tspan class="code">%edi</tspan>)</text>
+  <text class="off" x="400" y="150">-8(%rbp)</text>
+  <text class="note" x="490" y="150">parameter spill</text>
+
+  <rect class="pad" x="180" y="168" width="200" height="46"/>
+  <rect x="180" y="168" width="200" height="46" fill="url(#hatch)"/>
+  <text x="280" y="196" text-anchor="middle" fill="#718096">(unused)</text>
+  <text class="off" x="400" y="188">-16(%rbp)</text>
+  <text class="note" x="490" y="188">padding for 16-byte alignment</text>
+  <text class="note" x="400" y="206">after <tspan class="code">subq $16</tspan>, <tspan class="code">%rsp</tspan> points here</text>
+
+  <rect class="free" x="180" y="214" width="200" height="104"/>
+  <text class="addr" x="280" y="260" text-anchor="middle">grows and shrinks with</text>
+  <text class="addr" x="280" y="278" text-anchor="middle">temporary push / pop</text>
+
+  <!-- register pointers on the far left of each row -->
+  <text class="ptr" x="84" y="104">%rbp</text>
+  <line x1="128" y1="99" x2="176" y2="99" stroke="#dd8a2a" stroke-width="1.5" marker-end="url(#o)"/>
+  <text class="ptr" x="84" y="196">%rsp</text>
+  <line x1="128" y1="191" x2="176" y2="191" stroke="#dd8a2a" stroke-width="1.5" marker-end="url(#o)"/>
+</svg>

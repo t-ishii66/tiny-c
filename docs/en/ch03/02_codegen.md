@@ -35,34 +35,11 @@ In ch01 and ch02 we added nothing in between — there were no local variables. 
 
 The stack grows downward (toward lower addresses). Right after the prologue, `%rbp` points to the location where the caller's `%rbp` was saved.
 
-```
-            high address
-           +---------+
-           |  ...    |
-           +---------+
-           | ret addr|   pushed by call (%rsp points here right after call)
-           +---------+
-   %rbp →  | old %rbp|   pushed by pushq %rbp (then movq %rsp, %rbp makes %rbp point here)
-           +---------+
-   %rsp →  |         |   (empty stack)
-           |         |
-           | ...     |
-           low address
-```
+![Stack frame right after the prologue](../../images/diagrams/en/fig-3-2.svg)
 
 Local variables go **below** this `%rbp`. We grow downward in 8-byte steps: `-8(%rbp)`, `-16(%rbp)`, `-24(%rbp)`, ...
 
-```
-   %rbp →    | old %rbp|
-             +---------+
-   -8(%rbp)  |    x    |     int x  (first)
-             +---------+
-   -16(%rbp) |    y    |     int y  (second)
-             +---------+
-   -24(%rbp) |    z    |     int z  (third)
-             +---------+
-   %rsp →    |         |
-```
+![Slots for the local variables x, y, z](../../images/diagrams/en/fig-3-3.svg)
 
 Each variable is always accessible via its **negative offset** from `%rbp`. Even if `%rsp` moves (because we `pushq` an intermediate value), `%rbp` doesn't, so the variable's location is unchanged. That's the reason we keep `%rbp` separate.
 
@@ -73,6 +50,12 @@ An `int` is only 4 bytes. Why allocate 8 bytes per variable?
 The simple reason: **the stack's natural unit is 8 bytes**. On x86-64, `pushq` and `popq` operate on 8 bytes, and the stack pointer naturally moves in 8-byte multiples. Making each local 8 bytes means a single `subq $8` expands the region by one slot, and we get clean offsets `-8`, `-16`, `-24`, ...
 
 Production compilers manage alignment and size carefully per type, but tiny-c takes the shortcut: "everything is 8 bytes."
+
+> **Alice**: An `int` is 4 bytes, but we take 8? Isn't that wasteful?
+>
+> **Bob**: It is. Programmers back in the day supposedly pulled all-nighters to shave off a single byte. But matching `pushq`'s 8 bytes makes life so much easier.
+>
+> **Alice**: Then let's not tell Alice's dad.
 
 ## 3.2.3 The symbol table
 
@@ -130,6 +113,10 @@ static int find_local(char *name) {
 Walk the list, return the offset if found, error otherwise.
 
 The symbol table is a static device used **only inside `codegen.c`**. The AST and `parser.y` stay at the name level; address resolution doesn't touch them. `tinyc` gets away with "one flat table per function" — when `if`/`while` arrive in ch04 and global variables arrive in ch06, the local mechanism stays the same. In ch07, when we introduce block scope, we extend this by saving and restoring the head of the `locals` list.
+
+> **Alice**: There's no `x` anywhere in the assembly...
+>
+> **Bob**: Only humans call it by name. To the CPU, our pal `x` is just "the one who lives at `-8(%rbp)`."
 
 ## 3.2.4 Codegen for NODE_VAR_DECL
 
@@ -205,14 +192,7 @@ x = x + 5;
 
 This is an "expression" in C (the assignment `x = x + 5`); adding `;` makes it a "statement." The AST looks like:
 
-```
-EXPR_STMT
-└─ ASSIGN
-   ├─ IDENT x
-   └─ BINARY +
-      ├─ IDENT x
-      └─ INT_LIT 5
-```
+![AST of x = x + 5;](../../images/diagrams/en/fig-3-4.svg)
 
 Codegen just evaluates the inner expression:
 
@@ -239,13 +219,7 @@ Trace the codegen for `a = b = 7`.
 
 AST:
 
-```
-ASSIGN
-├─ IDENT a
-└─ ASSIGN
-   ├─ IDENT b
-   └─ INT_LIT 7
-```
+![AST of a = b = 7;](../../images/diagrams/en/fig-3-5.svg)
 
 Codegen for the outer `ASSIGN`:
 

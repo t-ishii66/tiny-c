@@ -195,6 +195,10 @@ The first `call f(2)` enters with `so=0`, naturally 16-aligned. The moment we `p
 
 Just one number, `stack_offset`, lets us align correctly at any depth of nesting.
 
+> **Alice**: In the assembly for `f(1) + f(2)`, there's a `subq $8, %rsp` only before the second `call`. Why?
+>
+> **Bob**: Because stacking `f(2)`'s result shifted `%rsp` by 8 bytes. It's padding to keep the ABI rule: "a multiple of 16 right before `call`."
+
 ## 5.4.6 The 32-bit-argument issue and the caller/callee mismatch
 
 Looking back, there's an interesting asymmetry:
@@ -243,28 +247,15 @@ Calling `fact(5)` recurses into `fact(4)`, then `fact(3)`, and so on, calling it
 
 Each call's prologue pushes a new frame and updates `%rbp` to that frame's base. `-8(%rbp)` is relative to the *current* `%rbp`, so it **points to a different memory location per call**.
 
-```
-high address
- +-------------+
- | main's rbp  |
- +-------------+
- | rip = main  |
- | saved rbp   |
- | n=5         |   ← fact(5)'s frame
- +-------------+
- | rip = fact  |
- | saved rbp   |
- | n=4         |   ← fact(4)'s frame
- +-------------+
- | rip = fact  |
- | saved rbp   |
- | n=3         |   ← fact(3)'s frame
- +-------------+
- | ...         |
-low address
-```
+![Recursive frames: fact(5) → fact(4) → fact(3)](../../images/diagrams/en/fig-5-2.svg)
 
 The `n` of `fact(3)` and the `n` of `fact(4)` both look like `-8(%rbp)` in assembly, but `%rbp` differs, so they refer to different memory. As long as the prologue/epilogue and `%rbp` follow the ABI, recursion works with no special mechanism.
+
+> **Alice**: What special code did you write to make recursion work?
+>
+> **Bob**: Nothing. Every call stacks a new frame, so `fact(5)` and `fact(4)` each get their very own `n`.
+>
+> **Alice**: A ninja cloning trick! And you didn't even lift a finger.
 
 ## Next
 

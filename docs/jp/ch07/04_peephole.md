@@ -8,11 +8,7 @@
 
 `open_memstream` でアセンブリ出力をメモリバッファに溜める仕組みは、ch07/02 でバックパッチのために導入済み。ピープホールはこの **同じバッファ** を再利用する ── codegen が書き終わった asm を、stdout に流す前に一度走査して書き換える後処理として乗る。
 
-```
-codegen → メモリバッファ (open_memstream) → peephole → stdout
-                   ↑                            ↑
-              ch07/02 で導入             この節で追加
-```
+![codegen → メモリバッファ → peephole → stdout](../../images/diagrams/jp/fig-7-4.svg)
 
 `main.c` の流れは:
 
@@ -90,6 +86,12 @@ for (int i = 0; i + 1 < n_lines; i++) {
 ```
 
 「lines[i] が `pushq %rax\n` で、lines[i+1] が `popq REG\n` の形」── このパターンを strcmp / strncmp で見て、合致したら lines[i] を `movq` 命令に置き換え、lines[i+1] を NULL にする。
+
+> **Alice**: 2 章からずっと、テーブルに積んだものを次の瞬間に取ってたってこと？
+>
+> **Bob**: そういう所がけっこうある。隣り合った `pushq` と `popq` は、`movq` 1 本の手渡しで済むんだ。
+>
+> **Alice**: 私、今までずっとキッチンまで往復してたのね……。
 
 ## 7.4.4 パターン2: `pushq %rax; popq %rax` → 消去
 

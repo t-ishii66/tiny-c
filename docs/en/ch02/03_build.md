@@ -360,6 +360,12 @@ $ ./tinyc test.c > test.s && gcc -o test test.s && ./test; echo $?
 
 Checked with `--dump-ast`, you'll see a `*` clump on the left of `+` and a `%` clump on the right, each standing on its own. The grammar's layering shows up directly in the shape of the AST.
 
+> **Alice**: 18? That's not what I got in my head...
+>
+> **Bob**: `100 / 4 % 7` goes left to right. It's `(100 / 4) % 7`, so 4.
+>
+> **Alice**: Beaten by a calculator I built myself...
+
 ## 2.3.8 Tracing the generated assembly
 
 Read the assembly emitted for `return 2 + 3 * 4;` from top to bottom.
@@ -385,25 +391,13 @@ main:
 
 The stack moves like this (left = older, right = newer):
 
-```
-time 0: []
-time 1: pushq %rax (=4)         → [4]
-time 2: popq  %rcx               → []         (rcx=4, used in the computation)
-time 3: pushq %rax (=12)         → [12]
-time 4: popq  %rcx               → []         (rcx=12)
-```
+![The stack during evaluation](../../images/diagrams/en/fig-2-3.svg)
 
 Every pair balances perfectly. By the time `leave` runs, the stack is back to where it was right after `pushq %rbp`.
 
 The AST-to-assembly correspondence is also clean:
 
-```
-BINARY +                       <-- the final addl
-├─ INT_LIT 2                   <-- "movl $2, %eax"   (second one)
-└─ BINARY *                    <-- the inner imull
-   ├─ INT_LIT 3                <-- "movl $3, %eax"
-   └─ INT_LIT 4                <-- "movl $4, %eax"   (first one)
-```
+![The AST and the assembly it produces](../../images/diagrams/en/fig-2-4.svg)
 
 Leaves (`INT_LIT`) become `movl $N, %eax`; inner nodes (`BINARY`) become their operation instructions. The instructions come out in **postorder** traversal.
 

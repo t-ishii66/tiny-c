@@ -90,20 +90,7 @@ $ ./tinyc test.c > test.s && gcc -o test test.s && ./test; echo $?
 
 `-8(%rbp)` and `-16(%rbp)` mean "the location 8 (or 16) bytes below `%rbp`" — they're **addresses on the stack**. The layout in memory looks like:
 
-```
-            ↑ high address
-   ┌──────────────────────────┐
-   │  caller's return address │  +8(%rbp)
-   ├──────────────────────────┤
-   │  saved caller's %rbp     │  0(%rbp)  ← %rbp points here
-   ├──────────────────────────┤
-   │  x = 1                   │  -8(%rbp)   ← reserved by the first subq $8
-   ├──────────────────────────┤
-   │  y = 2                   │  -16(%rbp)  ← %rsp is here (reserved by the second subq $8)
-   ├──────────────────────────┤
-   │  (free)                  │
-   ↓ low address
-```
+![Stack frame holding x and y](../../images/diagrams/en/fig-3-1.svg)
 
 The x86-64 stack **grows downward (toward lower addresses)**. Each `subq $8, %rsp` reserves one slot of space, and we hand out the resulting fixed addresses (`-8(%rbp)`, `-16(%rbp)`) to variables. How the compiler builds the mapping between addresses and names is what this chapter is about.
 

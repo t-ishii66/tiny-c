@@ -6,21 +6,11 @@
 
 構文解析器の仕事は、トークンの列が「文法的に正しいか」を判定し、同時に**木のかたち**（AST）に組み立てることだ。
 
-```
-INT  IDENT(main)  '('  ')'  '{'  RETURN  INT_LIT(42)  ';'  '}'
-                                  ↓ 構文解析器
-                          FUNC_DEF main
-                            BLOCK
-                              RETURN
-                                INT_LIT 42
-```
+![トークン列 → AST（構文解析）](../../images/diagrams/jp/fig-1-5.svg)
 
 そこで使うのが **bison** だ。flex と同じ発想で、文法規則とアクションを書いた定義ファイルから C のソースコードを生成してくれる。
 
-```
-parser.y  ─ bison ─→  parser.tab.c   （構文解析器の C コード）
-                      parser.tab.h   （トークン定義のヘッダ）
-```
+![parser.y → bison → parser.tab.c / parser.tab.h](../../images/diagrams/jp/fig-1-6.svg)
 
 
 ## 1.3.1 文法とは何か
@@ -136,6 +126,12 @@ ret_stmt
 `ret_stmt` ルール: 右辺は `RETURN`, `expr`, `;` の3要素で `$1` `$2` `$3` がそれぞれに対応する。`$2` は `expr` ── 上のルール `expr: INT_LIT {$$=new_int_lit($1);};`が `$$` に入れたノード。それを `new_return` で包んで return 文ノードを作る。
 
 ルールがマッチするたびに小さなノードが組み立てられ、それがさらに上のルールの引数になり、最終的に木全体ができあがる。木の葉から根に向かって組み上げていくイメージだ。
+
+> **Alice**: `$$ = new_return($2);` ……ドル記号だらけ。お金がもらえる話？
+>
+> **Bob**: `$2` は右辺の 2 番目の部品、`$$` はこのルールが返す値。お金は 1 円も出てこないよ。
+>
+> **Alice**: なんだ、がっかり。
 
 
 ## 1.3.4 `%union`、`%token`、`%type` ── 値の型を教える
@@ -348,27 +344,15 @@ bison は左から右にトークンを読み込んで、ルールにマッチ�
 順を追って見る。
 
 1. **`INT_LIT(42)` を読む** → ルール `expr : INT_LIT` にマッチ。`new_int_lit(42)` でノードを作り、`expr` の結果（`$$`）にする。
-   ```
-   INT_LIT(42) ──→ INT_LIT(42) ノード
-   ```
+   ![INT_LIT トークンがノードになる](../../images/diagrams/jp/fig-1-7.svg)
 
 2. **`RETURN expr ';'` の3要素がそろった** → ルール `stmt : RETURN expr ';'` にマッチ。`new_return(...)` で return 文ノードを作る。
-   ```
-   RETURN ── INT_LIT(42)ノード ── ';' 
-                  ↓
-              RETURN ノード
-              └─ INT_LIT(42) ノード
-   ```
+   ![RETURN ノードができる](../../images/diagrams/jp/fig-1-8.svg)
 
 3. **`stmt stmts` がそろった**（`stmt` が1個、後ろの `stmts` は空）→ ルール `stmts : stmt stmts` にマッチ。`new_node_list(stmt, NULL)` で文1個分のリストを作る。
 
 4. **`INT IDENT '(' ')' '{' stmts '}'` の7要素がそろった** → ルール `func_def : ...` にマッチ。`new_block(stmts)` でブロックノードを作り、`new_func_def("main", block)` で関数定義ノードを作る。
-   ```
-              FUNC_DEF main
-              └─ BLOCK
-                  └─ RETURN
-                      └─ INT_LIT 42
-   ```
+   ![完成した木](../../images/diagrams/jp/fig-1-9.svg)
 
 5. **`func_def` が完成した** → ルール `program : func_def` にマッチ。グローバル変数 `program` に代入。
 
@@ -404,31 +388,7 @@ $ bison -d -o parser.tab.c parser.y
 
 ## 1.3.9 flex と bison の連携
 
-```
-+-----------+
-| 入力ファイル |   tiny-c で書かれたソース (例: `int main() { return 42; }`)
-+-----+-----+
-      |
-      v
-+-----------+
-|  yyin     |   FILE * 型のグローバル変数
-+-----+-----+
-      |
-      v
-+-----------+
-|  yylex()  |   flex 生成。1回呼ぶと1トークン返す
-+-----+-----+
-      |
-      v
-+-----------+
-|  yyparse()|   bison 生成。yylex を内部で呼びながら木を作る
-+-----+-----+
-      |
-      v
-+-----------+
-|  program  |   グローバル変数。AST の根が入る
-+-----------+
-```
+![入力ファイル → yyin → yylex → yyparse → program](../../images/diagrams/jp/fig-1-10.svg)
 
 `main.c` でやることはたった3つ：
 

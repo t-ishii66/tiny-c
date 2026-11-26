@@ -64,6 +64,12 @@ cmpl %ecx, %eax    # compare
 setl %al           # %al = 1 if %eax < %ecx else 0
 ```
 
+> **Alice**: `3 < 5` is correct, right? So where do you keep that "correct"?
+>
+> **Bob**: There's no special box for "correct." `setl` just writes a 1 into `%al`. ...All the truth in the world fits in a single byte, you know.
+>
+> **Alice**: Uh-huh.
+
 ## 4.2.4 Zero extension `movzbl`
 
 Updating only `%al` leaves **old garbage** in the upper 24 bits of `%eax`. To make all of `%eax` exactly 0 or 1, we zero-extend `%al` into `%eax`.

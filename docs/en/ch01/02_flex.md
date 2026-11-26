@@ -4,17 +4,11 @@
 
 The **lexer** is a program that converts the source string into a stream of **tokens**.
 
-```
-"int main() { return 42; }"
-              ↓ lexer
-INT  IDENT(main)  '('  ')'  '{'  RETURN  INT_LIT(42)  ';'  '}'
-```
+![Source text → tokens (lexing)](../../images/diagrams/en/fig-1-3.svg)
 
 Writing one by hand is tedious and error-prone. That's where **flex** comes in — **a program that generates a lexer for you**. Given a definition file of regular expressions paired with actions (what to do when a pattern matches), flex produces C source code.
 
-```
-lexer.l   ─ flex ─→   lex.yy.c   (this is the lexer's C code)
-```
+![lexer.l → flex → lex.yy.c](../../images/diagrams/en/fig-1-4.svg)
 
 Write `lexer.l`, run it through flex to produce `lex.yy.c`, then compile that with gcc and you have a lexer.
 
@@ -90,6 +84,10 @@ For instance, suppose we have:
 For the input `if` alone, both patterns match "the two characters `if`" — a tie.
 
 But for the input `iframe`, `"if"` only matches 2 characters while `[a-zA-Z_]+` matches all 6. flex picks the longest match, so `iframe` is treated as an IDENT. That's the "longest-match principle."
+
+> **Alice**: If I write `return42`, does it split into `return` and `42`?
+>
+> **Bob**: Nope. flex is painfully by-the-book, so it's convinced `return42` is one single name.
 
 ### Rule B: Earlier wins ties
 

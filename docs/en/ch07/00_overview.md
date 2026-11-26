@@ -21,12 +21,7 @@ Backpatching and optimization are **different things**. Backpatching is structur
 
 Where chapters 1–6 built "the compiler's body (lexer → parser → AST → codegen)," chapter 7 adds:
 
-```
-source → lex → parse → AST → [AST opt] → codegen → asm → [peephole] → output asm
-                              ↑                ↑                ↑
-                              ch07 adds       single-pass        ch07 adds
-                                              (backpatch)
-```
+![The ch07 pipeline](../../images/diagrams/en/fig-7-1.svg)
 
 The asm is written to an in-memory buffer, polished by the peephole, and then flows to stdout. Backpatching happens on the same buffer.
 

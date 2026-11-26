@@ -22,14 +22,7 @@ expr
 
 For the input `2 + 3 * 4`, bison can produce two interpretations.
 
-```
-Interpretation A:  expr     Interpretation B:  expr
-                   / | \                       / | \
-                expr + expr                 expr * expr
-                  2  / | \                  / | \   4
-                   expr * expr           expr + expr
-                     3     4               2     3
-```
+![Two readings of 2 + 3 * 4](../../images/diagrams/en/fig-2-1.svg)
 
 Interpretation A gives `2 + 12 = 14`; interpretation B gives `5 * 4 = 20`. bison decides "both are grammatically valid" and reports a conflict (a shift/reduce conflict). Our intended meaning (A) doesn't get through.
 
@@ -100,6 +93,14 @@ Each level's responsibility maps to a specific part of the input. `-2` is a unar
 
 In short, **"stronger operators (like `*`) form their chunks at inner levels, weaker operators (like `+`) at outer levels"** — that division of labor is what encodes precedence.
 
+> **Alice**: So where do we hand bison the precedence table?
+>
+> **Bob**: There is no table. The grammar groups `*` first, so `*` ends up lower in the tree. Evaluation starts from the bottom of the tree.
+>
+> **Alice**: So the underlings get to work first. You're always the first to get moving too, Bob.
+>
+> **Bob**: ...
+
 ## 2.1.3 Associativity is also decided by the grammar
 
 Is `10 - 3 - 2` equal to `(10 - 3) - 2 = 5`, or `10 - (3 - 2) = 9`? The C standard says the former (left associative). The grammar can express this too.
@@ -117,15 +118,7 @@ In the second and third rules, **the left side is `add_expr`, the right side is 
 
 Apply it to `10 - 3 - 2`:
 
-```
-add_expr
-├─ add_expr ← "10 - 3"
-│  ├─ add_expr ← "10"
-│  ├─ '-'
-│  └─ mul_expr ← "3"
-├─ '-'
-└─ mul_expr ← "2"
-```
+![The left-associative tree for 10 - 3 - 2](../../images/diagrams/en/fig-2-2.svg)
 
 "There's another `add_expr` on the left of `add_expr`" — that's left associativity. Recursion grows to the left.
 

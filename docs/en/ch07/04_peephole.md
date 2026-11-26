@@ -8,11 +8,7 @@ Peephole optimization is a simple post-processing pass: walk the emitted asm top
 
 The setup of accumulating assembly output into a memory buffer via `open_memstream` was already introduced in ch07/02 for backpatching. The peephole pass **reuses the same buffer** — after codegen has finished writing the asm, we scan and rewrite it once before flushing to stdout.
 
-```
-codegen → memory buffer (open_memstream) → peephole → stdout
-                ↑                              ↑
-        introduced in ch07/02            added here
-```
+![codegen → memory buffer → peephole → stdout](../../images/diagrams/en/fig-7-4.svg)
 
 In `main.c`:
 
@@ -90,6 +86,12 @@ for (int i = 0; i + 1 < n_lines; i++) {
 ```
 
 "lines[i] is `pushq %rax\n` and lines[i+1] is of the form `popq REG\n`" — we recognize the pattern with strcmp/strncmp, and on a match we replace lines[i] with a `movq` instruction and set lines[i+1] to NULL.
+
+> **Alice**: So ever since Chapter 2, we've been stacking things on the table and grabbing them right back the next instant?
+>
+> **Bob**: There's a fair bit of that. A `pushq` right next to a `popq` can be a single `movq` hand-off.
+>
+> **Alice**: So I've been running back and forth to the kitchen this whole time...
 
 ## 7.4.4 Pattern 2: `pushq %rax; popq %rax` → erase
 

@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 300" width="720" height="300" font-family="'Hiragino Sans','Hiragino Kaku Gothic ProN','Noto Sans JP','Yu Gothic',Meiryo,sans-serif" font-size="14" fill="#1a202c">
+  <style>
+    .nt { fill: #eef3fb; stroke: #4a6fa5; stroke-width: 1.5; }
+    .op { fill: #fff1dc; stroke: #dd8a2a; stroke-width: 1.5; }
+    .lit { fill: #f4f6f8; stroke: #718096; stroke-width: 1.5; }
+    .code { font-family: SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace; }
+    .title { font-size: 15px; font-weight: bold; }
+    .note { font-size: 13px; fill: #2d3748; }
+    .edge { stroke: #4a5568; stroke-width: 1.4; }
+  </style>
+  <rect width="720" height="300" fill="#ffffff"/>
+
+  <!-- ===== interpretation A: 2 + (3 * 4) ===== -->
+  <text class="title" x="40" y="28">解釈A</text>
+  <text class="note code" x="100" y="28">2 + (3 * 4) = 14</text>
+  <line class="edge" x1="160" y1="66" x2="80" y2="104"/>
+  <line class="edge" x1="160" y1="66" x2="160" y2="104"/>
+  <line class="edge" x1="160" y1="66" x2="240" y2="104"/>
+  <rect class="nt" x="128" y="44" width="64" height="26" rx="6"/><text class="code" x="160" y="62" text-anchor="middle">expr</text>
+  <rect class="lit" x="58" y="104" width="44" height="26" rx="6"/><text class="code" x="80" y="122" text-anchor="middle">2</text>
+  <circle class="op" cx="160" cy="117" r="14"/><text class="code" x="160" y="122" text-anchor="middle">+</text>
+  <line class="edge" x1="240" y1="130" x2="180" y2="174"/>
+  <line class="edge" x1="240" y1="130" x2="240" y2="174"/>
+  <line class="edge" x1="240" y1="130" x2="300" y2="174"/>
+  <rect class="nt" x="208" y="104" width="64" height="26" rx="6"/><text class="code" x="240" y="122" text-anchor="middle">expr</text>
+  <rect class="lit" x="158" y="174" width="44" height="26" rx="6"/><text class="code" x="180" y="192" text-anchor="middle">3</text>
+  <circle class="op" cx="240" cy="187" r="14"/><text class="code" x="240" y="192" text-anchor="middle">*</text>
+  <rect class="lit" x="278" y="174" width="44" height="26" rx="6"/><text class="code" x="300" y="192" text-anchor="middle">4</text>
+  <text class="note" x="40" y="250">掛け算が木の下にあるので先に計算される</text>
+  <text class="note" x="40" y="270">（C の規則どおり）</text>
+
+  <!-- divider -->
+  <line x1="360" y1="20" x2="360" y2="280" stroke="#e2e8f0" stroke-width="1.5"/>
+
+  <!-- ===== interpretation B: (2 + 3) * 4 ===== -->
+  <text class="title" x="400" y="28">解釈B</text>
+  <text class="note code" x="460" y="28">(2 + 3) * 4 = 20</text>
+  <line class="edge" x1="600" y1="66" x2="520" y2="104"/>
+  <line class="edge" x1="600" y1="66" x2="600" y2="104"/>
+  <line class="edge" x1="600" y1="66" x2="680" y2="104"/>
+  <rect class="nt" x="568" y="44" width="64" height="26" rx="6"/><text class="code" x="600" y="62" text-anchor="middle">expr</text>
+  <rect class="nt" x="488" y="104" width="64" height="26" rx="6"/><text class="code" x="520" y="122" text-anchor="middle">expr</text>
+  <circle class="op" cx="600" cy="117" r="14"/><text class="code" x="600" y="122" text-anchor="middle">*</text>
+  <rect class="lit" x="658" y="104" width="44" height="26" rx="6"/><text class="code" x="680" y="122" text-anchor="middle">4</text>
+  <line class="edge" x1="520" y1="130" x2="460" y2="174"/>
+  <line class="edge" x1="520" y1="130" x2="520" y2="174"/>
+  <line class="edge" x1="520" y1="130" x2="580" y2="174"/>
+  <rect class="lit" x="438" y="174" width="44" height="26" rx="6"/><text class="code" x="460" y="192" text-anchor="middle">2</text>
+  <circle class="op" cx="520" cy="187" r="14"/><text class="code" x="520" y="192" text-anchor="middle">+</text>
+  <rect class="lit" x="558" y="174" width="44" height="26" rx="6"/><text class="code" x="580" y="192" text-anchor="middle">3</text>
+  <text class="note" x="400" y="250">足し算が木の下にあるので先に計算される</text>
+  <text class="note" x="400" y="270">（素朴な文法だと、こちらも作れてしまう）</text>
+</svg>

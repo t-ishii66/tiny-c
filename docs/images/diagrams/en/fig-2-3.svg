@@ -1,0 +1,60 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 230" width="760" height="230" font-family="'Hiragino Sans','Hiragino Kaku Gothic ProN','Noto Sans JP','Yu Gothic',Meiryo,sans-serif" font-size="14" fill="#1a202c">
+  <style>
+    .cup { fill: none; stroke: #4a6fa5; stroke-width: 1.6; }
+    .val { fill: #fff1dc; stroke: #dd8a2a; stroke-width: 1.5; }
+    .code { font-family: SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace; font-size: 13px; }
+    .t { font-size: 13px; font-weight: bold; fill: #2d3748; }
+    .ins { font-family: SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace; font-size: 12px; fill: #2d3748; }
+    .reg { font-family: SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace; font-size: 12px; fill: #4a6fa5; }
+    .empty { font-size: 12px; fill: #a0aec0; }
+  </style>
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#a0aec0"/>
+    </marker>
+  </defs>
+  <rect width="760" height="230" fill="#ffffff"/>
+
+  <!-- time 0 -->
+  <text class="t" x="80" y="26" text-anchor="middle">Time 0</text>
+  <text class="ins" x="80" y="50" text-anchor="middle">(start)</text>
+  <path class="cup" d="M40,80 L40,170 L120,170 L120,80"/>
+  <text class="empty" x="80" y="150" text-anchor="middle">empty</text>
+
+  <line x1="134" y1="125" x2="162" y2="125" stroke="#a0aec0" stroke-width="1.4" marker-end="url(#a)"/>
+
+  <!-- time 1 -->
+  <text class="t" x="230" y="26" text-anchor="middle">Time 1</text>
+  <text class="ins" x="230" y="50" text-anchor="middle">pushq %rax (=4)</text>
+  <path class="cup" d="M190,80 L190,170 L270,170 L270,80"/>
+  <rect class="val" x="196" y="136" width="68" height="30" rx="4"/>
+  <text class="code" x="230" y="156" text-anchor="middle">4</text>
+
+  <line x1="284" y1="125" x2="312" y2="125" stroke="#a0aec0" stroke-width="1.4" marker-end="url(#a)"/>
+
+  <!-- time 2 -->
+  <text class="t" x="380" y="26" text-anchor="middle">Time 2</text>
+  <text class="ins" x="380" y="50" text-anchor="middle">popq %rcx</text>
+  <path class="cup" d="M340,80 L340,170 L420,170 L420,80"/>
+  <text class="empty" x="380" y="150" text-anchor="middle">empty</text>
+  <text class="reg" x="380" y="196" text-anchor="middle">rcx = 4</text>
+  <text class="empty" x="380" y="214" text-anchor="middle">used by the operation</text>
+
+  <line x1="434" y1="125" x2="462" y2="125" stroke="#a0aec0" stroke-width="1.4" marker-end="url(#a)"/>
+
+  <!-- time 3 -->
+  <text class="t" x="530" y="26" text-anchor="middle">Time 3</text>
+  <text class="ins" x="530" y="50" text-anchor="middle">pushq %rax (=12)</text>
+  <path class="cup" d="M490,80 L490,170 L570,170 L570,80"/>
+  <rect class="val" x="496" y="136" width="68" height="30" rx="4"/>
+  <text class="code" x="530" y="156" text-anchor="middle">12</text>
+
+  <line x1="584" y1="125" x2="612" y2="125" stroke="#a0aec0" stroke-width="1.4" marker-end="url(#a)"/>
+
+  <!-- time 4 -->
+  <text class="t" x="680" y="26" text-anchor="middle">Time 4</text>
+  <text class="ins" x="680" y="50" text-anchor="middle">popq %rcx</text>
+  <path class="cup" d="M640,80 L640,170 L720,170 L720,80"/>
+  <text class="empty" x="680" y="150" text-anchor="middle">empty</text>
+  <text class="reg" x="680" y="196" text-anchor="middle">rcx = 12</text>
+</svg>

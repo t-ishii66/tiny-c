@@ -8,21 +8,11 @@ The first round of optimization is **AST-level**. Right after parsing, before th
 
 If both children of a binary operator are constants, we **compute the result at compile time** and replace it with a single constant node.
 
-```
-BINARY +              →   INT_LIT 5
-├─ INT_LIT 2
-└─ INT_LIT 3
-```
+![Constant folding: 2 + 3 → 5](../../images/diagrams/en/fig-7-2.svg)
 
 Nesting works recursively:
 
-```
-BINARY +              →   BINARY +              →   INT_LIT 14
-├─ INT_LIT 2              ├─ INT_LIT 2
-└─ BINARY *               └─ INT_LIT 12
-   ├─ INT_LIT 3
-   └─ INT_LIT 4
-```
+![Constant folding: 2 + 3 * 4 → 14](../../images/diagrams/en/fig-7-3.svg)
 
 By optimizing the children first and then looking at the parent, even deeply nested trees fold all the way through in one go.
 
@@ -158,6 +148,12 @@ f() * 0   /* C says f() should be called */
 tiny-c's algebraic simplification **doesn't check purity**, so turning `f() * 0` into `0` would remove the call to `f()` — strictly speaking, an invalid transformation.
 
 Production compilers determine "expression purity" before simplifying. tiny-c doesn't (we declare patterns like `f() * 0` outside the supported subset).
+
+> **Alice**: Turning `x * 0` into `0` — so clever!
+>
+> **Bob**: Then what about `f() * 0`? In tiny-c, the call to `f()` vanishes along with it. That's why we call writing it that way unsupported.
+>
+> **Alice**: Talk about decluttering too hard!
 
 ## 7.1.6 AST, before and after
 

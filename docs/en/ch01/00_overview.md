@@ -96,15 +96,7 @@ The source code `int main() { return 42; }` has been converted into this tree.
 
 The compiler first converts the source into this tree, then walks the tree to emit assembly. **Source → tree → assembly**, two stages.
 
-```
-Source                 Tree (AST)            Assembly
-"int main() {          FUNC_DEF main         main:
-  return 42;             BLOCK                 pushq %rbp
-}"                         RETURN              movq %rsp, %rbp
-                             INT_LIT 42        movl $42, %eax
-                                               leave
-                                               ret
-```
+![Source code → AST → assembly](../../images/diagrams/en/fig-1-1.svg)
 
 Why route through a tree? In raw string form, extracting "the expression after `return`" is fiddly; on a tree you just say "the return node's child" and there it is. We convert it into a form that's easier to work with inside the compiler.
 
@@ -125,39 +117,7 @@ There are seven files in Chapter 1.
 
 ## The overall flow
 
-```
-+-----------+
-| test.c    |  Human-written tiny-c source / int main() { return 42 ; }
-+-----+-----+
-      |
-      v
-+-----------+
-| lexer.l   |  flex generates C code
-| (lex.yy.c)|  → splits the string into tokens
-+-----+-----+
-      | int, main, (, ), {, return, 42, ;, }
-      v
-+-----------+
-| parser.y  |  bison generates C code
-|(parser.tab|  → builds a tree from the token stream
-| .c)       |  along the way, it calls constructors from ast.c
-+-----+-----+
-      |
-      v
-+-----------+
-| Node tree |  the AST, in memory
-+-----+-----+
-      |
-      v
-+-----------+
-| codegen.c |  walks the tree and emits assembly
-+-----+-----+
-      |
-      v
-+-----------+
-| test.s    |  x86 assembly
-+-----------+
-```
+![The pipeline from test.c to test.s](../../images/diagrams/en/fig-1-2.svg)
 
 `lexer.l` and `parser.y` are not C code as-is. **flex** and **bison** generate C source files (`lex.yy.c`, `parser.tab.c`) from these definition files. We then compile the generated C alongside our own C (`ast.c`, `codegen.c`, `main.c`) to produce an executable called `tinyc`.
 

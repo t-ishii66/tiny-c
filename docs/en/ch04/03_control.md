@@ -163,6 +163,12 @@ case NODE_WHILE: {
 }
 ```
 
+> **Alice**: So which instruction is `while`?
+>
+> **Bob**: There isn't one. It just `jmp`s back to the label at the top.
+>
+> **Alice**: Aww, my beautifully indented while loop...
+
 ## 4.3.6 Nesting doesn't break it
 
 Even with an `if` inside a `while`, or a `while` inside an `if`, label numbers are **unique per `new_label()` call**, so there's no collision.

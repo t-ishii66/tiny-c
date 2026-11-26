@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 230" width="480" height="230" font-family="'Hiragino Sans','Hiragino Kaku Gothic ProN','Noto Sans JP','Yu Gothic',Meiryo,sans-serif" font-size="14" fill="#1a202c">
+  <style>
+    .tok { fill: #eef3fb; stroke: #4a6fa5; stroke-width: 1.4; }
+    .node { fill: #eef3fb; stroke: #4a6fa5; stroke-width: 1.5; }
+    .leaf { fill: #f4f6f8; stroke: #718096; stroke-width: 1.5; }
+    .code { font-family: SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace; font-size: 13px; }
+    .tag { font-size: 12px; fill: #4a5568; }
+  </style>
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#4a5568"/>
+    </marker>
+  </defs>
+  <rect width="480" height="230" fill="#ffffff"/>
+
+  <text class="tag" x="20" y="22">3 つがそろった</text>
+  <rect class="tok" x="60" y="32" width="72" height="30" rx="5"/><text class="code" x="96" y="52" text-anchor="middle">RETURN</text>
+  <rect class="leaf" x="160" y="32" width="160" height="30" rx="6"/><text class="code" x="240" y="52" text-anchor="middle">INT_LIT(42) ノード</text>
+  <rect class="tok" x="348" y="32" width="40" height="30" rx="5"/><text class="code" x="368" y="52" text-anchor="middle">';'</text>
+  <line x1="132" y1="47" x2="160" y2="47" stroke="#a0aec0" stroke-width="1.3"/>
+  <line x1="320" y1="47" x2="348" y2="47" stroke="#a0aec0" stroke-width="1.3"/>
+
+  <line x1="240" y1="70" x2="240" y2="112" stroke="#4a5568" stroke-width="1.6" marker-end="url(#a)"/>
+  <text class="tag" x="252" y="88">stmt ルールのアクション</text>
+  <text class="tag code" x="252" y="104">new_return($2)</text>
+
+  <rect class="node" x="180" y="118" width="120" height="30" rx="6"/><text class="code" x="240" y="138" text-anchor="middle">RETURN ノード</text>
+  <line x1="240" y1="148" x2="240" y2="176" stroke="#4a5568" stroke-width="1.3"/>
+  <rect class="leaf" x="160" y="176" width="160" height="30" rx="6"/><text class="code" x="240" y="196" text-anchor="middle">INT_LIT(42) ノード</text>
+  <text class="tag" x="330" y="196"><tspan class="code">;</tspan> は捨てられる</text>
+</svg>

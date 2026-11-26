@@ -69,6 +69,16 @@ Each has its own lvalue / rvalue:
 
 Key insight: **`*p`'s lvalue equals `p`'s rvalue**. That's the meat of "`&` and `*` are symmetric" — `*` adds one load; `&` removes one.
 
+> **Alice**: No matter how many times I read about pointers, my brain gets tangled...
+>
+> **Bob**: `*` follows one step, `&` steps back one. That's it. So `&*p` is just `p` again.
+>
+> **Alice**: So `&*&*&*p` is `p` too?
+>
+> **Bob**: Yep. But write code like that and everyone will hate you.
+>
+> **Alice**: Hehe.
+
 ### For `int a[5];` — the special rule for arrays (decay)
 
 > **decay (the implicit array → pointer conversion)**: when you use an array name in an expression **without a subscript**, C automatically treats it as "the address of the first element" (= a pointer value). For `int a[5]; int *p = a;`, the `a` becomes `&a[0]` and is assigned to `p`. An array itself has no "value as an rvalue"; in rvalue context, it morphs into an address — that's what decay is.
@@ -195,32 +205,11 @@ Then we compute `(base) + i × elem_size` and place the result in `%rax`.
 
 **`a[i] = X;`** (lvalue path, on the left of ASSIGN):
 
-```
-gen_stmt(EXPR_STMT)
-└─ gen_expr(NODE_ASSIGN)        ← entry
-    ├─ gen_addr(node->lhs)       ← lhs = NODE_INDEX(a, i)
-    │  └─ case NODE_INDEX        ← ★ arrives at 6.2.4.3
-    │     ├─ gen_addr(IDENT a)   ← 6.2.4.1 (the array's base address)
-    │     ├─ gen_expr(IDENT i)
-    │     ├─ imulq $4, %rax     ← scaling!
-    │     └─ addq → %rax = &a[i]
-    └─ ... store
-```
+![Codegen call path for a[i] = ...](../../images/diagrams/en/fig-6-1.svg)
 
 **`*(p+i) = X;`** (lvalue path on the same kind of ASSIGN):
 
-```
-gen_stmt(EXPR_STMT)
-└─ gen_expr(NODE_ASSIGN)        ← entry
-    ├─ gen_addr(node->lhs)       ← lhs = NODE_UNARY '*'
-    │  └─ case NODE_UNARY '*'    ← arrives at 6.2.4.2 (not 6.2.4.3!)
-    │     └─ gen_expr(operand)   ← operand = NODE_BINARY '+'
-    │        └─ case NODE_BINARY ← not 6.2.4.3 or 6.2.4.2, just an addl
-    │           ├─ gen_expr(rhs = i)
-    │           ├─ gen_expr(lhs = p)
-    │           └─ addl %ecx, %eax  ← no scaling!
-    └─ ... store
-```
+![Codegen call path for *(p + i) = ...](../../images/diagrams/en/fig-6-2.svg)
 
 The decisive difference is in **`NODE_BINARY '+'`'s codegen** (`case NODE_BINARY` in `steps/ch06/src/codegen.c`) — tiny-c emits a plain `addl` here without looking at types. So `*(p+i)` becomes "p bytes + i" and doesn't advance by element size. `a[i]`, by contrast, reaches 6.2.4.3 via `NODE_INDEX`, where `imulq $elem_size` does the scaling.
 
@@ -394,6 +383,12 @@ static void emit_store(int sz) {
 - `movq`: 8-byte store (pointer)
 
 `%al` is the low 1 byte of `%rax`, `%eax` the low 4 bytes, `%rax` the full 8. We use different views of the same register depending on the store size.
+
+> **Alice**: `%al`, `%eax`, and `%rax` — three names, and they're all the same box?
+>
+> **Bob**: They're nested. The lower half of `%rax` is `%eax`, and the very bottom byte of that is `%al`.
+>
+> **Alice**: It's a matryoshka doll!
 
 ## 6.2.8 Summary
 

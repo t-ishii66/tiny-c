@@ -123,6 +123,14 @@ tiny-c **doesn't require prototypes**. The front end doesn't check whether a fun
 
 By skipping semantic analysis, we get mutual recursion and external function calls for free.
 
+> **Alice**: Can I call a function that's defined further down?
+>
+> **Bob**: tiny-c just writes `call name`. Tracking down the actual function is the linker's job, later on.
+>
+> **Alice**: Isn't tiny-c just dumping all the hard work on the linker?
+>
+> **Bob**: Lazy... I mean, it's a design decision.
+
 ## 5.1.6 Argument-count checking
 
 The "at most 6 arguments" constraint can't be expressed at the grammar level. We check at codegen time (we'll see this in Section 5.4). Before `call`, "error if there are 7 or more."

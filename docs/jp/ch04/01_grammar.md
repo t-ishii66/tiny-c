@@ -161,6 +161,10 @@ bison のデフォルトは **shift**。これがちょうど C 言語の規則�
 
 これが宣言されていると、競合が **ちょうど1個** のときに警告にならない。0 個でも 2 個以上でも警告が出るので、想定外の競合があれば気付ける。
 
+> **Alice**: bison に「conflict」って言われた！ 何か壊した？
+>
+> **Bob**: 壊してないよ。bison は心配性なだけ。`%expect 1` で「1 個は想定内です」と先に伝えておけば、もう聞かれない。
+
 ## 4.1.6 AST のかたち
 
 新しい3種類のノード。
@@ -215,20 +219,7 @@ else
 
 AST:
 
-```
-IF
-├─ BINARY >          ← 条件
-│  ├─ IDENT x
-│  └─ INT_LIT 0
-├─ EXPR_STMT         ← then 部
-│  └─ ASSIGN
-│     ├─ IDENT y
-│     └─ INT_LIT 1
-└─ EXPR_STMT         ← else 部
-   └─ ASSIGN
-      ├─ IDENT y
-      └─ INT_LIT 2
-```
+![if-else の AST](../../images/diagrams/jp/fig-4-1.svg)
 
 `while` も同様に2つ枝（条件と本体）を持つ木になる。
 
@@ -241,18 +232,7 @@ while (i < 10)
 
 AST:
 
-```
-WHILE
-├─ BINARY <          ← 条件
-│  ├─ IDENT i
-│  └─ INT_LIT 10
-└─ EXPR_STMT         ← 本体
-   └─ ASSIGN
-      ├─ IDENT i
-      └─ BINARY +
-         ├─ IDENT i
-         └─ INT_LIT 1
-```
+![while の AST](../../images/diagrams/jp/fig-4-2.svg)
 
 ## 4.1.8 ブロックスコープについての補足
 

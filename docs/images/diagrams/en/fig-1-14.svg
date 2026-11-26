@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 300" width="720" height="300" font-family="'Hiragino Sans','Hiragino Kaku Gothic ProN','Noto Sans JP','Yu Gothic',Meiryo,sans-serif" font-size="14" fill="#1a202c">
+  <style>
+    .cell { fill: #eef3fb; stroke: #4a6fa5; stroke-width: 1.5; }
+    .old { fill: #f4f6f8; stroke: #a0aec0; stroke-width: 1.5; }
+    .new { fill: #fff1dc; stroke: #dd8a2a; stroke-width: 1.5; }
+    .code { font-family: SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace; }
+    .note { font-size: 13px; fill: #2d3748; }
+    .addr { font-size: 12px; fill: #718096; }
+    .line { stroke: #4a5568; stroke-width: 1.5; fill: none; }
+  </style>
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#4a5568"/>
+    </marker>
+    <marker id="o" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#dd8a2a"/>
+    </marker>
+  </defs>
+  <rect width="720" height="300" fill="#ffffff"/>
+
+  <!-- address axis -->
+  <text class="addr" x="40" y="34">high address</text>
+  <line class="line" x1="70" y1="44" x2="70" y2="250" stroke="#a0aec0" marker-end="url(#a)"/>
+  <text class="addr" x="40" y="276">low address</text>
+
+  <!-- stack cells -->
+  <rect class="old" x="130" y="30" width="200" height="40"/>
+  <rect class="old" x="130" y="70" width="200" height="40"/>
+  <text x="230" y="95" text-anchor="middle" fill="#718096">…</text>
+  <rect class="new" x="130" y="110" width="200" height="44"/>
+  <text x="230" y="137" text-anchor="middle"><tspan class="code">caller</tspan>'s <tspan class="code">rbp</tspan></text>
+  <rect x="130" y="154" width="200" height="96" fill="#ffffff" stroke="#cbd5e0" stroke-width="1.5" stroke-dasharray="5 4"/>
+  <text class="addr" x="230" y="206" text-anchor="middle">(free)</text>
+
+  <!-- %rsp before push: points at the previous top of stack -->
+  <line class="line" x1="440" y1="90" x2="336" y2="90" marker-end="url(#a)"/>
+  <text class="note" x="450" y="86"><tspan class="code">%rsp</tspan> before <tspan class="code">push</tspan></text>
+  <text class="addr" x="450" y="104">the previous top of stack</text>
+
+  <!-- %rsp after push: points at the value just pushed -->
+  <line class="line" x1="440" y1="132" x2="336" y2="132" stroke="#dd8a2a" marker-end="url(#o)"/>
+  <text class="note" x="450" y="136"><tspan class="code">%rsp</tspan> after <tspan class="code">push</tspan></text>
+  <text class="addr" x="450" y="154">moved down by 8 bytes</text>
+
+  <!-- movement indicator -->
+  <path d="M356,96 L356,126" stroke="#dd8a2a" stroke-width="1.5" fill="none" marker-end="url(#o)"/>
+  <text class="addr code" x="364" y="115" fill="#dd8a2a">-8</text>
+
+  <text class="note" x="130" y="290"><tspan class="code">pushq %rbp</tspan> subtracts 8 from <tspan class="code">%rsp</tspan>, then writes the value there</text>
+</svg>

@@ -7,23 +7,7 @@ We have `lexer.l`, `parser.y`, `ast.h/ast.c`, and `codegen.c/codegen.h`. What re
 
 ## 1.6.1 Who does what
 
-```
-+---------+                                                +---------+
-| .c in   |                                                | .s out  |
-+----+----+                                                +----+----+
-     |                                                          ^
-     v                                                          |
-+----------+   +-----------+   +-------+   +-----------+   +----+----+
-|  lexer   |─→ |  parser   |─→ |  AST  |─→ | codegen   |─→ |   FILE  |
-| (flex)   |   | (bison)   |   |       |   |           |   |  (stdout)|
-+----------+   +-----------+   +-------+   +-----------+   +---------+
-                  ^                            ^
-                  |                            |
-            +-----+----+                +------+-----+
-            | main.c   |                | main.c     |
-            | yyparse  |                | codegen()  |
-            +----------+                +------------+
-```
+![lexer → parser → AST → codegen, driven by main.c](../../images/diagrams/en/fig-1-15.svg)
 
 `main.c` reads the arguments, opens the file, calls `yyparse()`, and hands the resulting AST to `codegen()` — its job is just **outer plumbing**.
 
@@ -297,20 +281,7 @@ clean:
 
 ## 1.6.5 The build dependency graph
 
-```
-src/parser.y ─→ build/parser.tab.c ─→ build/parser.tab.o ──┐
-            └─→ build/parser.tab.h ─┐                        │
-                                    │                        │
-src/lexer.l ────────────────────────┴→ build/lex.yy.c ─→ build/lex.yy.o ──┤
-                                                                          │
-src/ast.c    ─────────────────────────────────────→ build/ast.o ─────────┤
-                                                                          │
-src/codegen.c ────────────────────────────────────→ build/codegen.o ─────┤
-                                                                          │
-src/main.c   ─────────────────────────────────────→ build/main.o ────────┤
-                                                                          ↓
-                                                                       tinyc
-```
+![Build dependency graph](../../images/diagrams/en/fig-1-16.svg)
 
 `make` reads this graph and runs commands in the necessary order. Anything unchanged is skipped.
 
@@ -371,6 +342,16 @@ $ echo $?
 ```
 
 **It works.** The compiler produced an executable.
+
+> **Alice**: I ran `echo $?` and got 42 back! And it can't even add!
+>
+> **Bob**: It can't do anything except return 42. But it reads source code, turns it into a tree, and emits assembly. It has the whole essence of a compiler.
+>
+> **Alice**: Wow! So now that I've got compilers figured out, let's go play!
+>
+> **Bob**: Uh, we've only just started.
+>
+> **Alice**: Ugh.
 
 (Note: running the executable requires x86-64 Linux. On Mac or Windows the compiler itself works, but assembling and running its output requires a different environment.)
 

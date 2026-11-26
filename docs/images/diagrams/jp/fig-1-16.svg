@@ -1,0 +1,71 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 380" width="760" height="380" font-family="'Hiragino Sans','Hiragino Kaku Gothic ProN','Noto Sans JP','Yu Gothic',Meiryo,sans-serif" font-size="13" fill="#1a202c">
+  <style>
+    .src { fill: #eef3fb; stroke: #4a6fa5; stroke-width: 1.5; }
+    .gen { fill: #f4f6f8; stroke: #718096; stroke-width: 1.5; stroke-dasharray: 5 3; }
+    .obj { fill: #e3ecf9; stroke: #4a6fa5; stroke-width: 1.5; }
+    .bin { fill: #fff1dc; stroke: #dd8a2a; stroke-width: 1.8; }
+    .code { font-family: SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace; font-size: 13px; }
+    .head { font-size: 12px; fill: #4a5568; font-weight: bold; }
+    .tool { font-size: 11px; fill: #4a6fa5; }
+    .line { stroke: #4a5568; stroke-width: 1.4; fill: none; }
+  </style>
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#4a5568"/>
+    </marker>
+  </defs>
+  <rect width="760" height="380" fill="#ffffff"/>
+
+  <!-- column headers -->
+  <text class="head" x="95" y="22" text-anchor="middle">ソース（src/）</text>
+  <text class="head" x="305" y="22" text-anchor="middle">生成されたコード（build/）</text>
+  <text class="head" x="520" y="22" text-anchor="middle">オブジェクト（gcc -c）</text>
+  <text class="head" x="695" y="22" text-anchor="middle">実行ファイル</text>
+
+  <!-- sources -->
+  <rect class="src" x="20" y="40" width="150" height="34" rx="6"/><text class="code" x="95" y="62" text-anchor="middle">parser.y</text>
+  <rect class="src" x="20" y="140" width="150" height="34" rx="6"/><text class="code" x="95" y="162" text-anchor="middle">lexer.l</text>
+  <rect class="src" x="20" y="200" width="150" height="34" rx="6"/><text class="code" x="95" y="222" text-anchor="middle">ast.c</text>
+  <rect class="src" x="20" y="260" width="150" height="34" rx="6"/><text class="code" x="95" y="282" text-anchor="middle">codegen.c</text>
+  <rect class="src" x="20" y="320" width="150" height="34" rx="6"/><text class="code" x="95" y="342" text-anchor="middle">main.c</text>
+
+  <!-- generated code -->
+  <rect class="gen" x="220" y="40" width="170" height="34" rx="6"/><text class="code" x="305" y="62" text-anchor="middle">parser.tab.c</text>
+  <rect class="gen" x="220" y="90" width="170" height="34" rx="6"/><text class="code" x="305" y="112" text-anchor="middle">parser.tab.h</text>
+  <rect class="gen" x="220" y="140" width="170" height="34" rx="6"/><text class="code" x="305" y="162" text-anchor="middle">lex.yy.c</text>
+
+  <!-- objects -->
+  <rect class="obj" x="440" y="40" width="160" height="34" rx="6"/><text class="code" x="520" y="62" text-anchor="middle">parser.tab.o</text>
+  <rect class="obj" x="440" y="140" width="160" height="34" rx="6"/><text class="code" x="520" y="162" text-anchor="middle">lex.yy.o</text>
+  <rect class="obj" x="440" y="200" width="160" height="34" rx="6"/><text class="code" x="520" y="222" text-anchor="middle">ast.o</text>
+  <rect class="obj" x="440" y="260" width="160" height="34" rx="6"/><text class="code" x="520" y="282" text-anchor="middle">codegen.o</text>
+  <rect class="obj" x="440" y="320" width="160" height="34" rx="6"/><text class="code" x="520" y="342" text-anchor="middle">main.o</text>
+
+  <!-- target -->
+  <rect class="bin" x="650" y="177" width="90" height="40" rx="8"/><text class="code" x="695" y="202" text-anchor="middle" font-size="15">tinyc</text>
+
+  <!-- bison -->
+  <line class="line" x1="170" y1="57" x2="218" y2="57" marker-end="url(#a)"/>
+  <text class="tool" x="194" y="51" text-anchor="middle">bison</text>
+  <path class="line" d="M184,57 L184,107 L218,107" marker-end="url(#a)"/>
+
+  <!-- flex (lex.yy.c also depends on parser.tab.h for the token numbers) -->
+  <line class="line" x1="170" y1="157" x2="218" y2="157" marker-end="url(#a)"/>
+  <text class="tool" x="194" y="151" text-anchor="middle">flex</text>
+  <line class="line" x1="305" y1="124" x2="305" y2="138" marker-end="url(#a)"/>
+
+  <!-- compile -->
+  <line class="line" x1="390" y1="57" x2="438" y2="57" marker-end="url(#a)"/>
+  <line class="line" x1="390" y1="157" x2="438" y2="157" marker-end="url(#a)"/>
+  <line class="line" x1="170" y1="217" x2="438" y2="217" marker-end="url(#a)"/>
+  <line class="line" x1="170" y1="277" x2="438" y2="277" marker-end="url(#a)"/>
+  <line class="line" x1="170" y1="337" x2="438" y2="337" marker-end="url(#a)"/>
+
+  <!-- link -->
+  <path class="line" d="M600,57 C628,57 622,192 648,194" marker-end="url(#a)"/>
+  <path class="line" d="M600,157 C626,157 624,194 648,196" marker-end="url(#a)"/>
+  <path class="line" d="M600,217 C626,217 624,200 648,199" marker-end="url(#a)"/>
+  <path class="line" d="M600,277 C626,277 624,204 648,202" marker-end="url(#a)"/>
+  <path class="line" d="M600,337 C628,337 622,208 648,205" marker-end="url(#a)"/>
+  <text class="tool" x="695" y="236" text-anchor="middle">gcc（リンク）</text>
+</svg>

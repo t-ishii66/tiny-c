@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 320" width="760" height="320" font-family="'Hiragino Sans','Hiragino Kaku Gothic ProN','Noto Sans JP','Yu Gothic',Meiryo,sans-serif" font-size="14" fill="#1a202c">
+  <style>
+    .old { fill: #f4f6f8; stroke: #a0aec0; stroke-width: 1.5; }
+    .sys { fill: #eef3fb; stroke: #4a6fa5; stroke-width: 1.5; }
+    .free { fill: #ffffff; stroke: #cbd5e0; stroke-width: 1.5; stroke-dasharray: 5 4; }
+    .code { font-family: SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace; }
+    .note { font-size: 12px; fill: #4a5568; }
+    .addr { font-size: 12px; fill: #718096; }
+    .ptr { font-family: SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace; font-size: 14px; fill: #b86b14; font-weight: bold; }
+  </style>
+  <defs>
+    <marker id="o" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#dd8a2a"/>
+    </marker>
+    <marker id="g" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#a0aec0"/>
+    </marker>
+  </defs>
+  <rect width="760" height="320" fill="#ffffff"/>
+
+  <text class="addr" x="30" y="30">high address</text>
+  <line x1="60" y1="40" x2="60" y2="278" stroke="#a0aec0" stroke-width="1.5" marker-end="url(#g)"/>
+  <text class="addr" x="30" y="300">low address</text>
+
+  <rect class="old" x="180" y="30" width="200" height="46"/>
+  <text x="280" y="58" text-anchor="middle" fill="#718096">…</text>
+  <text class="note" x="400" y="58">caller's frame</text>
+
+  <rect class="sys" x="180" y="76" width="200" height="46"/>
+  <text x="280" y="104" text-anchor="middle">return address</text>
+  <text class="note" x="400" y="96">pushed by the <tspan class="code">call</tspan> instruction</text>
+  <text class="note" x="400" y="114">(right after <tspan class="code">call</tspan>, <tspan class="code">%rsp</tspan> points here)</text>
+
+  <rect class="sys" x="180" y="122" width="200" height="46"/>
+  <text x="280" y="150" text-anchor="middle">old <tspan class="code">%rbp</tspan></text>
+  <text class="note" x="400" y="142">pushed by <tspan class="code">pushq %rbp</tspan></text>
+  <text class="note" x="400" y="160">(then <tspan class="code">movq %rsp, %rbp</tspan> makes <tspan class="code">%rbp</tspan> point here)</text>
+
+  <rect class="free" x="180" y="168" width="200" height="106"/>
+  <text class="addr" x="280" y="225" text-anchor="middle">(free stack)</text>
+
+  <!-- after movq %rsp, %rbp both registers hold the same address -->
+  <text class="ptr" x="96" y="140">%rbp</text>
+  <line x1="140" y1="135" x2="176" y2="140" stroke="#dd8a2a" stroke-width="1.5" marker-end="url(#o)"/>
+  <text class="ptr" x="96" y="164">%rsp</text>
+  <line x1="140" y1="159" x2="176" y2="150" stroke="#dd8a2a" stroke-width="1.5" marker-end="url(#o)"/>
+  <text class="note" x="84" y="188">(same address</text>
+  <text class="note" x="84" y="204">for now)</text>
+</svg>

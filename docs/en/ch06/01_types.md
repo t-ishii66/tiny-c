@@ -75,6 +75,14 @@ type
 
 Note that `*` is used as a token here, as in `INT '*'`. The `*` is **both** a binary operator (multiplication) and a unary operator (dereference). bison distinguishes them by context.
 
+> **Alice**: So I can't write `int **pp`?
+>
+> **Bob**: Pointers in tiny-c go one level deep. Two levels, and the confusion gets squared.
+>
+> **Alice**: If the confusion is 1, then squared it's still 1, isn't it?
+>
+> **Bob**: Smaaarty-paaants.
+
 ## 6.1.4 Global variables: extending the top level
 
 Through ch05, `program : func_defs`. ch06 rewrites the top level so that function definitions and global declarations can sit side by side.

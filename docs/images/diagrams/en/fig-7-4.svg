@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 190" width="760" height="190" font-family="'Hiragino Sans','Hiragino Kaku Gothic ProN','Noto Sans JP','Yu Gothic',Meiryo,sans-serif" font-size="14" fill="#1a202c">
+  <style>
+    .box { fill: #eef3fb; stroke: #4a6fa5; stroke-width: 1.5; }
+    .buf { fill: #f4f6f8; stroke: #718096; stroke-width: 1.5; }
+    .new { fill: #fff1dc; stroke: #dd8a2a; stroke-width: 1.8; }
+    .code { font-family: SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace; }
+    .sub { font-size: 12px; fill: #4a5568; }
+    .tag { font-size: 12px; fill: #b86b14; }
+    .line { stroke: #4a5568; stroke-width: 1.5; fill: none; }
+  </style>
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#4a5568"/>
+    </marker>
+    <marker id="o" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#dd8a2a"/>
+    </marker>
+  </defs>
+  <rect width="760" height="190" fill="#ffffff"/>
+
+  <rect class="box" x="20" y="30" width="130" height="56" rx="8"/>
+  <text class="code" x="85" y="63" text-anchor="middle">codegen</text>
+
+  <rect class="buf" x="200" y="30" width="200" height="56" rx="8"/>
+  <text x="300" y="54" text-anchor="middle">memory buffer</text>
+  <text class="sub code" x="300" y="74" text-anchor="middle">(open_memstream)</text>
+
+  <rect class="new" x="450" y="30" width="130" height="56" rx="8"/>
+  <text class="code" x="515" y="63" text-anchor="middle">peephole</text>
+
+  <rect class="box" x="630" y="30" width="110" height="56" rx="8"/>
+  <text class="code" x="685" y="63" text-anchor="middle">stdout</text>
+
+  <line class="line" x1="150" y1="58" x2="198" y2="58" marker-end="url(#a)"/>
+  <line class="line" x1="400" y1="58" x2="448" y2="58" marker-end="url(#a)"/>
+  <line class="line" x1="580" y1="58" x2="628" y2="58" marker-end="url(#a)"/>
+
+  <line x1="300" y1="134" x2="300" y2="90" stroke="#718096" stroke-width="1.4" marker-end="url(#a)"/>
+  <text class="sub" x="300" y="154" text-anchor="middle">introduced in Section 7.2</text>
+
+  <line x1="515" y1="134" x2="515" y2="90" stroke="#dd8a2a" stroke-width="1.4" marker-end="url(#o)"/>
+  <text class="tag" x="515" y="154" text-anchor="middle">added in this section</text>
+</svg>

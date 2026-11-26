@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 332 193" width="332" height="193" font-family="'Hiragino Sans','Hiragino Kaku Gothic ProN','Noto Sans JP','Yu Gothic',Meiryo,sans-serif" font-size="14" fill="#1a202c">
+<defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#4a5568"/></marker></defs>
+<rect width="332" height="193" fill="#ffffff"/>
+<text x="79.4" y="36.0" text-anchor="middle" font-size="13" font-weight="bold" fill="#2d3748">Source</text>
+<rect x="20.0" y="48.0" width="118.7" height="28" rx="6" fill="#f4f6f8" stroke="#718096" stroke-width="1.5"/>
+<text x="79.4" y="67.0" text-anchor="middle" font-family="SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace" font-size="13">"return 42;"</text>
+<line x1="150.7" y1="64" x2="196.7" y2="64" stroke="#4a5568" stroke-width="1.6" marker-end="url(#a)"/>
+<text x="260.0" y="36.0" text-anchor="middle" font-size="13" font-weight="bold" fill="#2d3748">AST node</text>
+<line x1="260.0" y1="76.0" x2="260.0" y2="126.0" stroke="#4a5568" stroke-width="1.3"/>
+<rect x="224.8" y="48.0" width="70.4" height="28" rx="6" fill="#eef3fb" stroke="#4a6fa5" stroke-width="1.5"/>
+<text x="260.0" y="67.0" text-anchor="middle" font-family="SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace" font-size="13">RETURN</text>
+<rect x="208.7" y="126.0" width="102.6" height="28" rx="6" fill="#f4f6f8" stroke="#718096" stroke-width="1.5"/>
+<text x="260.0" y="145.0" text-anchor="middle" font-family="SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace" font-size="13">INT_LIT 42</text>
+<text x="260.0" y="168.0" text-anchor="middle" font-size="11" fill="#4a5568">value: 42</text>
+</svg>

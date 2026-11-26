@@ -94,6 +94,12 @@ Key points:
 - **The write-back uses the same fixed width.** If the byte length changed, we'd clobber the following code; **keeping the length constant is mandatory**. 10 digits can represent frame sizes up to ~10 GB, plenty for tiny-c.
 - Assemblers (`as` / GAS / LLVM as) accept **extra whitespace inside operands** like `subq $16        , %rsp` — the spaces before `,` are not part of the number; they're just whitespace and ignored.
 
+> **Alice**: We don't know the frame size until the very end, but `subq` goes at the top? Is that fortune-telling?
+>
+> **Bob**: You just write a placeholder, then come back and fix it when you're done. Same as a book's table of contents.
+>
+> **Alice**: So a table of contents is basically throwing your rock-paper-scissors hand after everyone else.
+
 ## 7.2.4 Codegen becomes single-pass
 
 With Phase 1 gone, `gen_func` allocates LVars during body generation. `NODE_VAR_DECL` handling:

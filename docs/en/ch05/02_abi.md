@@ -37,6 +37,12 @@ call add
 
 The callee reads `%edi` and `%esi` to get the arguments.
 
+> **Alice**: `%rdi` `%rsi` `%rdx` `%rcx` `%r8` `%r9`... does this order mean anything?
+>
+> **Bob**: Nothing worth memorizing. But every compiler on Linux sticks to it. Same as "red means stop" back in Chapter 1.
+>
+> **Alice**: Aren't we getting a few too many traffic lights?
+
 ### Return value
 
 Integer return values go in **`%rax`** (or `%eax` for 32-bit values).

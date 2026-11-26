@@ -1,303 +1,753 @@
-# PLAN — Alice と Bob の会話を各章に入れる
+# PLAN — docs/jp のブロック図一覧
 
-## 目的
+`docs/jp/` の本文に描かれている図（ブロック図・フロー図・スタック図・木構造図・対応図）を、本文から**そのままコピー**して並べたもの。図の中身は一字一句変えていない（箇条書きの中に置かれた図だけは、箇条書きの字下げを外した）。行番号は図のコードブロックを開く行。
 
-各章に 2〜3 個（最終章の第7章だけ 4 個）、Alice と Bob の短い掛け合いを差し込む。本文の説明を補う「ちょっとホッとする」息抜きで、次の 3 種類の空気を混ぜる。
+SVG で描き直した図は、ASCII 図の下に置いた。日本語版は `docs/images/diagrams/jp/fig-章-番号.svg`、英語版は `docs/images/diagrams/en/fig-章-番号.svg`（ここには日本語版を表示）。
 
-- **くすっと笑える** ── 素朴なボケやたとえ話
-- **むずかしい…と悩む** ── 読者がつまずきそうな所で Alice が代わりに悩む
-- **そうか！と分かる** ── Bob のひと言で視界が開ける
+## 収録の基準
 
-## 登場人物
+- **収録した**: 枠（`+--+` や `┌─┐`）、線（`├─` `│`）、矢印（`→` `↓` `─→`）で描いた図。並べて対応関係を示す図。
+- **収録しなかった**: アセンブリやコードの一覧（コメントに矢印があっても図ではない）、手順を書いた擬似コード（例: 5.4.1 の push / pop の並び、2.2.5 の gen_expr の追跡）、文法規則の表記、正規表現の例、インデントだけで表した AST ダンプ（`--dump-ast` の出力と同じ形のもの）。
 
-| 人物 | 立ち位置 | 口調 |
-|------|---------|------|
-| **Bob** | 少し先を学んでいる。答えを全部言わず、ヒントやたとえで導く | 落ち着いている。短く言い切る |
-| **Alice** | 教わる側。素朴な疑問を遠慮なくぶつける。分かった瞬間は素直に喜ぶ | 好奇心旺盛。たとえ話でまとめたがる。ときどきボケる |
-
-- Alice は「読者の代弁者」。本文を読んで湧きそうな疑問を口に出す。
-- Bob は先生ではなく「一歩先の仲間」。説教くさくしない。
-- 章をまたいだ小ネタ（前の章のセリフの回収）を少しだけ入れる。
-
-## 書き方のルール
-
-- **基本は Alice 1 回、Bob 1 回の 2 行。** どうしても必要なときだけ、Alice の返し（「そうか！」）を 1 行足して 3 行にする。
-- 1 セリフは 1〜2 文。本文の説明を繰り返さない。
-- 技術的に正しいこと。ボケは Alice の側にとどめ、Bob の答えは正確に。
-- 置き場所は本文の該当説明の直後。項番号（例: 4.2.3）で書き、ファイル名を添える。番号の付け方は CHAPTER.md を参照。
-- 表記は引用ブロックで統一する（行間の空 `>` で 1 行ずつ段落にする）。
-
-```markdown
-> **Alice**: ……
->
-> **Bob**: ……
-```
-
-- 対象は日本語版 `docs/jp/` のみ。英語版は翻訳パスで生成する。
+全 35 図（うち SVG 版あり 35）: 対応図 1、ブロック図 4、フロー図 8、木構造図 15、スタック図 7
 
 ---
 
 ## 第1章 — 42を返すだけのコンパイラ
 
-### 1-1. クソ真面目な flex
+### 図 1-1. ソースコード → AST → アセンブリの対応
 
-- **置き場所**: 1.2.3（`ch01/02_flex.md`）「ルール A：最長一致」の直後
+- **場所**: 第1章の表紙「`--dump-ast` で内部を覗く」（`docs/jp/ch01/00_overview.md` 99 行目）
+- **種類**: 対応図
 
-> **Alice**: `return42` って書いたら、`return` と `42` に分かれるの？
->
-> **Bob**: 分かれない。flex はクソ真面目な奴だから、`return42` という 1 個の名前があると思っちゃうんだ。
+```
+ソースコード         木 (AST)              アセンブリ
+"int main() {        FUNC_DEF main         main:
+  return 42;            BLOCK                 pushq %rbp
+}"                        RETURN              movq %rsp, %rbp
+                            INT_LIT 42        movl $42, %eax
+                                              leave
+                                              ret
+```
 
-### 1-2. %eax は「赤は止まれ」
+SVG 版（日本語 `docs/images/diagrams/jp/fig-1-1.svg`、英語 `docs/images/diagrams/en/fig-1-1.svg`）:
 
-- **置き場所**: 1.5.6（`ch01/05_codegen.md`）「戻り値の渡し方 ── %eax の約束」の直後
-- **伏線**: 第5章 5-1 で回収
+![図 1-1 ソースコード → AST → アセンブリの対応](docs/images/diagrams/jp/fig-1-1.svg)
 
-> **Alice**: 戻り値はなんで `%eax` なの？ `%ebx` じゃダメ？
->
-> **Bob**: 信号の「赤は止まれ」と同じ。理屈より、世界中のみんなが同じルールを守ってることが大事なんだ。
+### 図 1-2. test.c から test.s までのパイプライン（縦）
 
-### 1-3. 初めてコンパイラが喋った
+- **場所**: 第1章の表紙「全体の流れ」（`docs/jp/ch01/00_overview.md` 128 行目）
+- **種類**: ブロック図
 
-- **置き場所**: 1.6.6（`ch01/06_build.md`）「ビルド & 実行」で `echo $?` が `42` を表示した直後
-- **伏線**: 第7章 7-4 で回収
+```
++-----------+
+| test.c    |  人間が書いた tiny-c ソース / int main() { return 42 ; }
++-----+-----+
+      |
+      v
++-----------+
+| lexer.l   |  flex がCコードを生成
+| (lex.yy.c)|  → 文字列をトークンに分解
++-----+-----+
+      | int, main, (, ), {, return, 42, ;, }
+      v
++-----------+
+| parser.y  |  bison がCコードを生成
+|(parser.tab|  → トークン列から木を組み立てる
+| .c)       |  途中で ast.c のコンストラクタを呼ぶ
++-----+-----+
+      |
+      v
++-----------+
+| Node 木   |  メモリ上の AST
++-----+-----+
+      |
+      v
++-----------+
+| codegen.c |  木を辿ってアセンブリを出力
++-----+-----+
+      |
+      v
++-----------+
+| test.s    |  x86 アセンブリ
++-----------+
+```
 
-> **Alice**: `echo $?` したら 42 が返ってきた！ 足し算もできないのに！
->
-> **Bob**: 42 を返す以外は何もできない。でも、ソースコードを読んで、ツリーにして、アセンブリを出す。コンパイラのエッセンスは全部押さえてるんだよ。
->
-> **Alice**: すごーい！ じゃあ、コンパイラはもう分かったから、遊ぼうよ！
->
-> **Bob**: いや、まだ始まったばかりだよ。
->
-> **Alice**: ……。
+SVG 版（日本語 `docs/images/diagrams/jp/fig-1-2.svg`、英語 `docs/images/diagrams/en/fig-1-2.svg`）:
+
+![図 1-2 test.c から test.s までのパイプライン（縦）](docs/images/diagrams/jp/fig-1-2.svg)
+
+### 図 1-3. ソース文字列 → トークン列（字句解析）
+
+- **場所**: 1.2 flex 入門 と lexer.l の冒頭（最初の項より前）（`docs/jp/ch01/02_flex.md` 7 行目）
+- **種類**: フロー図
+
+```
+"int main() { return 42; }"
+              ↓ 字句解析器
+INT  IDENT(main)  '('  ')'  '{'  RETURN  INT_LIT(42)  ';'  '}'
+```
+
+SVG 版（日本語 `docs/images/diagrams/jp/fig-1-3.svg`、英語 `docs/images/diagrams/en/fig-1-3.svg`）:
+
+![図 1-3 ソース文字列 → トークン列（字句解析）](docs/images/diagrams/jp/fig-1-3.svg)
+
+### 図 1-4. lexer.l → flex → lex.yy.c
+
+- **場所**: 1.2 flex 入門 と lexer.l の冒頭（最初の項より前）（`docs/jp/ch01/02_flex.md` 15 行目）
+- **種類**: フロー図
+
+```
+lexer.l   ─ flex ─→   lex.yy.c   （これが字句解析器の C コード）
+```
+
+SVG 版（日本語 `docs/images/diagrams/jp/fig-1-4.svg`、英語 `docs/images/diagrams/en/fig-1-4.svg`）:
+
+![図 1-4 lexer.l → flex → lex.yy.c](docs/images/diagrams/jp/fig-1-4.svg)
+
+### 図 1-5. トークン列 → AST（構文解析）
+
+- **場所**: 1.3 bison 入門 と parser.y の冒頭（最初の項より前）（`docs/jp/ch01/03_bison.md` 9 行目）
+- **種類**: フロー図
+
+```
+INT  IDENT(main)  '('  ')'  '{'  RETURN  INT_LIT(42)  ';'  '}'
+                                  ↓ 構文解析器
+                          FUNC_DEF main
+                            BLOCK
+                              RETURN
+                                INT_LIT 42
+```
+
+SVG 版（日本語 `docs/images/diagrams/jp/fig-1-5.svg`、英語 `docs/images/diagrams/en/fig-1-5.svg`）:
+
+![図 1-5 トークン列 → AST（構文解析）](docs/images/diagrams/jp/fig-1-5.svg)
+
+### 図 1-6. parser.y → bison → parser.tab.c / parser.tab.h
+
+- **場所**: 1.3 bison 入門 と parser.y の冒頭（最初の項より前）（`docs/jp/ch01/03_bison.md` 20 行目）
+- **種類**: フロー図
+
+```
+parser.y  ─ bison ─→  parser.tab.c   （構文解析器の C コード）
+                      parser.tab.h   （トークン定義のヘッダ）
+```
+
+SVG 版（日本語 `docs/images/diagrams/jp/fig-1-6.svg`、英語 `docs/images/diagrams/en/fig-1-6.svg`）:
+
+![図 1-6 parser.y → bison → parser.tab.c / parser.tab.h](docs/images/diagrams/jp/fig-1-6.svg)
+
+### 図 1-7. パースの追跡 1: INT_LIT がノードになる
+
+- **場所**: 1.3.7 パースを追ってみる（`docs/jp/ch01/03_bison.md` 357 行目）
+- **種類**: フロー図
+
+```
+INT_LIT(42) ──→ INT_LIT(42) ノード
+```
+
+SVG 版（日本語 `docs/images/diagrams/jp/fig-1-7.svg`、英語 `docs/images/diagrams/en/fig-1-7.svg`）:
+
+![図 1-7 パースの追跡 1: INT_LIT がノードになる](docs/images/diagrams/jp/fig-1-7.svg)
+
+### 図 1-8. パースの追跡 2: RETURN ノードができる
+
+- **場所**: 1.3.7 パースを追ってみる（`docs/jp/ch01/03_bison.md` 362 行目）
+- **種類**: 木構造図
+
+```
+RETURN ── INT_LIT(42)ノード ── ';' 
+               ↓
+           RETURN ノード
+           └─ INT_LIT(42) ノード
+```
+
+SVG 版（日本語 `docs/images/diagrams/jp/fig-1-8.svg`、英語 `docs/images/diagrams/en/fig-1-8.svg`）:
+
+![図 1-8 パースの追跡 2: RETURN ノードができる](docs/images/diagrams/jp/fig-1-8.svg)
+
+### 図 1-9. パースの追跡 3: 完成した木
+
+- **場所**: 1.3.7 パースを追ってみる（`docs/jp/ch01/03_bison.md` 372 行目）
+- **種類**: 木構造図
+
+```
+           FUNC_DEF main
+           └─ BLOCK
+               └─ RETURN
+                   └─ INT_LIT 42
+```
+
+SVG 版（日本語 `docs/images/diagrams/jp/fig-1-9.svg`、英語 `docs/images/diagrams/en/fig-1-9.svg`）:
+
+![図 1-9 パースの追跡 3: 完成した木](docs/images/diagrams/jp/fig-1-9.svg)
+
+### 図 1-10. 入力ファイル → yyin → yylex → yyparse → program
+
+- **場所**: 1.3.9 flex と bison の連携（`docs/jp/ch01/03_bison.md` 413 行目）
+- **種類**: ブロック図
+
+```
++-----------+
+| 入力ファイル |   tiny-c で書かれたソース (例: `int main() { return 42; }`)
++-----+-----+
+      |
+      v
++-----------+
+|  yyin     |   FILE * 型のグローバル変数
++-----+-----+
+      |
+      v
++-----------+
+|  yylex()  |   flex 生成。1回呼ぶと1トークン返す
++-----+-----+
+      |
+      v
++-----------+
+|  yyparse()|   bison 生成。yylex を内部で呼びながら木を作る
++-----+-----+
+      |
+      v
++-----------+
+|  program  |   グローバル変数。AST の根が入る
++-----------+
+```
+
+SVG 版（日本語 `docs/images/diagrams/jp/fig-1-10.svg`、英語 `docs/images/diagrams/en/fig-1-10.svg`）:
+
+![図 1-10 入力ファイル → yyin → yylex → yyparse → program](docs/images/diagrams/jp/fig-1-10.svg)
+
+### 図 1-11. "return 42;" と RETURN ノード
+
+- **場所**: 1.4.1 なぜ「木」なのか（`docs/jp/ch01/04_ast.md` 14 行目）
+- **種類**: 木構造図
+
+```
+"return 42;"           RETURN ノード
+                        └─ INT_LIT ノード（値: 42）
+```
+
+SVG 版（日本語 `docs/images/diagrams/jp/fig-1-11.svg`、英語 `docs/images/diagrams/en/fig-1-11.svg`）:
+
+![図 1-11 "return 42;" と RETURN ノード](docs/images/diagrams/jp/fig-1-11.svg)
+
+### 図 1-12. メモリ上のノードとポインタのつながり
+
+- **場所**: 1.4.7 AST が組み立てられる様子（`docs/jp/ch01/04_ast.md` 352 行目）
+- **種類**: 木構造図
+
+```
+program ──→ [D: FUNC_DEF "main"]
+              │
+              body: [C: BLOCK]
+                      │
+                      stmts: [L: NodeList]
+                              │
+                              node: [B: RETURN]
+                                      │
+                                      expr: [A: INT_LIT 42]
+```
+
+SVG 版（日本語 `docs/images/diagrams/jp/fig-1-12.svg`、英語 `docs/images/diagrams/en/fig-1-12.svg`）:
+
+![図 1-12 メモリ上のノードとポインタのつながり](docs/images/diagrams/jp/fig-1-12.svg)
+
+### 図 1-13. %rax / %eax / %ax の入れ子
+
+- **場所**: 1.5.2 レジスタ ── CPU の中の作業箱（`docs/jp/ch01/05_codegen.md` 53 行目）
+- **種類**: ブロック図
+
+```
++----------------------+
+|         %rax         |   ← 64 ビット全体
++----------+----------+
+            |   %eax   |   ← 下位 32 ビット
+            +---+------+
+                | %ax  |   ← 下位 16 ビット
+                +------+
+```
+
+SVG 版（日本語 `docs/images/diagrams/jp/fig-1-13.svg`、英語 `docs/images/diagrams/en/fig-1-13.svg`）:
+
+![図 1-13 %rax / %eax / %ax の入れ子](docs/images/diagrams/jp/fig-1-13.svg)
+
+### 図 1-14. pushq %rbp の前後のスタック
+
+- **場所**: 1.5.4 関数とスタック ── 値はどこに置くか（`docs/jp/ch01/05_codegen.md` 99 行目）
+- **種類**: スタック図
+
+```
+高アドレス  ┌──────────────┐
+           │              │
+           │              │
+           │     ...      │  ← push 前の %rsp はここ（直前のスタック先端）
+           ├──────────────┤
+           │ caller の rbp │  ← push 後の %rsp はここ（8 バイト下に動いた）
+           ├──────────────┤
+           │              │
+低アドレス  └──────────────┘
+```
+
+SVG 版（日本語 `docs/images/diagrams/jp/fig-1-14.svg`、英語 `docs/images/diagrams/en/fig-1-14.svg`）:
+
+![図 1-14 pushq %rbp の前後のスタック](docs/images/diagrams/jp/fig-1-14.svg)
+
+### 図 1-15. lexer → parser → AST → codegen と main.c の関係
+
+- **場所**: 1.6.1 役割分担（`docs/jp/ch01/06_build.md` 10 行目）
+- **種類**: ブロック図
+
+```
++---------+                                                +---------+
+| 入力 .c |                                                | 出力 .s |
++----+----+                                                +----+----+
+     |                                                          ^
+     v                                                          |
++----------+   +-----------+   +-------+   +-----------+   +----+----+
+|  lexer   |─→ |  parser   |─→ |  AST  |─→ | codegen   |─→ |   FILE  |
+| (flex)   |   | (bison)   |   |       |   |           |   |  (stdout)|
++----------+   +-----------+   +-------+   +-----------+   +---------+
+                  ^                            ^
+                  |                            |
+            +-----+----+                +------+-----+
+            | main.c   |                | main.c     |
+            | yyparse  |                | codegen()  |
+            +----------+                +------------+
+```
+
+SVG 版（日本語 `docs/images/diagrams/jp/fig-1-15.svg`、英語 `docs/images/diagrams/en/fig-1-15.svg`）:
+
+![図 1-15 lexer → parser → AST → codegen と main.c の関係](docs/images/diagrams/jp/fig-1-15.svg)
+
+### 図 1-16. ビルド依存グラフ（ソース → .o → tinyc）
+
+- **場所**: 1.6.5 ビルド依存グラフ（`docs/jp/ch01/06_build.md` 300 行目）
+- **種類**: フロー図
+
+```
+src/parser.y ─→ build/parser.tab.c ─→ build/parser.tab.o ──┐
+            └─→ build/parser.tab.h ─┐                        │
+                                    │                        │
+src/lexer.l ────────────────────────┴→ build/lex.yy.c ─→ build/lex.yy.o ──┤
+                                                                          │
+src/ast.c    ─────────────────────────────────────→ build/ast.o ─────────┤
+                                                                          │
+src/codegen.c ────────────────────────────────────→ build/codegen.o ─────┤
+                                                                          │
+src/main.c   ─────────────────────────────────────→ build/main.o ────────┤
+                                                                          ↓
+                                                                       tinyc
+```
+
+SVG 版（日本語 `docs/images/diagrams/jp/fig-1-16.svg`、英語 `docs/images/diagrams/en/fig-1-16.svg`）:
+
+![図 1-16 ビルド依存グラフ（ソース → .o → tinyc）](docs/images/diagrams/jp/fig-1-16.svg)
 
 ---
 
 ## 第2章 — 電卓を作る
 
-### 2-1. 下っ端から先に働く
+### 図 2-1. 2 + 3 * 4 の 2 通りの解釈
 
-- **置き場所**: 2.1.2（`ch02/01_precedence.md`）「階層化された文法」の直後
+- **場所**: 2.1.1 素朴な書き方の問題（`docs/jp/ch02/01_precedence.md` 25 行目）
+- **種類**: 木構造図
 
-> **Alice**: 優先順位の表って、どこで bison に教えるの？
->
-> **Bob**: 表はないよ。文法が `*` を先にまとめるように書いてあるから、`*` は木の下のほうに来る。計算は木の下から始まるんだ。
->
-> **Alice**: 下っ端のほうが先に動くのね。Bob もよく先に動くし。
->
-> **Bob**: ……。
+```
+解釈A:  expr             解釈B:  expr
+        / | \                    / | \
+     expr + expr             expr * expr
+       2  / | \              / | \   4
+        expr * expr        expr + expr
+          3     4            2     3
+```
 
-### 2-2. 置き場所がないのでキッチンテーブルに積む
+SVG 版（日本語 `docs/images/diagrams/jp/fig-2-1.svg`、英語 `docs/images/diagrams/en/fig-2-1.svg`）:
 
-- **置き場所**: 2.2.2（`ch02/02_codegen.md`）「二項演算で困ること」と 2.2.3 の間
-- **伏線**: 第7章 7-3 で回収
+![図 2-1 2 + 3 * 4 の 2 通りの解釈](docs/images/diagrams/jp/fig-2-1.svg)
 
-> **Alice**: 右を計算したら、`%eax` に入れておいた左が消えた……。
->
-> **Bob**: `%eax` の値の置き場所がないなら、紙に書いて隣のキッチンテーブルに積んでおけばいい。積むのが `pushq` で、いちばん上から取るのが `popq`。
+### 図 2-2. 10 - 3 - 2 の左結合の木
 
-### 2-3. 自分で作った電卓に負けた
+- **場所**: 2.1.3 結合性も文法で決まる（`docs/jp/ch02/01_precedence.md` 128 行目）
+- **種類**: 木構造図
 
-- **置き場所**: 2.3.7（`ch02/03_build.md`）「ビルドして動かす」で `(10 - 3) * 2 + 100 / 4 % 7` が `18` を返し、計算順のコメントが出た直後
+```
+add_expr
+├─ add_expr ← "10 - 3"
+│  ├─ add_expr ← "10"
+│  ├─ '-'
+│  └─ mul_expr ← "3"
+├─ '-'
+└─ mul_expr ← "2"
+```
 
-> **Alice**: 18？ 私の暗算と違う……。
->
-> **Bob**: `100 / 4 % 7` は左から。`(100 / 4) % 7` だから 4 になる。
->
-> **Alice**: 自分で作った電卓に負けた……。
+SVG 版（日本語 `docs/images/diagrams/jp/fig-2-2.svg`、英語 `docs/images/diagrams/en/fig-2-2.svg`）:
+
+![図 2-2 10 - 3 - 2 の左結合の木](docs/images/diagrams/jp/fig-2-2.svg)
+
+### 図 2-3. 2 + 3 * 4 の評価中のスタックの変化
+
+- **場所**: 2.3.8 生成アセンブリを追う（`docs/jp/ch02/03_build.md` 394 行目）
+- **種類**: スタック図
+
+```
+時刻 0: []
+時刻 1: pushq %rax (=4)         → [4]
+時刻 2: popq  %rcx               → []         (rcx=4, 内部計算で使う)
+時刻 3: pushq %rax (=12)         → [12]
+時刻 4: popq  %rcx               → []         (rcx=12)
+```
+
+SVG 版（日本語 `docs/images/diagrams/jp/fig-2-3.svg`、英語 `docs/images/diagrams/en/fig-2-3.svg`）:
+
+![図 2-3 2 + 3 * 4 の評価中のスタックの変化](docs/images/diagrams/jp/fig-2-3.svg)
+
+### 図 2-4. AST と生成アセンブリの対応
+
+- **場所**: 2.3.8 生成アセンブリを追う（`docs/jp/ch02/03_build.md` 406 行目）
+- **種類**: 木構造図
+
+```
+BINARY +                       <-- 一番最後の addl に対応
+├─ INT_LIT 2                   <-- "movl $2, %eax"   (2回目)
+└─ BINARY *                    <-- 内側の imull
+   ├─ INT_LIT 3                <-- "movl $3, %eax"
+   └─ INT_LIT 4                <-- "movl $4, %eax"   (1回目)
+```
+
+SVG 版（日本語 `docs/images/diagrams/jp/fig-2-4.svg`、英語 `docs/images/diagrams/en/fig-2-4.svg`）:
+
+![図 2-4 AST と生成アセンブリの対応](docs/images/diagrams/jp/fig-2-4.svg)
 
 ---
 
 ## 第3章 — 変数
 
-### 3-1. 同じ x なのに二つの顔
+### 図 3-1. x, y を置いたスタックフレーム
 
-- **置き場所**: 3.1.2（`ch03/01_grammar.md`）「lvalue について」の直後
+- **場所**: 第3章の表紙「まず動かしてみる」（`docs/jp/ch03/00_overview.md` 93 行目）
+- **種類**: スタック図
 
-> **Alice**: `x = x + 1` って、数学だと絶対おかしいよね。
->
-> **Bob**: 数学なら両辺から x を引いて 0 = 1。世界が壊れるね。でも左の `x` は「住所」、右の `x` は「住んでる人」なんだ。
+```
+            ↑ 高アドレス
+   ┌──────────────────────┐
+   │  呼び出し元の戻り番地  │  +8(%rbp)
+   ├──────────────────────┤
+   │  保存された呼び出し元の %rbp │  0(%rbp)  ← %rbp はここを指す
+   ├──────────────────────┤
+   │  x = 1               │  -8(%rbp)   ← 1 番目の subq $8 で確保
+   ├──────────────────────┤
+   │  y = 2               │  -16(%rbp)  ← %rsp はここ（2 番目の subq $8 で確保）
+   ├──────────────────────┤
+   │  （空き）              │
+   ↓ 低アドレス
+```
 
-### 3-2. 1 バイトのために徹夜
+SVG 版（日本語 `docs/images/diagrams/jp/fig-3-1.svg`、英語 `docs/images/diagrams/en/fig-3-1.svg`）:
 
-- **置き場所**: 3.2.2（`ch03/02_codegen.md`）「なぜ8バイトずつか」の直後
+![図 3-1 x, y を置いたスタックフレーム](docs/images/diagrams/jp/fig-3-1.svg)
 
-> **Alice**: `int` は 4 バイトなのに 8 バイト取るの、もったいなくない？
->
-> **Bob**: もったいない。昔のプログラマは 1 バイト削るために徹夜したらしいよ。でも `pushq` と同じ 8 バイトに揃えると、ずっと楽なんだ。
->
-> **Alice**: じゃあパパには内緒ね。
+### 図 3-2. プロローグ直後のスタックフレーム
 
-### 3-3. 名前は消えてしまう
+- **場所**: 3.2.2 ローカル変数の置き場所（`docs/jp/ch03/02_codegen.md` 38 行目）
+- **種類**: スタック図
 
-- **置き場所**: 3.2.3（`ch03/02_codegen.md`）「シンボルテーブル」の直後
+```
+            高アドレス
+           +---------+
+           |  ...    |
+           +---------+
+           | 戻り番地 |   call 命令で積まれた（call 直後は %rsp がここを指す）
+           +---------+
+   %rbp →  | 旧 %rbp  |   pushq %rbp で積まれた（その後 movq %rsp, %rbp で %rbp はここを指す）
+           +---------+
+   %rsp →  |         |   （空きスタック）
+           |         |
+           | ...     |
+           低アドレス
+```
 
-> **Alice**: アセンブリのどこにも `x` がない……。
->
-> **Bob**: 名前で呼んでいるのは人間だけ。CPU にとって `x` くんは、「`-8(%rbp)` 番地の人」なんだ。
+SVG 版（日本語 `docs/images/diagrams/jp/fig-3-2.svg`、英語 `docs/images/diagrams/en/fig-3-2.svg`）:
+
+![図 3-2 プロローグ直後のスタックフレーム](docs/images/diagrams/jp/fig-3-2.svg)
+
+### 図 3-3. ローカル変数 x, y, z のスロット
+
+- **場所**: 3.2.2 ローカル変数の置き場所（`docs/jp/ch03/02_codegen.md` 55 行目）
+- **種類**: スタック図
+
+```
+   %rbp →    | 旧 %rbp  |
+             +---------+
+   -8(%rbp)  |    x    |     int x  (1つ目)
+             +---------+
+   -16(%rbp) |    y    |     int y  (2つ目)
+             +---------+
+   -24(%rbp) |    z    |     int z  (3つ目)
+             +---------+
+   %rsp →    |         |
+```
+
+SVG 版（日本語 `docs/images/diagrams/jp/fig-3-3.svg`、英語 `docs/images/diagrams/en/fig-3-3.svg`）:
+
+![図 3-3 ローカル変数 x, y, z のスロット](docs/images/diagrams/jp/fig-3-3.svg)
+
+### 図 3-4. x = x + 5; の AST
+
+- **場所**: 3.2.7 NODE_EXPR_STMT の codegen（`docs/jp/ch03/02_codegen.md` 218 行目）
+- **種類**: 木構造図
+
+```
+EXPR_STMT
+└─ ASSIGN
+   ├─ IDENT x
+   └─ BINARY +
+      ├─ IDENT x
+      └─ INT_LIT 5
+```
+
+SVG 版（日本語 `docs/images/diagrams/jp/fig-3-4.svg`、英語 `docs/images/diagrams/en/fig-3-4.svg`）:
+
+![図 3-4 x = x + 5; の AST](docs/images/diagrams/jp/fig-3-4.svg)
+
+### 図 3-5. a = b = 7; の AST（連鎖代入）
+
+- **場所**: 3.2.8 連鎖代入を見てみる（`docs/jp/ch03/02_codegen.md` 252 行目）
+- **種類**: 木構造図
+
+```
+ASSIGN
+├─ IDENT a
+└─ ASSIGN
+   ├─ IDENT b
+   └─ INT_LIT 7
+```
+
+SVG 版（日本語 `docs/images/diagrams/jp/fig-3-5.svg`、英語 `docs/images/diagrams/en/fig-3-5.svg`）:
+
+![図 3-5 a = b = 7; の AST（連鎖代入）](docs/images/diagrams/jp/fig-3-5.svg)
 
 ---
 
 ## 第4章 — 分岐とループ
 
-### 4-1. bison は心配性
+### 図 4-1. if-else の AST
 
-- **置き場所**: 4.1.5（`ch04/01_grammar.md`）「dangling-else の問題」の `%expect 1` の直後
+- **場所**: 4.1.7 AST 例（`docs/jp/ch04/01_grammar.md` 222 行目）
+- **種類**: 木構造図
 
-> **Alice**: bison に「conflict」って言われた！ 何か壊した？
->
-> **Bob**: 壊してないよ。bison は心配性なだけ。`%expect 1` で「1 個は想定内です」と先に伝えておけば、もう聞かれない。
+```
+IF
+├─ BINARY >          ← 条件
+│  ├─ IDENT x
+│  └─ INT_LIT 0
+├─ EXPR_STMT         ← then 部
+│  └─ ASSIGN
+│     ├─ IDENT y
+│     └─ INT_LIT 1
+└─ EXPR_STMT         ← else 部
+   └─ ASSIGN
+      ├─ IDENT y
+      └─ INT_LIT 2
+```
 
-### 4-2. 真実は 1 バイト
+SVG 版（日本語 `docs/images/diagrams/jp/fig-4-1.svg`、英語 `docs/images/diagrams/en/fig-4-1.svg`）:
 
-- **置き場所**: 4.2.3（`ch04/02_compare.md`）「条件代入 `setcc`」の直後（`setl %al` のコードブロックの後、4.2.4 の前）
+![図 4-1 if-else の AST](docs/images/diagrams/jp/fig-4-1.svg)
 
-> **Alice**: `3 < 5` は「正しい」でしょ。その「正しい」って、どこにしまうの？
->
-> **Bob**: 「正しい」専用の入れ物はないよ。`setl` が `%al` に 1 を書くだけ。……世の中の真実なんて、1 バイトあれば足りるのさ。
->
-> **Alice**: へー。
+### 図 4-2. while の AST
 
-### 4-3. ループはただ戻っているだけ
+- **場所**: 4.1.7 AST 例（`docs/jp/ch04/01_grammar.md` 248 行目）
+- **種類**: 木構造図
 
-- **置き場所**: 4.3.5（`ch04/03_control.md`）「while の翻訳」の直後
+```
+WHILE
+├─ BINARY <          ← 条件
+│  ├─ IDENT i
+│  └─ INT_LIT 10
+└─ EXPR_STMT         ← 本体
+   └─ ASSIGN
+      ├─ IDENT i
+      └─ BINARY +
+         ├─ IDENT i
+         └─ INT_LIT 1
+```
 
-> **Alice**: while の命令って、どれ？
->
-> **Bob**: ないよ。最後に先頭のラベルへ `jmp` で戻るだけ。
->
-> **Alice**: あー、きれいに字下げした私の while が……。
+SVG 版（日本語 `docs/images/diagrams/jp/fig-4-2.svg`、英語 `docs/images/diagrams/en/fig-4-2.svg`）:
+
+![図 4-2 while の AST](docs/images/diagrams/jp/fig-4-2.svg)
 
 ---
 
 ## 第5章 — 関数を呼ぶ・作る
 
-### 5-1. 信号機、増えすぎ
+### 図 5-1. パラメータ spill とパディングを含むフレーム
 
-- **置き場所**: 5.2.1（`ch05/02_abi.md`）「整数引数」の直後
-- **回収**: 第1章 1-2
+- **場所**: 5.3.5 フレームのレイアウト（`docs/jp/ch05/03_frame.md` 170 行目）
+- **種類**: スタック図
 
-> **Alice**: `%rdi` `%rsi` `%rdx` `%rcx` `%r8` `%r9`……この順番、何か意味あるの？
->
-> **Bob**: 覚えるほどの理由はない。でも Linux のコンパイラはみんなこの順番を守ってる。第1章の「赤は止まれ」と同じだよ。
->
-> **Alice**: 信号機、増えすぎじゃない？
+```
+高アドレス
+ +---------------+
+ | 戻り番地       |  ← caller の call が積んだ
+ +---------------+
+ | 旧 %rbp       |  ← 自分の pushq %rbp が積んだ。続く movq %rsp, %rbp で %rbp はここを指す
+ +---------------+
+ | n (= %edi)    |  -8(%rbp)   ← パラメータ spill
+ +---------------+
+ | (使われない)   |  -16(%rbp)  ← 16-aligned のためのパディング。subq $16 で %rsp はここを指す
+ +---------------+
+ |               |
+ | (一時値の     |
+ |  push/pop で  |
+ |  伸び縮み)    |
+ |               |
+低アドレス
+```
 
-### 5-2. 2 回目の call にだけある詰め物
+SVG 版（日本語 `docs/images/diagrams/jp/fig-5-1.svg`、英語 `docs/images/diagrams/en/fig-5-1.svg`）:
 
-- **置き場所**: 5.4.5（`ch05/04_call.md`）「入れ子の call で動くか確認」の直後
+![図 5-1 パラメータ spill とパディングを含むフレーム](docs/images/diagrams/jp/fig-5-1.svg)
 
-> **Alice**: `f(1) + f(2)` のアセンブリ、2 回目の `call` の前にだけ `subq $8, %rsp` が入ってる。なんで？
->
-> **Bob**: `f(2)` の答えを積んだぶん、`%rsp` が 8 バイトずれてるからね。「`call` の直前は 16 の倍数」っていう ABI の決まりを守るための詰め物なんだ。
+### 図 5-2. fact(5) → fact(4) → fact(3) の再帰フレーム
 
-### 5-3. 分身の術
+- **場所**: 5.4.8 再帰呼び出しが「自然に」動く理由（`docs/jp/ch05/04_call.md` 250 行目）
+- **種類**: スタック図
 
-- **置き場所**: 5.4.8（`ch05/04_call.md`）「再帰呼び出しが「自然に」動く理由」の直後
+```
+高アドレス
+ +-------------+
+ | main の rbp |
+ +-------------+
+ | rip = main  |
+ | rbp の保存  |
+ | n=5         |   ← fact(5) のフレーム
+ +-------------+
+ | rip = fact  |
+ | rbp の保存  |
+ | n=4         |   ← fact(4) のフレーム
+ +-------------+
+ | rip = fact  |
+ | rbp の保存  |
+ | n=3         |   ← fact(3) のフレーム
+ +-------------+
+ | ...         |
+低アドレス
+```
 
-> **Alice**: 再帰のために、どんな特別なコードを書いたの？
->
-> **Bob**: 何も。呼ぶたびに新しいフレームが積まれるから、`fact(5)` も `fact(4)` も自分専用の `n` を持つんだ。
->
-> **Alice**: 分身の術だ！ しかも何もしてないのに。
+SVG 版（日本語 `docs/images/diagrams/jp/fig-5-2.svg`、英語 `docs/images/diagrams/en/fig-5-2.svg`）:
+
+![図 5-2 fact(5) → fact(4) → fact(3) の再帰フレーム](docs/images/diagrams/jp/fig-5-2.svg)
 
 ---
 
 ## 第6章 — ポインタと配列
 
-### 6-1. & と * は打ち消しあう
+### 図 6-1. a[i] = ... の codegen の呼び出し経路
 
-- **置き場所**: 6.2.3（`ch06/02_lvalue.md`）「`char *p;` の場合」の直後
+- **場所**: 6.2.4 lvalue 側 ── アドレス取得 (`gen_addr`) の「6.2.4.3 に至る経路 ── `a[i]` と `*(p+i)` で違う」（`docs/jp/ch06/02_lvalue.md` 208 行目）
+- **種類**: 木構造図
 
-> **Alice**: ポインタ、何回読んでも頭がこんがらがる……。
->
-> **Bob**: `*` は 1 段たどって、`&` は 1 段戻るだけ。だから `&*p` は `p` に戻る。
->
-> **Alice**: じゃあ `&*&*&*p` も `p`？
->
-> **Bob**: そう。でも、そんなコードを書いたら嫌われるよ。
->
-> **Alice**: へへ。
+```
+gen_stmt(EXPR_STMT)
+└─ gen_expr(NODE_ASSIGN)        ← 入口
+    ├─ gen_addr(node->lhs)       ← lhs = NODE_INDEX(a, i)
+    │  └─ case NODE_INDEX        ← ★ 6.2.4.3 に到達
+    │     ├─ gen_addr(IDENT a)   ← 6.2.4.1（配列のベースアドレス）
+    │     ├─ gen_expr(IDENT i)
+    │     ├─ imulq $4, %rax     ← スケーリング!
+    │     └─ addq → %rax = &a[i]
+    └─ ... store
+```
 
-### 6-2. レジスタはマトリョーシカ
+SVG 版（日本語 `docs/images/diagrams/jp/fig-6-1.svg`、英語 `docs/images/diagrams/en/fig-6-1.svg`）:
 
-- **置き場所**: 6.2.7（`ch06/02_lvalue.md`）「サイズ別 load / store」の末尾（`%al` / `%eax` / `%rax` の説明の直後）
+![図 6-1 a[i] = ... の codegen の呼び出し経路](docs/images/diagrams/jp/fig-6-1.svg)
 
-> **Alice**: `%al` と `%eax` と `%rax`、名前が 3 つもあるのに、同じ箱なの？
->
-> **Bob**: 入れ子なんだ。`%rax` の下半分が `%eax`、そのいちばん下の 1 バイトが `%al`。
->
-> **Alice**: マトリョーシカだ！
+### 図 6-2. *(p + i) = ... の codegen の呼び出し経路
 
-### 6-3. やっと Hello, world
+- **場所**: 6.2.4 lvalue 側 ── アドレス取得 (`gen_addr`) の「6.2.4.3 に至る経路 ── `a[i]` と `*(p+i)` で違う」（`docs/jp/ch06/02_lvalue.md` 222 行目）
+- **種類**: 木構造図
 
-- **置き場所**: 6.3.9（`ch06/03_globals_strings.md`）「全部つながる: Hello, world」の直後
+```
+gen_stmt(EXPR_STMT)
+└─ gen_expr(NODE_ASSIGN)        ← 入口
+    ├─ gen_addr(node->lhs)       ← lhs = NODE_UNARY '*'
+    │  └─ case NODE_UNARY '*'    ← 6.2.4.2 に到達（6.2.4.3 ではない!）
+    │     └─ gen_expr(operand)   ← operand = NODE_BINARY '+'
+    │        └─ case NODE_BINARY ← ここの処理は 6.2.4.3 にも 6.2.4.2 にも入らず、ただの addl
+    │           ├─ gen_expr(rhs = i)
+    │           ├─ gen_expr(lhs = p)
+    │           └─ addl %ecx, %eax  ← スケーリングなし!
+    └─ ... store
+```
 
-> **Alice**: Hello, world が出た！ 6 章もかかったけど。
->
-> **Bob**: 使う側なら 1 行、作る側なら 6 章。
->
-> **Alice**: やっと入門書の 1 ページ目に追いついたのね。
+SVG 版（日本語 `docs/images/diagrams/jp/fig-6-2.svg`、英語 `docs/images/diagrams/en/fig-6-2.svg`）:
+
+![図 6-2 *(p + i) = ... の codegen の呼び出し経路](docs/images/diagrams/jp/fig-6-2.svg)
 
 ---
 
 ## 第7章 — 最適化とバックパッチ
 
-### 7-1. 賢すぎる最適化
+### 図 7-1. ch07 のパイプライン（AST 最適化とピープホールの位置）
 
-- **置き場所**: 7.1.5（`ch07/01_const_fold.md`）「副作用に注意」の直後
+- **場所**: 第7章の表紙「はじめに」（`docs/jp/ch07/00_overview.md` 24 行目）
+- **種類**: フロー図
 
-> **Alice**: `x * 0` を `0` にしちゃうの、賢い！
->
-> **Bob**: じゃあ `f() * 0` は？ tiny-c だと `f()` の呼び出しごと消える。だから、そういう書き方は仕様外ってことにしてるんだ。
->
-> **Alice**: 断捨離しすぎ！
+```
+ソース → 字句解析 → 構文解析 → AST → [AST 最適化] → codegen → asm → [ピープホール] → 出力 asm
+                                  ↑                  ↑                  ↑
+                                  ch07 で追加        単一パス化         ch07 で追加
+                                                     (バックパッチ)
+```
 
-### 7-2. 目次は後出しジャンケン
+SVG 版（日本語 `docs/images/diagrams/jp/fig-7-1.svg`、英語 `docs/images/diagrams/en/fig-7-1.svg`）:
 
-- **置き場所**: 7.2.3（`ch07/02_backpatch.md`）「プロローグのバックパッチ」の直後
+![図 7-1 ch07 のパイプライン（AST 最適化とピープホールの位置）](docs/images/diagrams/jp/fig-7-1.svg)
 
-> **Alice**: フレームサイズは最後まで分からないのに、`subq` は先頭に書くの？ 未来予知？
->
-> **Bob**: 仮の値で書いておいて、終わったら戻って書き直すだけ。本の目次と同じだよ。
->
-> **Alice**: 目次って、後出しジャンケンだったのね。
+### 図 7-2. 定数畳み込み: 2 + 3 → 5
 
-### 7-3. キッチンまで往復していた
+- **場所**: 7.1.1 定数畳み込み (Constant folding)（`docs/jp/ch07/01_const_fold.md` 11 行目）
+- **種類**: 木構造図
 
-- **置き場所**: 7.4.3（`ch07/04_peephole.md`）「パターン1: `pushq %rax; popq %reg` → `movq %rax, %reg`」の直後
-- **回収**: 第2章 2-2
+```
+BINARY +              →   INT_LIT 5
+├─ INT_LIT 2
+└─ INT_LIT 3
+```
 
-> **Alice**: 2 章からずっと、テーブルに積んだものを次の瞬間に取ってたってこと？
->
-> **Bob**: そういう所がけっこうある。隣り合った `pushq` と `popq` は、`movq` 1 本の手渡しで済むんだ。
->
-> **Alice**: 私、今までずっとキッチンまで往復してたのね……。
+SVG 版（日本語 `docs/images/diagrams/jp/fig-7-2.svg`、英語 `docs/images/diagrams/en/fig-7-2.svg`）:
 
-### 7-4. 旅の終わりに
+![図 7-2 定数畳み込み: 2 + 3 → 5](docs/images/diagrams/jp/fig-7-2.svg)
 
-- **置き場所**: 7.5.11（`ch07/05_build.md`）「ここまでで作ったもの」の直後
-- **回収**: 第1章 1-3
+### 図 7-3. 定数畳み込み: 2 + 3 * 4 → 14
 
-> **Alice**: 42 を返すだけだったのに、もう再帰で `fib` が動いてる。
->
-> **Bob**: でも骨組みは第1章のまま。ソースコードを読んで、ツリーにして、アセンブリを出す。あのエッセンスに機能を足してきただけなんだ。
->
-> **Alice**: おー。
+- **場所**: 7.1.1 定数畳み込み (Constant folding)（`docs/jp/ch07/01_const_fold.md` 19 行目）
+- **種類**: 木構造図
 
----
+```
+BINARY +              →   BINARY +              →   INT_LIT 14
+├─ INT_LIT 2              ├─ INT_LIT 2
+└─ BINARY *               └─ INT_LIT 12
+   ├─ INT_LIT 3
+   └─ INT_LIT 4
+```
 
-## 章をまたぐ伏線と回収
+SVG 版（日本語 `docs/images/diagrams/jp/fig-7-3.svg`、英語 `docs/images/diagrams/en/fig-7-3.svg`）:
 
-| 伏線 | 回収 |
-|------|------|
-| 1-2「`%eax` は信号の『赤は止まれ』」 | 5-1「信号機、増えすぎじゃない？」 |
-| 2-2「置き場所がないならキッチンテーブルに積む」 | 7-3「今までずっとキッチンまで往復してた」 |
-| 1-3「コンパイラのエッセンスは全部押さえてる」 | 7-4「あのエッセンスに機能を足してきただけ」 |
+![図 7-3 定数畳み込み: 2 + 3 * 4 → 14](docs/images/diagrams/jp/fig-7-3.svg)
 
-## 進め方
+### 図 7-4. codegen → メモリバッファ → peephole → stdout
 
-1. この PLAN.md でセリフ案を確定する（トーン・本数・置き場所の調整）
-2. `docs/jp/chNN/*.md` の該当箇所に差し込む（1 章ずつ）
-3. 差し込み後、`check-github-render` で引用ブロックと太字の表示を確認する
-4. 英語版は `doc-translator-ja-en` で翻訳パスを回す
+- **場所**: 7.4.1 パイプラインの中の位置（memstream の復習）（`docs/jp/ch07/04_peephole.md` 11 行目）
+- **種類**: フロー図
+
+```
+codegen → メモリバッファ (open_memstream) → peephole → stdout
+                   ↑                            ↑
+              ch07/02 で導入             この節で追加
+```
+
+SVG 版（日本語 `docs/images/diagrams/jp/fig-7-4.svg`、英語 `docs/images/diagrams/en/fig-7-4.svg`）:
+
+![図 7-4 codegen → メモリバッファ → peephole → stdout](docs/images/diagrams/jp/fig-7-4.svg)

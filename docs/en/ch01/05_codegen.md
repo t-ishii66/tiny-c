@@ -50,15 +50,7 @@ The leading `%` on register names is AT&T syntax.
 
 The relationship between `%rax` and `%eax`:
 
-```
-+----------------------+
-|         %rax         |   ← the full 64 bits
-+----------+----------+
-            |   %eax   |   ← the low 32 bits
-            +---+------+
-                | %ax  |   ← the low 16 bits
-                +------+
-```
+![How %rax / %eax / %ax nest](../../images/diagrams/en/fig-1-13.svg)
 
 We use `%eax` for integers (`int` is 32 bits) and `%rax` for pointers and addresses (those need 64 bits).
 
@@ -96,17 +88,7 @@ On x86-64, the stack "**grows from high to low addresses**." "Down" in this cont
 
 Here's what `pushq %rbp` (which appeared above) actually does to the stack, in a diagram:
 
-```
-high addr  ┌──────────────┐
-           │              │
-           │              │
-           │     ...      │  ← %rsp is here before the push (the previous top)
-           ├──────────────┤
-           │ caller's rbp │  ← %rsp is here after the push (moved 8 bytes down)
-           ├──────────────┤
-           │              │
-low addr   └──────────────┘
-```
+![The stack before and after pushq %rbp](../../images/diagrams/en/fig-1-14.svg)
 
 `%rsp` is the register that points to **the top of the stack**. Pushing a value (`push`) moves `%rsp` down; popping (`pop`) moves it back up. Concretely, `pushq %rbp` is the two-step action "move `%rsp` 8 bytes down, then write the value of `%rbp` at that location."
 
@@ -155,6 +137,10 @@ return 42;   →   movl $42, %eax    + a ret instruction
 That becomes the process **exit code**. That's why `echo $?` prints 42.
 
 "**Put the `int` return value in `%eax` and `ret`.**"
+
+> **Alice**: Why does the return value go in `%eax`? Why not `%ebx`?
+>
+> **Bob**: Same as "red means stop." It's less about logic and more about everyone in the world following the same rule.
 
 
 ## 1.5.7 The full picture

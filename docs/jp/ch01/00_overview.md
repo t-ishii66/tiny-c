@@ -96,15 +96,7 @@ FUNC_DEF main
 
 コンパイラは、ソースコードをまずこの木に変換し、それからこの木を辿ってアセンブリを生成する。**ソースコード → 木 → アセンブリ** の二段階。
 
-```
-ソースコード         木 (AST)              アセンブリ
-"int main() {        FUNC_DEF main         main:
-  return 42;            BLOCK                 pushq %rbp
-}"                        RETURN              movq %rsp, %rbp
-                            INT_LIT 42        movl $42, %eax
-                                              leave
-                                              ret
-```
+![ソースコード → AST → アセンブリの対応](../../images/diagrams/jp/fig-1-1.svg)
 
 なぜ木を経由するか。文字列のままだと「`return` の後ろにある式」を取り出すのが面倒だが、木なら「return ノードの子」と言えばすぐ取り出せる。コンパイラの中で扱いやすい形に変換しておく。
 
@@ -125,39 +117,7 @@ FUNC_DEF main
 
 ## 全体の流れ
 
-```
-+-----------+
-| test.c    |  人間が書いた tiny-c ソース / int main() { return 42 ; }
-+-----+-----+
-      |
-      v
-+-----------+
-| lexer.l   |  flex がCコードを生成
-| (lex.yy.c)|  → 文字列をトークンに分解
-+-----+-----+
-      | int, main, (, ), {, return, 42, ;, }
-      v
-+-----------+
-| parser.y  |  bison がCコードを生成
-|(parser.tab|  → トークン列から木を組み立てる
-| .c)       |  途中で ast.c のコンストラクタを呼ぶ
-+-----+-----+
-      |
-      v
-+-----------+
-| Node 木   |  メモリ上の AST
-+-----+-----+
-      |
-      v
-+-----------+
-| codegen.c |  木を辿ってアセンブリを出力
-+-----+-----+
-      |
-      v
-+-----------+
-| test.s    |  x86 アセンブリ
-+-----------+
-```
+![test.c から test.s までのパイプライン](../../images/diagrams/jp/fig-1-2.svg)
 
 `lexer.l` と `parser.y` は、そのままでは C のコードではない。**flex** と **bison** がこれらの定義ファイルから C のソースコード（`lex.yy.c`、`parser.tab.c`）を自動生成する。生成された C コードを、自分で書いた C コード（`ast.c`、`codegen.c`、`main.c`）と一緒にコンパイルすれば、`tinyc` という実行ファイルができる。
 
