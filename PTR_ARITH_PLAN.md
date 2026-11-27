@@ -4,12 +4,13 @@
 
 ## 1. 結論
 
-- **作業量の見積もり: 約 3.5 時間（半日弱）**。内訳は次のとおり。
+- **作業量の見積もり: 約 4 時間（半日）**。内訳は次のとおり。
+- **ポインタ同士の引き算 `p - q` も実装する**。アドレスの差を要素サイズで割るだけで、`p + i` の修正に 24 行足せば済む（3.3 節）。
 
 | 作業 | 対象 | 規模 | 目安 |
 |------|------|------|------|
-| ソース修正 | `steps/ch06/src/codegen.c`、`steps/ch07/src/codegen.c` | 各 +46 行、削除 0 行。両章とも同じ差分 | 30 分 |
-| テスト追加 | `test/cases/06_ptr_arith.c`（新規） | 1 ファイル、10 行 | 15 分 |
+| ソース修正 | `steps/ch06/src/codegen.c`、`steps/ch07/src/codegen.c` | 各 +68 行、削除 0 行。両章とも同じ差分 | 45 分 |
+| テスト追加 | `test/cases/06_ptr_arith.c`、`06_ptr_diff.c`（新規） | 2 ファイル、各 10 行 | 15 分 |
 | 本文（日本語） | `docs/jp/ch06/02_lvalue.md` の 6 か所、`docs/jp/ch06/00_overview.md` の 1 か所、`docs/jp/ch06/04_build.md` の 2 か所（5 節） | 段落の書き換えと追加 | 1.5 時間 |
 | 図 6-2 | `tools/diagrams/gen_trees.py` の定義を直して、日本語版・英語版を作り直す | 定義 10 行ほど | 15 分 |
 | 確認 | Docker（x86-64 Linux）で `make test`、`check-github-render` | — | 30 分 |
@@ -56,13 +57,24 @@ addl 後  %rax = 0x00000000_e8a01231   ← 上位の 0x00007ffd が消える
 
 ## 3. ソースコードの変更
 
-ch06 と ch07 の `codegen.c` に、**同じ差分**を当てる。下は ch06 の行番号で書いた（ch07 では `expr_type` が 149 行目、`case NODE_BINARY` が 339 行目にある）。
+ch06 と ch07 の `codegen.c` に、**同じ差分**を当てる。追加は 68 行（空行を除く）、削除は 0 行。下は ch06 の行番号で書いた（ch07 では `expr_type` が 149 行目、`case NODE_BINARY` が 339 行目にある）。
 
-考え方は 1 つだけで、**片側がポインタ（または配列）の `+` / `-` には、6.2.4.3 の `NODE_INDEX` と同じ命令列を出す**。`movslq` で `i` を 64 ビットに広げ、`imulq $elem_size` を掛けて、`addq` で足す。
+考え方は 2 つ。
 
-### 3.1 `expr_type` ── `p + i` をポインタ型にする
+- **ポインタ ± 整数**（`p + i`、`i + p`、`p - i`）には、6.2.4.3 の `NODE_INDEX` と同じ命令列を出す。`movslq` で `i` を 64 ビットに広げ、`imulq $elem_size` を掛けて、`addq`（`-` なら `subq`）で計算する。
+- **ポインタ − ポインタ**（`p - q`）は、その逆向き。64 ビットでアドレスの差（バイト数）を取り、要素サイズで割って要素数にする。
+
+### 3.1 `expr_type` ── 結果の型を決める
 
 いまは `NODE_BINARY` が常に `int` を返す。そのため `*(p + 1)` の load サイズは `int` の 4 バイトに決め打ちになり、`char *s` の `*(s + 1)` が 4 バイト読みになる。
+
+直したあとの結果の型は次のとおり。`p - q` だけはポインタではなく `int`（要素数）になる。
+
+| 式 | 結果の型 |
+|----|----------|
+| `p + i`、`i + p`、`p - i` | `p` と同じポインタ型 |
+| `p - q` | `int` |
+| それ以外 | `int`（いままでどおり） |
 
 ```diff
 @@ -112,6 +112,11 @@
@@ -75,13 +87,15 @@ ch06 と ch07 の `codegen.c` に、**同じ差分**を当てる。下は ch06 �
     We track variable types in symbol tables; for derived expressions we
     infer from operator structure. */
  static Type *expr_type(Node *node) {
-@@ -146,6 +151,13 @@
+@@ -146,6 +151,15 @@
      case NODE_ASSIGN:
          return expr_type(node->lhs);
      case NODE_BINARY:
 +        /* p + i, i + p, p - i keep the pointer's type */
 +        if (node->op == '+' || node->op == '-') {
 +            Type *l = expr_type(node->lhs), *r = expr_type(node->rhs);
++            if (node->op == '-' && is_addr_type(l) && is_addr_type(r))
++                return type_int();               /* p - q is a count */
 +            if (is_addr_type(l)) return type_ptr(l->base_size);
 +            if (node->op == '+' && is_addr_type(r)) return type_ptr(r->base_size);
 +        }
@@ -91,22 +105,28 @@ ch06 と ch07 の `codegen.c` に、**同じ差分**を当てる。下は ch06 �
          return type_int();
 ```
 
-### 3.2 `gen_ptr_arith` ── 新しい関数
+`p - q` の行は、`p - i` の行より前に置く必要がある。逆にすると `p - q` が「左がポインタの `-`」に当たってポインタ型になり、`(p - q) * 10` のような式が壊れる。
 
-`push_args` のあと、`gen_expr` の前に置く。中身は `gen_addr` の `case NODE_INDEX` とほぼ同じで、違うのは `-` のときに `subq` を使うところだけ。
+### 3.2 `gen_ptr_arith` ── ポインタ ± 整数
+
+`push_args` のあと、`gen_expr` の前に置く。中身は `gen_addr` の `case NODE_INDEX` とほぼ同じで、違うのは `-` のときに `subq` を使うところだけ。両方がポインタの `-` は、入口で `gen_ptr_diff`（3.3）に回す。
 
 ```c
-/* Pointer arithmetic: p + i, i + p, p - i.
-   Same steps as a[i] in gen_addr: scale i by the element size,
-   then add in 64 bits so the upper half of the address survives. */
+/* Pointer arithmetic: p + i, i + p, p - i, and p - q.
+   p ± i takes the same steps as a[i] in gen_addr: scale i by the element
+   size, then add in 64 bits so the upper half of the address survives. */
 static void gen_ptr_arith(Node *node) {
     Node *ptr = node->lhs, *idx = node->rhs;
+    if (node->op == '-' && is_addr_type(expr_type(ptr)) && is_addr_type(expr_type(idx))) {
+        gen_ptr_diff(node);                 /* p - q */
+        return;
+    }
     if (!is_addr_type(expr_type(ptr))) {    /* i + p */
         ptr = node->rhs;
         idx = node->lhs;
     }
     if (is_addr_type(expr_type(idx)) || (node->op == '-' && ptr == node->rhs)) {
-        fprintf(stderr, "unsupported pointer arithmetic\n");
+        fprintf(stderr, "unsupported pointer arithmetic\n");    /* p + q, i - p */
         exit(1);
     }
     int es = expr_type(ptr)->base_size;
@@ -126,10 +146,51 @@ static void gen_ptr_arith(Node *node) {
 }
 ```
 
-### 3.3 `gen_expr` の `case NODE_BINARY` ── 入口で振り分ける
+### 3.3 `gen_ptr_diff` ── ポインタ − ポインタ
+
+`gen_ptr_arith` の前に置く。
+
+```c
+/* Pointer difference p - q: the byte distance divided by the element size. */
+static void gen_ptr_diff(Node *node) {
+    int es = expr_type(node->lhs)->base_size;
+    if (expr_type(node->rhs)->base_size != es) {
+        fprintf(stderr, "pointer types differ in p - q\n");
+        exit(1);
+    }
+    gen_expr(node->rhs);
+    emit_push();
+    gen_expr(node->lhs);                 /* %rax = p */
+    emit_pop("%rcx");                    /* %rcx = q */
+    fprintf(out, "  subq %%rcx, %%rax\n");            /* %rax = bytes between */
+    if (es != 1) {
+        fprintf(out, "  cqto\n");                     /* sign-extend into %rdx:%rax */
+        fprintf(out, "  movq $%d, %%rcx\n", es);
+        fprintf(out, "  idivq %%rcx\n");              /* %rax = bytes / elem_size */
+    }
+}
+```
+
+`int *p, *q` の `p - q` は、次の 4 行になる。
+
+```asm
+  subq %rcx, %rax     # バイト差（64 ビットで引く）
+  cqto                # %rax を %rdx:%rax に符号拡張
+  movq $4, %rcx
+  idivq %rcx          # ÷ 4 → 要素数
+```
+
+**割り算に `idivq` を使う理由**: 今の要素サイズは 1 か 4 だけなので、`sarq $2`（右シフト）でも動く。それでも `idivq` にした理由は 2 つある。
+
+- **第2章とつながる**。2.2.6 の割り算で説明した `cdq` + `idivl` の 64 ビット版（`cqto` + `idivq`）なので、新しい概念が増えない。
+- **構造体を入れても困らない**。構造体のサイズは 12 や 20 のような 2 のべき乗でない値になりうる。`sarq` だとそのとき書き直しになるが、`idivq` ならそのまま使える。
+
+結果は `%rax`（64 ビット）に入る。tiny-c の `int` は 32 ビットなので、続く計算では `%eax` だけを使う。差が 2^31 要素を超えない限り、値は正しい。
+
+### 3.4 `gen_expr` の `case NODE_BINARY` ── 入口で振り分ける
 
 ```diff
-@@ -302,6 +343,11 @@
+@@ -302,6 +368,11 @@
      case NODE_BINARY:
 +        if ((node->op == '+' || node->op == '-') &&
 +            (is_addr_type(expr_type(node->lhs)) || is_addr_type(expr_type(node->rhs)))) {
@@ -143,19 +204,20 @@ static void gen_ptr_arith(Node *node) {
 
 `int` 同士の `+` / `-` は、ch02 からの `addl` / `subl` のまま。
 
-### 3.4 決めたこと（変えてもよい）
+### 3.5 決めたこと（変えてもよい）
 
 | 書き方 | C 標準 | この案での扱い |
 |--------|--------|----------------|
-| `p + i` / `i + p` / `p - i` | 要素サイズでスケーリング | 対応する |
-| `p - q`（ポインタ同士） | 要素数（`ptrdiff_t`）を返す | **コンパイルエラー**（`unsupported pointer arithmetic`）。いまは黙って `subl` している |
-| `i - p`、`p + q` | エラー | コンパイルエラー |
+| `p + i` / `i + p` / `p - i` | 要素サイズでスケーリング | 対応する（`gen_ptr_arith`） |
+| `p - q`（同じ型のポインタ同士） | 要素数（`ptrdiff_t`）を返す | 対応する（`gen_ptr_diff`）。結果は `int` |
+| `p - s`（`int *` と `char *` など、型の違うポインタ同士） | エラー | コンパイルエラー（`pointer types differ in p - q`） |
+| `i - p`、`p + q` | エラー | コンパイルエラー（`unsupported pointer arithmetic`） |
 
-`p - q` を入れるなら、`subq` のあとに要素サイズで割る（`int` なら `sarq $2`）だけで、10 行ほど増える。この案では入れず、本文の「読者への課題」に回した（5.5 節）。
+いまの tiny-c は、これらをすべて黙って `addl` / `subl` でコンパイルしている。
 
-### 3.5 確かめたこと
+### 3.6 確かめたこと
 
-作業用のコピー（`steps/ch06`、`steps/ch07` を複製して 3.1〜3.3 を当てたもの）で確認した。
+作業用のコピー（`steps/ch06`、`steps/ch07` を複製して 3.1〜3.4 を当てたもの）で確認した。
 
 - **警告なしでビルドできる**（`-Wall`）。
 - **既存のテストケースは、出力アセンブリが 1 行も変わらない**。`test/cases/01_*`〜`06_*` は ch06 で、全ケースは ch07 で（最適化あり・`--no-opt` の両方）、修正前後の `.s` を比べた。いまのテストにはポインタ算術を使うケースがないためである。
@@ -164,12 +226,14 @@ static void gen_ptr_arith(Node *node) {
 | プログラム | 修正前 | 修正後 ch06 | 修正後 ch07 |
 |------------|--------|-------------|-------------|
 | 2 節の `*(p + 1)`（期待値 7） | Segmentation fault | 7 | 7 |
-| 6 節のテスト（期待値 73） | — | 73 | 73 |
-| `p - q`（ポインタ同士） | 黙ってコンパイル | エラーで止まる | エラーで止まる |
+| `*(a + 1)`（配列に `+`、期待値 7） | Segmentation fault | 6 節の `06_ptr_arith.c` の `*(1 + a)` で確認 | 同左 |
+| 6 節の `06_ptr_arith.c`（期待値 73） | — | 73 | 73 |
+| 6 節の `06_ptr_diff.c`（期待値 54。負の差を含む） | — | 54 | 54（最適化あり・なし） |
+| `int *` − `char *` | 黙ってコンパイル | エラーで止まる | エラーで止まる |
 
 ## 4. 第7章への影響
 
-- **`optimize.c` は変えなくてよい**。代数的単純化の `x + 0 → x` / `0 + x → x` / `x - 0 → x` は、`x` がポインタでもそのまま正しい。定数畳み込みは両辺が `INT_LIT` のときだけなので、ポインタは関係しない。`p + (1 + 1)` は先に `p + 2` に畳まれ、そのあと `gen_ptr_arith` を通る。
+- **`optimize.c` は変えなくてよい**。代数的単純化の `x + 0 → x` / `0 + x → x` / `x - 0 → x` は、`x` がポインタでもそのまま正しい。定数畳み込みは両辺が `INT_LIT` のときだけなので、ポインタは関係しない。`p + (1 + 1)` は先に `p + 2` に畳まれ、そのあと `gen_ptr_arith` を通る。`p - q` には当てはまる規則がないので、そのまま `gen_ptr_diff` に届く。
 - **ピープホールも変えなくてよい**。`gen_ptr_arith` は `pushq %rax` / `popq %rcx` の組を出すので、ほかの二項演算と同じく `movq %rax, %rcx` に縮む。
 - **第7章の本文も変えなくてよい**。`docs/jp/ch07/05_build.md` の 7.5.1 は ch06 からの差分（バックパッチとスコープ）だけを載せている。7.5 の「`lexer.l / parser.y / ast.h / ast.c` は ch06 と完全に同じ」も、そのまま成り立つ。
 
@@ -189,7 +253,7 @@ static void gen_ptr_arith(Node *node) {
 | 5.2 | `ch06/02_lvalue.md` | 6.2.4.3 のコードのあと（198 行目） | 1 段落を追加 |
 | 5.3 | `ch06/02_lvalue.md` | 6.2.4.3 に至る経路（214 行目） | 1 段落を差し替え（コード片つき） |
 | 5.4 | `ch06/02_lvalue.md` | 図 6-2 | 図の下半分 |
-| 5.5 | `ch06/02_lvalue.md` | C 標準との対比（216〜220 行目） | 2 段落を差し替え |
+| 5.5 | `ch06/02_lvalue.md` | C 標準との対比（216〜220 行目） | 2 段落を 3 段落に差し替え（`p - q` のコード片つき）、課題を削除 |
 | 5.6 | `ch06/02_lvalue.md` | 6.2.6.2 `*p` を値として読む（329 行目） | 1 文を追加 |
 | 5.7 | `ch06/02_lvalue.md` | 6.2.8 まとめ（400 行目） | 箇条を 1 つ追加 |
 | 5.8 | `ch06/00_overview.md` | strlen の例のあと（131 行目） | 1 文を差し替え |
@@ -248,7 +312,7 @@ static void gen_ptr_arith(Node *node) {
 > /* gen_expr の switch 内 ── 片側がポインタの + / - はここで振り分ける */
 > case NODE_BINARY:
 >     if ((op が '+' か '-') && (lhs か rhs がポインタ・配列)) {
->         gen_ptr_arith(node);       /* p + i, i + p, p - i */
+>         gen_ptr_arith(node);       /* p + i, i + p, p - i, p - q */
 >         return;
 >     }
 >     ...                            /* int 同士は ch02 からの addl / subl のまま */
@@ -321,11 +385,22 @@ N('case NODE_BINARY', note=t('片側がポインタなので gen_ptr_arith へ',
 
 > C 標準では `+` のポインタ算術が型に応じてスケーリングするので、`a[i] ≡ *(a + i) ≡ *(p + i)` が成立する。tiny-c も `gen_ptr_arith` でこれにそろえた。`[]` で書いても `+` で書いても、同じ要素を指す。
 >
-> 対応しないのは、ポインタ同士の引き算 `p - q` である（C では間の要素数を返す）。`i - p` と `p + q` は C でもエラーなので、tiny-c もコンパイルエラーにする。
+> ポインタ同士の引き算 `p - q` は、`p + i` の逆向きである。結果はアドレスではなく、`p` と `q` の間にある要素の数（`int`）になる。64 ビットでアドレスの差（バイト数）を取り、要素サイズで割る。
 >
-> > **読者への課題**: `p - q` を実装するなら、`subq` で差を取ったあと要素サイズで割ればよい（`int` なら `sarq $2, %rax`）。
+> ```c
+> /* gen_ptr_diff ── p - q */
+> gen_expr(q); emit_push(); gen_expr(p); emit_pop("%rcx");
+> fprintf(out, "  subq %%rcx, %%rax\n");     /* %rax = p - q（バイト差） */
+> fprintf(out, "  cqto\n");                  /* %rax を %rdx:%rax に符号拡張 */
+> fprintf(out, "  movq $%d, %%rcx\n", es);
+> fprintf(out, "  idivq %%rcx\n");           /* %rax = バイト差 / 要素サイズ */
+> ```
+>
+> 割り算は、2.2.6 で見た `cdq` + `idivl` の 64 ビット版（`cqto` + `idivq`）である。`int *p = a + 7; int *q = a + 2;` なら、バイト差は 20、`p - q` は 20 ÷ 4 = 5。`q - p` なら −5 になる。
+>
+> `p + q`（アドレス同士を足しても意味がない）と `i - p` は C でもエラーなので、tiny-c もコンパイルエラーにする。`int *` から `char *` を引くような、要素サイズの違うポインタ同士の引き算もエラーにする。
 
-**ねらい**: 元の文章は「`+` は使わず `[]` を使え」という制限の説明だった。直したあとは、標準にそろったことと、残った制限（`p - q`）を書く。課題も、残った制限に差し替える。
+**ねらい**: 元の文章は「`+` は使わず `[]` を使え」という制限の説明だった。直したあとは、標準にそろったことと、`p - q` が `p + i` の逆向きであることを書く。割り算は第2章の `idivl` につなぐので、新しく説明することはほとんどない。元の「読者への課題」は実装済みになるので消す（課題を残したい場合は、7 節のポインタ比較の 64 ビット化が候補になる）。
 
 ---
 
@@ -352,7 +427,7 @@ N('case NODE_BINARY', note=t('片側がポインタなので gen_ptr_arith へ',
 **改良案**（そのあとに箇条を 1 つ足す）:
 
 > - load/store のサイズ（`movb`/`movl`/`movq`、`movsbl` で読み込み符号拡張）は型から決まる。
-> - 要素サイズ（`Type.base_size`）も型から決まる。`a[i]` も `*(p + i)` も、添字に要素サイズを掛けて 64 ビットで足す。
+> - 要素サイズ（`Type.base_size`）も型から決まる。`a[i]` も `*(p + i)` も、添字に要素サイズを掛けて 64 ビットで足す。`p - q` は逆に、バイト差を要素サイズで割る。
 
 **ねらい**: まとめに 1 行あると、第8章で構造体を入れるときに「要素サイズに構造体のサイズが入る」とつなげやすい。省いてもよい。
 
@@ -385,8 +460,9 @@ N('case NODE_BINARY', note=t('片側がポインタなので gen_ptr_arith へ',
 **改良案**:
 
 > - **`gen_addr`**: lvalue（IDENT、`*p`、`a[i]`）のアドレスを `%rax` に。
-> - **`expr_type`**: 式の型を推論（変数→シンボルテーブル、`&`→ポインタ昇格、`*`→ポインタ降格、`p + i`→ポインタのまま）。
+> - **`expr_type`**: 式の型を推論（変数→シンボルテーブル、`&`→ポインタ昇格、`*`→ポインタ降格、`p + i`→ポインタのまま、`p - q`→`int`）。
 > - **`gen_ptr_arith`**: `p + i` / `p - i` を、要素サイズでスケーリングして 64 ビットで計算する。
+> - **`gen_ptr_diff`**: `p - q` を、64 ビットのバイト差 ÷ 要素サイズで計算する。
 > - **`emit_load(sz)` / `emit_store(sz)`**: 1/4/8 バイトの読み書きをサイズ別に。
 
 #### 6.4.6 ビルドして動かす（「### 配列」のあと、任意）
@@ -440,7 +516,25 @@ int main() {
 }
 ```
 
-`*(s + 1)` = `'b'` = 98、`*(q - 1)` = `a[1]` = 5、`a[2]` = 30 なので、98 + 5 − 30 = 73。修正後の ch06 / ch07 で 73 になることを Docker で確かめた（3.5 節）。
+`*(s + 1)` = `'b'` = 98、`*(q - 1)` = `a[1]` = 5、`a[2]` = 30 なので、98 + 5 − 30 = 73。
+
+`test/cases/06_ptr_diff.c`（新規）。`p - q` を、`int *`（要素サイズ 4、`idivq` を通る）、`char *`（要素サイズ 1、割り算なし）、負の結果の 3 通りで確かめる。
+
+```c
+// expect: 54
+int main() {
+    int a[10];
+    char *s = "hello";
+    int *p = a + 7;
+    int *q = a + 2;
+    char *e = s + 4;
+    return (p - q) * 10 + (e - s) + (q - p) + 5;
+}
+```
+
+`p - q` = 5、`e - s` = 4、`q - p` = −5 なので、5 × 10 + 4 − 5 + 5 = 54。`(p - q) * 10` は、3.1 節で `p - q` の型を `int` にしていないと正しく計算されない。
+
+どちらも、修正後の ch06 / ch07 で期待値になることを Docker で確かめた（3.6 節）。
 
 ## 7. 今回の範囲外だが、同じ根を持つ問題
 
